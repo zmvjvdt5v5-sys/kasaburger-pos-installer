@@ -1826,7 +1826,8 @@ try:
 
     @api_router.get("/payments/summary")
     async def get_payments_summary(current_user: dict = Depends(get_current_user)):
-        payments = await db.payments.find({}, {"_id": 0}).to_list(10000)
+        # Sadece gerekli alanları al - performans optimizasyonu
+        payments = await db.payments.find({}, {"_id": 0, "amount": 1, "payment_method": 1}).to_list(10000)
         
         total_collected = sum(p.get("amount", 0) for p in payments)
         
@@ -1836,8 +1837,8 @@ try:
             method = p.get("payment_method", "other")
             by_method[method] = by_method.get(method, 0) + p.get("amount", 0)
         
-        # Get unpaid invoices total
-        unpaid_invoices = await db.invoices.find({"status": {"$in": ["unpaid", "partial"]}}, {"_id": 0}).to_list(10000)
+        # Get unpaid invoices total - sadece gerekli alanlar
+        unpaid_invoices = await db.invoices.find({"status": {"$in": ["unpaid", "partial"]}}, {"_id": 0, "total": 1, "paid_amount": 1}).to_list(10000)
         total_unpaid = sum(i.get("total", 0) - i.get("paid_amount", 0) for i in unpaid_invoices)
         
         return {
