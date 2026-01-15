@@ -191,7 +191,7 @@ const Materials = () => {
   const downloadTemplate = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/materials/template-excel`, {
+      const response = await axios.get(`${API_URL}/api/templates/materials-excel`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
@@ -218,7 +218,7 @@ const Materials = () => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post(`${API_URL}/api/materials/import-excel`, formData, {
+      const response = await axios.post(`${API_URL}/api/import/materials-excel`, formData, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
