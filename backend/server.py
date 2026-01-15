@@ -1295,7 +1295,7 @@ try:
         buffer.seek(0)
         return StreamingResponse(buffer, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=urun_sablonu.xlsx"})
 
-    @api_router.get("/materials/template-excel")
+    @api_router.get("/templates/materials-excel")
     async def get_materials_template(current_user: dict = Depends(get_current_user)):
         if not openpyxl_available:
             raise HTTPException(status_code=503, detail="Excel not available")
