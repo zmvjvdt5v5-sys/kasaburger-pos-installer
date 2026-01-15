@@ -550,14 +550,18 @@ try:
     @api_router.post("/dealers", response_model=DealerResponse)
     async def create_dealer(dealer: DealerCreate, current_user: dict = Depends(get_current_user)):
         dealer_id = str(uuid.uuid4())
+        dealer_data = dealer.model_dump()
+        # Şifre belirtilmemişse bayi kodunu kullan
+        if not dealer_data.get("password"):
+            dealer_data["password"] = dealer_data["code"]
         dealer_doc = {
             "id": dealer_id,
-            **dealer.model_dump(),
+            **dealer_data,
             "balance": 0,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.dealers.insert_one(dealer_doc)
-        return DealerResponse(**{k: v for k, v in dealer_doc.items() if k != "_id"})
+        return DealerResponse(**{k: v for k, v in dealer_doc.items() if k != "_id" and k != "password"})
 
     @api_router.get("/dealers", response_model=List[DealerResponse])
     async def get_dealers(current_user: dict = Depends(get_current_user)):
