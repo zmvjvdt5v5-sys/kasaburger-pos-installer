@@ -34,6 +34,7 @@ try:
     import jwt
     import bcrypt
     import io
+    import httpx
 
     # Add CORS
     app.add_middleware(
@@ -57,6 +58,10 @@ try:
     JWT_SECRET = os.environ.get('JWT_SECRET', 'kasaburger_jwt_secret_production_2024_secure_key')
     JWT_ALGORITHM = "HS256"
     JWT_EXPIRATION_HOURS = 24
+
+    # Bizim Hesap API Configuration
+    BIZIMHESAP_API_KEY = os.environ.get('BIZIMHESAP_API_KEY', '')
+    BIZIMHESAP_API_URL = os.environ.get('BIZIMHESAP_API_URL', 'https://bizimhesap.com/api/b2b')
 
     api_router = APIRouter(prefix="/api")
     security = HTTPBearer()
