@@ -198,13 +198,65 @@ const Products = () => {
           <h1 className="text-3xl font-heading font-bold">Ürünler</h1>
           <p className="text-muted-foreground">Burger köftesi ürünlerinizi yönetin</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary text-primary-foreground shadow-lg shadow-primary/20" data-testid="add-product-btn">
-              <Plus className="h-4 w-4 mr-2" />
-              Yeni Ürün
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          {/* Excel Import Dialog */}
+          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="border-primary/50 hover:bg-primary/10">
+                <Upload className="h-4 w-4 mr-2" />
+                Excel'den Aktar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border">
+              <DialogHeader>
+                <DialogTitle className="font-heading flex items-center gap-2">
+                  <FileSpreadsheet className="h-5 w-5 text-primary" />
+                  Excel'den Ürün Aktar
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Excel dosyası ile toplu ürün ekleyebilirsiniz. Önce şablonu indirin, doldurun ve yükleyin.
+                </p>
+                <Button variant="outline" onClick={downloadTemplate} className="w-full">
+                  <Download className="h-4 w-4 mr-2" />
+                  Şablonu İndir
+                </Button>
+                <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleExcelImport}
+                    className="hidden"
+                    id="excel-upload"
+                    disabled={importing}
+                  />
+                  <label htmlFor="excel-upload" className="cursor-pointer">
+                    {importing ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="text-sm">Yükleniyor...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-primary" />
+                        <span className="text-sm">Excel dosyası seçin veya sürükleyin</span>
+                        <span className="text-xs text-muted-foreground">.xlsx veya .xls</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary text-primary-foreground shadow-lg shadow-primary/20" data-testid="add-product-btn">
+                <Plus className="h-4 w-4 mr-2" />
+                Yeni Ürün
+              </Button>
+            </DialogTrigger>
           <DialogContent className="bg-card border-border">
             <DialogHeader>
               <DialogTitle className="font-heading">
