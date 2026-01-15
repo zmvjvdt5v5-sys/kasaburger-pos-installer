@@ -16,7 +16,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [companySettings, setCompanySettings] = useState({
-    name: 'KasaBurger İmalathanesi',
+    name: 'KasaBurger',
     address: '',
     phone: '',
     email: '',
