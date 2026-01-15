@@ -510,13 +510,27 @@ const Dealers = () => {
                     <span className="line-clamp-2">{dealer.address}</span>
                   </div>
                 </div>
-                <div className="pt-3 border-t border-border/50">
+                <div className="pt-3 border-t border-border/50 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">Bakiye</span>
                     <span className={`font-mono font-medium ${dealer.balance > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                       {formatCurrency(dealer.balance)}
                     </span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Kredi Limiti</span>
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {dealer.credit_limit > 0 ? formatCurrency(dealer.credit_limit) : 'Limitsiz'}
+                    </span>
+                  </div>
+                  {dealer.credit_limit > 0 && dealer.balance > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">Kalan Limit</span>
+                      <span className={`font-mono text-sm ${dealer.balance >= dealer.credit_limit ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {formatCurrency(Math.max(0, dealer.credit_limit - dealer.balance))}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
