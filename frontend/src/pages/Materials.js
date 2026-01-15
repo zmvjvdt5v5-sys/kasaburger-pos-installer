@@ -30,7 +30,10 @@ import {
 } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Boxes, Search, Loader2, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Boxes, Search, Loader2, ArrowDownCircle, ArrowUpCircle, Upload, Download, FileSpreadsheet } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Materials = () => {
   const [materials, setMaterials] = useState([]);
@@ -39,7 +42,9 @@ const Materials = () => {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
+  const [importing, setImporting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
