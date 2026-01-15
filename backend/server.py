@@ -1043,6 +1043,9 @@ async def health_check():
 
 @api_router.get("/invoices/{invoice_id}/pdf")
 async def get_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    if not reportlab_available:
+        raise HTTPException(status_code=503, detail="PDF export not available")
+    
     invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
     if not invoice:
         raise HTTPException(status_code=404, detail="Fatura bulunamadı")
