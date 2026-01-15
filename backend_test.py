@@ -636,6 +636,10 @@ class KasaBurgerAPITester:
             # Dashboard test
             self.test_dashboard_stats()
             
+            # New export features test
+            self.test_pdf_export()
+            self.test_excel_export()
+            
             # Cleanup
             self.cleanup_test_data()
             
