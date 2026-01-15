@@ -1116,6 +1116,9 @@ async def get_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_curr
 
 @api_router.get("/reports/excel")
 async def export_reports_excel(report_type: str = "all", current_user: dict = Depends(get_current_user)):
+    if not openpyxl_available:
+        raise HTTPException(status_code=503, detail="Excel export not available")
+    
     wb = Workbook()
     
     # Style definitions
