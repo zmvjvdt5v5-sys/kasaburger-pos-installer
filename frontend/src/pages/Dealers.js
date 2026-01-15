@@ -132,6 +132,7 @@ const Dealers = () => {
 
   const handleEdit = (dealer) => {
     setEditingDealer(dealer);
+    setShowPassword(false);
     setFormData({
       name: dealer.name,
       code: dealer.code,
@@ -140,6 +141,7 @@ const Dealers = () => {
       email: dealer.email || '',
       address: dealer.address,
       tax_number: dealer.tax_number || '',
+      password: '', // Şifre düzenlemede boş başlar
       pricing: dealer.pricing || [],
     });
     setDialogOpen(true);
