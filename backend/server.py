@@ -1355,6 +1355,146 @@ try:
         )
         return {"message": "Şirket bilgileri kaydedildi", "settings": settings_doc}
 
+    # ==================== ÖDEME (PAYMENTS) MODÜLÜ ====================
+
+    class PaymentCreate(BaseModel):
+        invoice_id: str
+        dealer_id: str
+        dealer_name: str
+        amount: float
+        payment_method: str  # cash, bank_transfer, credit_card, check
+        payment_date: str
+        reference_no: Optional[str] = ""
+        notes: Optional[str] = ""
+
+    @api_router.post("/payments")
+    async def create_payment(payment: PaymentCreate, current_user: dict = Depends(get_current_user)):
+        # Verify invoice exists
+        invoice = await db.invoices.find_one({"id": payment.invoice_id}, {"_id": 0})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+        
+        payment_id = str(uuid.uuid4())
+        payment_doc = {
+            "id": payment_id,
+            "payment_number": f"PAY-{datetime.now().strftime('%Y%m%d')}-{payment_id[:4].upper()}",
+            **payment.model_dump(),
+            "invoice_number": invoice.get("invoice_number", ""),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["name"]
+        }
+        await db.payments.insert_one(payment_doc)
+        
+        # Update invoice paid amount
+        current_paid = invoice.get("paid_amount", 0)
+        new_paid = current_paid + payment.amount
+        invoice_total = invoice.get("total", 0)
+        new_status = "paid" if new_paid >= invoice_total else "partial"
+        
+        await db.invoices.update_one(
+            {"id": payment.invoice_id},
+            {"$set": {"paid_amount": new_paid, "status": new_status}}
+        )
+        
+        # Update dealer balance
+        await db.dealers.update_one(
+            {"id": payment.dealer_id},
+            {"$inc": {"balance": -payment.amount}}
+        )
+        
+        # Create transaction record
+        await db.transactions.insert_one({
+            "id": str(uuid.uuid4()),
+            "type": "income",
+            "category": "Tahsilat",
+            "amount": payment.amount,
+            "description": f"Fatura ödemesi: {invoice.get('invoice_number', '')} - {payment.dealer_name}",
+            "reference_id": payment_id,
+            "reference_type": "payment",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["name"]
+        })
+        
+        return {k: v for k, v in payment_doc.items() if k != "_id"}
+
+    @api_router.get("/payments")
+    async def get_payments(current_user: dict = Depends(get_current_user)):
+        payments = await db.payments.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+        return payments
+
+    @api_router.get("/payments/{payment_id}")
+    async def get_payment(payment_id: str, current_user: dict = Depends(get_current_user)):
+        payment = await db.payments.find_one({"id": payment_id}, {"_id": 0})
+        if not payment:
+            raise HTTPException(status_code=404, detail="Ödeme bulunamadı")
+        return payment
+
+    @api_router.delete("/payments/{payment_id}")
+    async def delete_payment(payment_id: str, current_user: dict = Depends(get_current_user)):
+        payment = await db.payments.find_one({"id": payment_id}, {"_id": 0})
+        if not payment:
+            raise HTTPException(status_code=404, detail="Ödeme bulunamadı")
+        
+        # Revert invoice paid amount
+        await db.invoices.update_one(
+            {"id": payment["invoice_id"]},
+            {"$inc": {"paid_amount": -payment["amount"]}}
+        )
+        
+        # Check if invoice should be unpaid again
+        invoice = await db.invoices.find_one({"id": payment["invoice_id"]}, {"_id": 0})
+        if invoice:
+            new_paid = invoice.get("paid_amount", 0) - payment["amount"]
+            new_status = "unpaid" if new_paid <= 0 else "partial"
+            await db.invoices.update_one(
+                {"id": payment["invoice_id"]},
+                {"$set": {"status": new_status}}
+            )
+        
+        # Revert dealer balance
+        await db.dealers.update_one(
+            {"id": payment["dealer_id"]},
+            {"$inc": {"balance": payment["amount"]}}
+        )
+        
+        # Delete payment
+        await db.payments.delete_one({"id": payment_id})
+        
+        return {"message": "Ödeme silindi"}
+
+    @api_router.get("/payments/by-dealer/{dealer_id}")
+    async def get_payments_by_dealer(dealer_id: str, current_user: dict = Depends(get_current_user)):
+        payments = await db.payments.find({"dealer_id": dealer_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return payments
+
+    @api_router.get("/payments/by-invoice/{invoice_id}")
+    async def get_payments_by_invoice(invoice_id: str, current_user: dict = Depends(get_current_user)):
+        payments = await db.payments.find({"invoice_id": invoice_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return payments
+
+    @api_router.get("/payments/summary")
+    async def get_payments_summary(current_user: dict = Depends(get_current_user)):
+        payments = await db.payments.find({}, {"_id": 0}).to_list(10000)
+        
+        total_collected = sum(p.get("amount", 0) for p in payments)
+        
+        # Group by payment method
+        by_method = {}
+        for p in payments:
+            method = p.get("payment_method", "other")
+            by_method[method] = by_method.get(method, 0) + p.get("amount", 0)
+        
+        # Get unpaid invoices total
+        unpaid_invoices = await db.invoices.find({"status": {"$in": ["unpaid", "partial"]}}, {"_id": 0}).to_list(10000)
+        total_unpaid = sum(i.get("total", 0) - i.get("paid_amount", 0) for i in unpaid_invoices)
+        
+        return {
+            "total_collected": total_collected,
+            "total_unpaid": total_unpaid,
+            "payment_count": len(payments),
+            "by_method": by_method
+        }
+
     # ==================== API ROOT ====================
 
     @api_router.get("/")
