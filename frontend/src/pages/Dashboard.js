@@ -61,9 +61,11 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = 'primar
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     loadStats();
+    loadNotifications();
   }, []);
 
   const loadStats = async () => {
@@ -74,6 +76,18 @@ const Dashboard = () => {
       console.error('Dashboard stats error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(response.data);
+    } catch (error) {
+      console.error('Notifications error:', error);
     }
   };
 
