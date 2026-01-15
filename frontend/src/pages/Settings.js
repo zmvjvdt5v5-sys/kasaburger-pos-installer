@@ -200,7 +200,8 @@ const Settings = () => {
               </div>
               <Separator className="my-4" />
               <div className="flex justify-end">
-                <Button onClick={handleSaveCompany} className="bg-primary" data-testid="save-company-btn">
+                <Button onClick={handleSaveCompany} className="bg-primary" disabled={saving} data-testid="save-company-btn">
+                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   Kaydet
                 </Button>
               </div>
