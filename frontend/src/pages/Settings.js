@@ -30,7 +30,7 @@ const Settings = () => {
 
   const loadSettings = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('kasaburger_token');
       const response = await axios.get(`${API_URL}/api/settings/company`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -45,7 +45,7 @@ const Settings = () => {
   const handleSaveCompany = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('kasaburger_token');
       await axios.put(`${API_URL}/api/settings/company`, companySettings, {
         headers: { Authorization: `Bearer ${token}` }
       });
