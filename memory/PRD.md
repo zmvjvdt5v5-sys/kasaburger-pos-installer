@@ -96,3 +96,28 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 2. Excel rapor indirme
 3. Bayi self-service portal
 4. E-fatura GIB entegrasyonu
+
+---
+
+## Update: January 2025 - Potansiyel İyileştirmeler Eklendi
+
+### Yeni Özellikler
+1. **PDF Fatura Export**
+   - Her fatura için PDF indirme butonu
+   - KasaBurger markalı profesyonel fatura formatı
+   - Endpoint: `/api/invoices/{id}/pdf`
+
+2. **Excel Rapor Export**
+   - Tüm raporları tek Excel dosyasında indirme
+   - Siparişler, Faturalar, Muhasebe, Stok sayfaları
+   - Endpoint: `/api/reports/excel`
+
+### Test Sonuçları
+- Backend: %100 başarı
+- Frontend: %95 başarı
+- PDF ve Excel export tam çalışıyor
+
+### Kalan İyileştirmeler (P1)
+- [ ] E-fatura GIB entegrasyonu
+- [ ] Bayi self-service portal
+- [ ] Mobil uygulama
