@@ -1078,19 +1078,63 @@ try:
 
     @api_router.post("/dealer-portal/orders")
     async def dealer_portal_create_order(order: DealerOrderCreate, dealer: dict = Depends(get_current_dealer)):
+        # Güncel bayi bilgilerini al (balance ve credit_limit için)
+        current_dealer = await db.dealers.find_one({"id": dealer["id"]}, {"_id": 0})
+        if not current_dealer:
+            raise HTTPException(status_code=404, detail="Bayi bulunamadı")
+        
         order_id = str(uuid.uuid4())
         order_number = await generate_order_number()
         subtotal = sum(item.total for item in order.items)
         tax_amount = subtotal * 0.20
         total = subtotal + tax_amount
+        
+        # Kredi limiti kontrolü
+        current_balance = current_dealer.get("balance", 0)  # Mevcut borç
+        credit_limit = current_dealer.get("credit_limit", 0)  # Kredi limiti
+        new_balance = current_balance + total  # Sipariş sonrası yeni borç
+        
+        # Limit aşımı kontrolü (credit_limit > 0 ise kontrol yap)
+        requires_approval = False
+        if credit_limit > 0 and new_balance > credit_limit:
+            requires_approval = True
+        
         order_doc = {
-            "id": order_id, "order_number": order_number, "dealer_id": dealer["id"], "dealer_name": dealer["name"],
-            "items": [item.model_dump() for item in order.items], "subtotal": subtotal, "tax_amount": tax_amount,
-            "total": total, "delivery_date": order.delivery_date, "notes": order.notes or "", "status": "pending",
-            "created_at": datetime.now(timezone.utc).isoformat(), "source": "dealer_portal"
+            "id": order_id, 
+            "order_number": order_number, 
+            "dealer_id": dealer["id"], 
+            "dealer_name": dealer["name"],
+            "items": [item.model_dump() for item in order.items], 
+            "subtotal": subtotal, 
+            "tax_amount": tax_amount,
+            "total": total, 
+            "delivery_date": order.delivery_date, 
+            "notes": order.notes or "", 
+            "status": "pending_approval" if requires_approval else "pending",
+            "requires_approval": requires_approval,
+            "approval_reason": f"Kredi limiti aşımı. Limit: {credit_limit:.2f} TL, Mevcut Borç: {current_balance:.2f} TL, Sipariş Tutarı: {total:.2f} TL" if requires_approval else None,
+            "created_at": datetime.now(timezone.utc).isoformat(), 
+            "source": "dealer_portal"
         }
         await db.orders.insert_one(order_doc)
-        return OrderResponse(**{k: v for k, v in order_doc.items() if k != "_id"})
+        
+        response = OrderResponse(**{k: v for k, v in order_doc.items() if k != "_id" and k not in ["requires_approval", "approval_reason"]})
+        
+        if requires_approval:
+            return {
+                "order": response.model_dump(),
+                "warning": "Kredi limitinizi aştığınız için siparişiniz onay bekliyor.",
+                "status": "pending_approval",
+                "credit_info": {
+                    "credit_limit": credit_limit,
+                    "current_balance": current_balance,
+                    "order_total": total,
+                    "new_balance": new_balance,
+                    "over_limit": new_balance - credit_limit
+                }
+            }
+        
+        return response
 
     @api_router.get("/dealer-portal/invoices")
     async def dealer_portal_invoices(dealer: dict = Depends(get_current_dealer)):
