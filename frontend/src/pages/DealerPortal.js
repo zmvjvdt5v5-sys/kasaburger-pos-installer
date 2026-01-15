@@ -81,9 +81,12 @@ const DealerPortal = () => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const token = localStorage.getItem('dealer_token');
 
