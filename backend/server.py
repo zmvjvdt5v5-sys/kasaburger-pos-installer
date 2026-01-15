@@ -41,6 +41,11 @@ app = FastAPI(title="KasaBurger API")
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 
+# Root level health check for Kubernetes/deployment probes
+@app.get("/health")
+async def root_health_check():
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 # ==================== MODELS ====================
 
 # Auth Models
