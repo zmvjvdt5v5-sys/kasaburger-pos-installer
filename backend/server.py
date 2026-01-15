@@ -1329,6 +1329,9 @@ try:
         email: Optional[str] = ""
         tax_number: Optional[str] = ""
         tax_office: Optional[str] = ""
+        type: Optional[str] = None
+        updated_at: Optional[str] = None
+        updated_by: Optional[str] = None
 
     @api_router.get("/settings/company")
     async def get_company_settings(current_user: dict = Depends(get_current_user)):
