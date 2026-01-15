@@ -95,6 +95,16 @@ const DealerPortal = () => {
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [changingPassword, setChangingPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('order');
+  
+  // Ödeme yapma state'leri
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '',
+    payment_method: 'mail_order',
+    payment_date: new Date().toISOString().split('T')[0],
+    reference_no: '',
+    notes: ''
+  });
+  const [submittingPayment, setSubmittingPayment] = useState(false);
 
   const token = localStorage.getItem('dealer_token');
 
