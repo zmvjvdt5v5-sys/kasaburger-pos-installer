@@ -257,7 +257,7 @@ const Products = () => {
                 Yeni Ürün
               </Button>
             </DialogTrigger>
-          <DialogContent className="bg-card border-border">
+            <DialogContent className="bg-card border-border">
             <DialogHeader>
               <DialogTitle className="font-heading">
                 {editingProduct ? 'Ürün Düzenle' : 'Yeni Ürün'}
