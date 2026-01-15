@@ -2,7 +2,7 @@
 # Health check MUST be first - before any imports that could fail
 
 from fastapi import FastAPI
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 # Create app immediately
 app = FastAPI(title="KasaBurger API", version="1.0.3")
