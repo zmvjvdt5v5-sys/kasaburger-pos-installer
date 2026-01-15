@@ -577,11 +577,15 @@ try:
 
     @api_router.put("/dealers/{dealer_id}", response_model=DealerResponse)
     async def update_dealer(dealer_id: str, dealer: DealerCreate, current_user: dict = Depends(get_current_user)):
-        result = await db.dealers.update_one({"id": dealer_id}, {"$set": dealer.model_dump()})
+        update_data = dealer.model_dump()
+        # Şifre boşsa güncelleme verisinden çıkar (mevcut şifreyi koru)
+        if not update_data.get("password"):
+            update_data.pop("password", None)
+        result = await db.dealers.update_one({"id": dealer_id}, {"$set": update_data})
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Bayi bulunamadı")
         updated = await db.dealers.find_one({"id": dealer_id}, {"_id": 0})
-        return DealerResponse(**updated)
+        return DealerResponse(**{k: v for k, v in updated.items() if k != "password"})
 
     @api_router.delete("/dealers/{dealer_id}")
     async def delete_dealer(dealer_id: str, current_user: dict = Depends(get_current_user)):
