@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Users, Search, Loader2, X, Phone, Mail, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Search, Loader2, X, Phone, Mail, MapPin, Key, Eye, EyeOff, Copy } from 'lucide-react';
 
 const Dealers = () => {
   const [dealers, setDealers] = useState([]);
@@ -38,6 +38,7 @@ const Dealers = () => {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDealer, setEditingDealer] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -46,6 +47,7 @@ const Dealers = () => {
     email: '',
     address: '',
     tax_number: '',
+    password: '',
     pricing: [],
   });
   const [currentPricing, setCurrentPricing] = useState({
