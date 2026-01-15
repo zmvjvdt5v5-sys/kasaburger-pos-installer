@@ -278,6 +278,52 @@ const DealerPortal = () => {
     }
   };
 
+  // Ödeme gönderme fonksiyonu
+  const handleSubmitPayment = async () => {
+    if (!paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+      toast.error('Geçerli bir tutar girin');
+      return;
+    }
+
+    setSubmittingPayment(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/dealer-portal/submit-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: parseFloat(paymentForm.amount),
+          payment_method: paymentForm.payment_method,
+          payment_date: paymentForm.payment_date,
+          reference_no: paymentForm.reference_no,
+          notes: paymentForm.notes
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Ödeme bildirimi gönderilemedi');
+      }
+
+      toast.success('Ödeme bildiriminiz alındı! Onay bekliyor.');
+      setPaymentForm({
+        amount: '',
+        payment_method: 'mail_order',
+        payment_date: new Date().toISOString().split('T')[0],
+        reference_no: '',
+        notes: ''
+      });
+      loadData();
+      setActiveTab('payments');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
   // Calculate totals for ekstre
   const totalDebt = invoices.filter(i => i.status !== 'paid').reduce((sum, i) => sum + (i.total - (i.paid_amount || 0)), 0);
   const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
