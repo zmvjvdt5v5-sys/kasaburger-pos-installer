@@ -1182,7 +1182,7 @@ try:
 
     from fastapi import UploadFile, File
 
-    @api_router.post("/products/import-excel")
+    @api_router.post("/import/products-excel")
     async def import_products_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
         if not openpyxl_available:
             raise HTTPException(status_code=503, detail="Excel import not available")
