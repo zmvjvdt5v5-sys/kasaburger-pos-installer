@@ -294,6 +294,55 @@ const DealerPortal = () => {
                 {formatCurrency(dealer?.balance || 0)}
               </p>
             </div>
+            {/* Password Change Dialog */}
+            <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" title="Şifre Değiştir">
+                  <Key className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle className="font-heading flex items-center gap-2">
+                    <Key className="h-5 w-5 text-primary" />
+                    Şifre Değiştir
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Mevcut Şifre</Label>
+                    <Input
+                      type="password"
+                      value={passwordData.oldPassword}
+                      onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Yeni Şifre</Label>
+                    <Input
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Yeni Şifre (Tekrar)</Label>
+                    <Input
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={changingPassword}>
+                    {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Şifreyi Değiştir
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
             <Button variant="ghost" onClick={handleLogout} data-testid="dealer-logout">
               <LogOut className="h-4 w-4" />
             </Button>
