@@ -458,6 +458,85 @@ const Reports = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sales Reports with Date Filter */}
+      <Card className="bg-card border-border/50">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="font-heading flex items-center gap-2">
+              <Filter className="h-5 w-5 text-primary" />
+              Satış Raporları
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Başlangıç:</Label>
+                <Input 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-36 h-8 text-sm"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Bitiş:</Label>
+                <Input 
+                  type="date" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-36 h-8 text-sm"
+                />
+              </div>
+              <Button size="sm" onClick={handleFilterReports} disabled={filterLoading}>
+                {filterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Filter className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="dealer" className="space-y-4">
+            <TabsList className="bg-background/50">
+              <TabsTrigger value="dealer">Bayi Bazlı</TabsTrigger>
+              <TabsTrigger value="product">Ürün Bazlı</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="dealer">
+              <div className="space-y-3">
+                {dealerSales.length > 0 ? (
+                  dealerSales.map((sale, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-md bg-background/50 border border-border/50">
+                      <div>
+                        <p className="font-medium">{sale.dealer_name}</p>
+                        <p className="text-xs text-muted-foreground">{sale.total_orders} sipariş</p>
+                      </div>
+                      <p className="font-mono font-bold text-primary">{formatCurrency(sale.total_amount)}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">Satış verisi yok</p>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="product">
+              <div className="space-y-3">
+                {productSales.length > 0 ? (
+                  productSales.map((sale, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-md bg-background/50 border border-border/50">
+                      <div>
+                        <p className="font-medium">{sale.product_name}</p>
+                        <p className="text-xs text-muted-foreground">{sale.total_quantity} adet satıldı</p>
+                      </div>
+                      <p className="font-mono font-bold text-primary">{formatCurrency(sale.total_amount)}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">Satış verisi yok</p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
