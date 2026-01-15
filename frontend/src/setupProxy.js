@@ -5,9 +5,8 @@ module.exports = function(app) {
   app.use(
     '/health',
     createProxyMiddleware({
-      target: 'http://localhost:8001',
+      target: 'http://localhost:8001/health',
       changeOrigin: true,
-      pathRewrite: { '^/health': '/health' },
     })
   );
 };
