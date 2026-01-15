@@ -149,6 +149,7 @@ const Dealers = () => {
       address: dealer.address,
       tax_number: dealer.tax_number || '',
       password: '', // Şifre düzenlemede boş başlar
+      credit_limit: dealer.credit_limit || '',
       pricing: dealer.pricing || [],
     });
     setDialogOpen(true);
