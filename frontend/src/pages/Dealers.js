@@ -159,6 +159,7 @@ const Dealers = () => {
 
   const resetForm = () => {
     setEditingDealer(null);
+    setShowPassword(false);
     setFormData({
       name: '',
       code: '',
@@ -167,6 +168,7 @@ const Dealers = () => {
       email: '',
       address: '',
       tax_number: '',
+      password: '',
       pricing: [],
     });
     setCurrentPricing({ product_id: '', product_name: '', special_price: '' });
