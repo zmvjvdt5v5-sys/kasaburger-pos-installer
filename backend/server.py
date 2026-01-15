@@ -938,13 +938,12 @@ try:
     async def dealer_portal_payments(dealer: dict = Depends(get_current_dealer)):
         """Bayinin ödeme geçmişini getirir"""
         payments = await db.payments.find({"dealer_id": dealer["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
-        # Fatura numaralarını da ekle
+        # Fatura numaralarını batch olarak al (N+1 sorgu optimizasyonu)
+        invoice_ids = [p["invoice_id"] for p in payments if p.get("invoice_id")]
+        invoices = await db.invoices.find({"id": {"$in": invoice_ids}}, {"_id": 0, "id": 1, "invoice_number": 1}).to_list(100)
+        invoice_map = {inv["id"]: inv["invoice_number"] for inv in invoices}
         for payment in payments:
-            if payment.get("invoice_id"):
-                invoice = await db.invoices.find_one({"id": payment["invoice_id"]}, {"_id": 0, "invoice_number": 1})
-                payment["invoice_number"] = invoice.get("invoice_number", "-") if invoice else "-"
-            else:
-                payment["invoice_number"] = "-"
+            payment["invoice_number"] = invoice_map.get(payment.get("invoice_id"), "-")
         return payments
 
     # ==================== DEPO/STOK YÖNETİMİ ====================
