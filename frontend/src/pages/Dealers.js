@@ -341,6 +341,30 @@ const Dealers = () => {
                 </p>
               </div>
 
+              {/* Credit Limit Section */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Kredi Limiti (TL)
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    value={formData.credit_limit}
+                    onChange={(e) => setFormData({ ...formData, credit_limit: e.target.value })}
+                    placeholder="Örn: 200000"
+                    className="bg-input/50 pl-8"
+                    data-testid="dealer-credit-limit-input"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₺</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Bu limiti aşan borç durumunda siparişler onay gerektirecek. 0 = Limitsiz
+                </p>
+              </div>
+
               {/* Special Pricing Section */}
               <div className="space-y-3">
                 <Label>Özel Fiyatlandırma</Label>
