@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { toast } from 'sonner';
-import { Plus, FileText, Search, Loader2, CheckCircle, Eye, Download } from 'lucide-react';
+import { Plus, FileText, Search, Loader2, CheckCircle, Eye, Download, FileCode } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -118,6 +118,30 @@ const Invoices = () => {
       loadData();
     } catch (error) {
       toast.error('İşlem başarısız');
+    }
+  };
+
+  const handleDownloadXML = async (invoice) => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/invoices/${invoice.id}/xml`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('XML indirilemedi');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `efatura_${invoice.invoice_number}.xml`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('E-Fatura XML indirildi');
+    } catch (error) {
+      toast.error('XML indirme başarısız');
     }
   };
 
@@ -327,11 +351,12 @@ const Invoices = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleViewInvoice(invoice)}
+                            title="Görüntüle"
                             data-testid={`view-invoice-${invoice.id}`}
                           >
                             <Eye className="h-4 w-4" />
@@ -341,9 +366,20 @@ const Invoices = () => {
                             size="icon"
                             onClick={() => handleDownloadPDF(invoice)}
                             className="text-primary hover:text-primary"
+                            title="PDF İndir"
                             data-testid={`download-invoice-${invoice.id}`}
                           >
                             <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownloadXML(invoice)}
+                            className="text-blue-400 hover:text-blue-400"
+                            title="E-Fatura XML"
+                            data-testid={`xml-invoice-${invoice.id}`}
+                          >
+                            <FileCode className="h-4 w-4" />
                           </Button>
                           {invoice.status === 'unpaid' && (
                             <Button
@@ -351,6 +387,7 @@ const Invoices = () => {
                               size="icon"
                               onClick={() => handlePayInvoice(invoice.id)}
                               className="text-emerald-400 hover:text-emerald-400"
+                              title="Ödendi İşaretle"
                               data-testid={`pay-invoice-${invoice.id}`}
                             >
                               <CheckCircle className="h-4 w-4" />
