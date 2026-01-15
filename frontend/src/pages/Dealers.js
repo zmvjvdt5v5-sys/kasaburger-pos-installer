@@ -113,6 +113,7 @@ const Dealers = () => {
     try {
       const data = {
         ...formData,
+        credit_limit: formData.credit_limit ? parseFloat(formData.credit_limit) : 0,
         pricing: formData.pricing.map(p => ({
           ...p,
           special_price: parseFloat(p.special_price),
