@@ -179,6 +179,7 @@ const Dealers = () => {
       address: '',
       tax_number: '',
       password: '',
+      credit_limit: '',
       pricing: [],
     });
     setCurrentPricing({ product_id: '', product_name: '', special_price: '' });
