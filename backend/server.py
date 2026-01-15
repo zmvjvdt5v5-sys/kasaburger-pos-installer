@@ -40,6 +40,15 @@ JWT_EXPIRATION_HOURS = 24
 
 app = FastAPI(title="KasaBurger API")
 
+# Add CORS middleware first
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Root level health check for Kubernetes/deployment probes - MUST be before router
 @app.get("/health")
 async def root_health_check():
