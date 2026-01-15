@@ -1,0 +1,129 @@
+{
+  "identity": {
+    "name": "KasaBurger",
+    "archetype": "The Performance Pro (Industrial Edition)",
+    "vibe": "Precision, Hygiene, Heat, Efficiency",
+    "theme_mode": "dark"
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Chivo, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "import_url": "https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+    "usage": {
+      "h1": "font-heading font-black tracking-tight text-4xl md:text-5xl lg:text-6xl",
+      "h2": "font-heading font-bold tracking-tight text-3xl md:text-4xl",
+      "h3": "font-heading font-bold text-2xl",
+      "body": "font-sans text-base leading-relaxed text-muted-foreground",
+      "label": "font-mono text-xs uppercase tracking-widest text-muted-foreground/80",
+      "data": "font-mono text-sm font-medium text-foreground"
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "0 0% 3.9%",
+      "foreground": "0 0% 98%",
+      "card": "0 0% 7%",
+      "card_foreground": "0 0% 98%",
+      "popover": "0 0% 7%",
+      "popover_foreground": "0 0% 98%",
+      "primary": "24.6 95% 53.1%",
+      "primary_foreground": "0 0% 9%",
+      "secondary": "0 0% 14.9%",
+      "secondary_foreground": "0 0% 98%",
+      "muted": "0 0% 14.9%",
+      "muted_foreground": "0 0% 63.9%",
+      "accent": "24.6 95% 53.1%",
+      "accent_foreground": "0 0% 98%",
+      "destructive": "0 62.8% 30.6%",
+      "destructive_foreground": "0 0% 98%",
+      "border": "0 0% 14.9%",
+      "input": "0 0% 14.9%",
+      "ring": "24.6 95% 53.1%"
+    },
+    "semantic": {
+      "brand_primary": "#f97316",
+      "brand_secondary": "#27272a",
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#3b82f6"
+    }
+  },
+  "visual_enhancers": {
+    "radius": "0.3rem",
+    "glassmorphism": "bg-black/40 backdrop-blur-xl border-white/10",
+    "borders": "border border-white/10",
+    "shadows": {
+      "card": "shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+      "glow": "shadow-[0_0_20px_rgba(249,115,22,0.15)]"
+    },
+    "textures": {
+      "grid": "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
+      "noise": "opacity-20 mix-blend-soft-light"
+    }
+  },
+  "layout_strategy": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6",
+    "bento_cells": {
+      "hero": "col-span-1 md:col-span-8 lg:col-span-9 row-span-2",
+      "stat_card": "col-span-1 md:col-span-4 lg:col-span-3",
+      "list_vertical": "col-span-1 md:col-span-4 row-span-3",
+      "chart_wide": "col-span-1 md:col-span-8 lg:col-span-9 row-span-2"
+    },
+    "spacing": {
+      "container_padding": "p-4 md:p-8 lg:p-12",
+      "section_gap": "gap-8 md:gap-12"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 font-medium tracking-wide",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-white/5",
+      "ghost": "hover:bg-white/5 hover:text-white"
+    },
+    "cards": {
+      "base": "bg-card text-card-foreground border border-border/50 shadow-sm hover:border-primary/30 transition-colors duration-300",
+      "interactive": "cursor-pointer hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
+    },
+    "inputs": {
+      "base": "bg-input/50 border-input focus:border-primary focus:ring-primary/20 transition-all duration-200"
+    }
+  },
+  "image_assets": {
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Chef preparing burger patty",
+      "usage": "Full screen background for login/register pages with heavy dark overlay (bg-black/80)"
+    },
+    "dashboard_texture": {
+      "url": "https://images.unsplash.com/photo-1760001553414-5634201efc36?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Stainless steel kitchen texture",
+      "usage": "Subtle texture for header or hero section backgrounds (opacity-10)"
+    },
+    "production_hero": {
+      "url": "https://images.unsplash.com/photo-1721304812035-db2f773accd8?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Raw ingredients concept",
+      "usage": "Hero image for Production Module or Recipe Management"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. THEME SETUP: Update `src/index.css` with the CSS variables provided in `colors.palette`. Ensure `.dark` class is applied to the root or body by default.",
+    "2. FONT SETUP: Add the Google Fonts import to `src/index.css` or `public/index.html`. Update `tailwind.config.js` to include 'Chivo' for headings and 'Inter' for body.",
+    "3. LAYOUT: Use the 'Bento Grid' strategy for the Dashboard. Avoid equal-width columns. Create hierarchy with col-spans.",
+    "4. COMPONENTS: Customize Shadcn components. Remove default rounded-xl if present, enforce `rounded-md` or `rounded-sm` for the industrial look. Add `border-white/10` to all cards.",
+    "5. MOTION: Add `framer-motion` for page transitions and list entrance animations. Use `layout` prop for smooth grid resizing.",
+    "6. DATA-TESTID: Every interactive element (button, input, link) MUST have a `data-testid` attribute (e.g., `data-testid='login-submit'`).",
+    "7. LANGUAGE: The UI must be in TURKISH as per requirements. Use 'Giriş Yap', 'Stok', 'Üretim', 'Raporlar' etc.",
+    "8. NO GRADIENTS: Do not use gradient backgrounds for the main body. Use solid dark colors with subtle noise or grid textures."
+  ],
+  "universal_guidelines": [
+    "Do not use 'Inter' for Headings. Use 'Chivo'.",
+    "Do not use generic centered layouts. Use asymmetric grids.",
+    "Ensure all text has sufficient contrast (WCAG AA).",
+    "Use 'sonner' for toast notifications.",
+    "Use 'lucide-react' for icons."
+  ]
+}
