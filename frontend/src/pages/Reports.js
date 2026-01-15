@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { dashboardAPI, ordersAPI, invoicesAPI, transactionsAPI } from '../lib/api';
 import { formatCurrency } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Loader2, BarChart3, TrendingUp, TrendingDown, Package, Users, ShoppingCart, FileText } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Loader2, BarChart3, TrendingUp, TrendingDown, Package, Users, ShoppingCart, FileText, Download } from 'lucide-react';
+import { toast } from 'sonner';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 import {
   AreaChart,
   Area,
@@ -46,6 +50,30 @@ const Reports = () => {
       console.error('Reports load error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportExcel = async (reportType = 'all') => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/reports/excel?report_type=${reportType}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('Excel indirilemedi');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kasaburger_rapor_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Excel raporu indirildi');
+    } catch (error) {
+      toast.error('Excel indirme başarısız');
     }
   };
 
@@ -127,9 +155,19 @@ const Reports = () => {
   return (
     <div className="space-y-6 animate-fade-in" data-testid="reports-page">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-heading font-bold">Raporlar</h1>
-        <p className="text-muted-foreground">Detaylı iş analizleri ve grafikler</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-heading font-bold">Raporlar</h1>
+          <p className="text-muted-foreground">Detaylı iş analizleri ve grafikler</p>
+        </div>
+        <Button 
+          onClick={() => handleExportExcel('all')} 
+          className="bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+          data-testid="export-excel-btn"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Excel İndir
+        </Button>
       </div>
 
       {/* Summary Stats */}
