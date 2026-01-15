@@ -283,6 +283,54 @@ const Dealers = () => {
                 />
               </div>
 
+              {/* Password Section */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  Bayi Giriş Şifresi {!editingDealer && '*'}
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder={editingDealer ? "Değiştirmek için yeni şifre girin" : "Bayi için şifre belirleyin"}
+                    className="bg-input/50 pr-20"
+                    data-testid="dealer-password-input"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    {formData.password && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          navigator.clipboard.writeText(formData.password);
+                          toast.success('Şifre kopyalandı');
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {editingDealer 
+                    ? "Boş bırakırsanız mevcut şifre korunur" 
+                    : "Bu şifreyi bayiye iletmeniz gerekecek"}
+                </p>
+              </div>
+
               {/* Special Pricing Section */}
               <div className="space-y-3">
                 <Label>Özel Fiyatlandırma</Label>
