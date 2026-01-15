@@ -3,8 +3,12 @@ import { dashboardAPI, ordersAPI, invoicesAPI, transactionsAPI } from '../lib/ap
 import { formatCurrency } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Loader2, BarChart3, TrendingUp, TrendingDown, Package, Users, ShoppingCart, FileText, Download } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Loader2, BarChart3, TrendingUp, TrendingDown, Package, Users, ShoppingCart, FileText, Download, Calendar, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 import {
@@ -29,6 +33,11 @@ const Reports = () => {
   const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [dealerSales, setDealerSales] = useState([]);
+  const [productSales, setProductSales] = useState([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filterLoading, setFilterLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -36,6 +45,9 @@ const Reports = () => {
 
   const loadData = async () => {
     try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
       const [statsRes, ordersRes, invoicesRes, transactionsRes] = await Promise.all([
         dashboardAPI.getStats(),
         ordersAPI.getAll(),
@@ -46,6 +58,14 @@ const Reports = () => {
       setOrders(ordersRes.data);
       setInvoices(invoicesRes.data);
       setTransactions(transactionsRes.data);
+
+      // Load sales reports
+      const [dealerRes, productRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/reports/sales-by-dealer`, { headers }),
+        axios.get(`${BACKEND_URL}/api/reports/sales-by-product`, { headers }),
+      ]);
+      setDealerSales(dealerRes.data);
+      setProductSales(productRes.data);
     } catch (error) {
       console.error('Reports load error:', error);
     } finally {
@@ -53,9 +73,33 @@ const Reports = () => {
     }
   };
 
+  const handleFilterReports = async () => {
+    if (!startDate || !endDate) {
+      toast.error('Tarih aralığı seçin');
+      return;
+    }
+    setFilterLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [dealerRes, productRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/reports/sales-by-dealer?start_date=${startDate}&end_date=${endDate}`, { headers }),
+        axios.get(`${BACKEND_URL}/api/reports/sales-by-product?start_date=${startDate}&end_date=${endDate}`, { headers }),
+      ]);
+      setDealerSales(dealerRes.data);
+      setProductSales(productRes.data);
+      toast.success('Raporlar filtrelendi');
+    } catch (error) {
+      toast.error('Filtreleme başarısız');
+    } finally {
+      setFilterLoading(false);
+    }
+  };
+
   const handleExportExcel = async (reportType = 'all') => {
     try {
-      const token = localStorage.getItem('kasaburger_token');
+      const token = localStorage.getItem('token');
       const response = await fetch(`${BACKEND_URL}/api/reports/excel?report_type=${reportType}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
