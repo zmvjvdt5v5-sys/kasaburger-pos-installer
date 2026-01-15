@@ -196,3 +196,57 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - [ ] Push notifications
 - [ ] Barkod/QR kod entegrasyonu
 - [ ] Çoklu depo yönetimi
+
+---
+
+## Update: January 15, 2026 - Yeni Özellikler Eklendi
+
+### ✅ Eklenen Özellikler
+
+#### 1. 📦 Depo/Stok Yönetimi (Gelişmiş)
+- Depo lokasyonları yönetimi (`/api/warehouses`)
+- Düşük stok uyarıları Dashboard'da
+- Stok sayım modülü (`/api/stock-counts`)
+
+#### 2. 🧾 Bayi Şifre Yönetimi
+- Bayilerin kendi şifrelerini değiştirmesi (Bayi Portal'da anahtar ikonu)
+- Admin'in bayi şifresi sıfırlaması (`/api/dealers/{id}/reset-password`)
+
+#### 3. 📊 Gelişmiş Raporlar
+- Bayi bazlı satış raporu (`/api/reports/sales-by-dealer`)
+- Ürün bazlı satış raporu (`/api/reports/sales-by-product`)
+- Tarih aralıklı filtreleme
+
+#### 4. 🔔 Bildirimler
+- Düşük stok uyarısı
+- Bekleyen sipariş bildirimi
+- Vadesi geçmiş fatura uyarısı
+- Dashboard'da bildirim kartı
+
+#### 5. 📱 Bayi Portal Geliştirmeleri
+- Şifre değiştirme (anahtar ikonu)
+- Fatura PDF indirme
+- Sipariş durumu takibi
+
+#### 6. 🏭 Üretim Geliştirmeleri
+- Otomatik stok düşümü (`/api/production/{id}/complete`)
+- Üretim maliyeti hesaplama (`/api/production/{id}/cost`)
+
+#### 7. 📥 Excel Import/Export
+- Ürün Excel şablonu indirme (`/api/templates/products-excel`)
+- Ürün Excel import (`/api/import/products-excel`)
+- Hammadde Excel şablonu indirme (`/api/templates/materials-excel`)
+- Hammadde Excel import (`/api/import/materials-excel`)
+
+### Frontend Değişiklikleri
+- `Products.js` - Excel'den Aktar butonu ve dialog eklendi
+- `Materials.js` - Excel'den Aktar butonu ve dialog eklendi
+- `Dashboard.js` - Bildirimler kartı eklendi
+- `Reports.js` - Bayi/Ürün bazlı satış raporları ve tarih filtresi eklendi
+- `DealerPortal.js` - Şifre değiştirme ve PDF indirme eklendi
+
+### Test Edildi
+- ✅ Dashboard bildirimleri
+- ✅ Excel template indirme
+- ✅ Gelişmiş raporlar
+- ✅ Bayi portal PDF indirme
