@@ -1226,7 +1226,7 @@ try:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Excel okuma hatası: {str(e)}")
 
-    @api_router.post("/materials/import-excel")
+    @api_router.post("/import/materials-excel")
     async def import_materials_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
         if not openpyxl_available:
             raise HTTPException(status_code=503, detail="Excel import not available")
