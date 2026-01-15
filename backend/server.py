@@ -48,10 +48,21 @@ try:
     ROOT_DIR = Path(__file__).parent
     load_dotenv(ROOT_DIR / '.env')
 
-    # MongoDB connection
+    # MongoDB connection with proper settings for production
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     db_name = os.environ.get('DB_NAME', 'kasaburger_db')
-    client = AsyncIOMotorClient(mongo_url)
+    
+    # Connection settings optimized for cloud deployment
+    client = AsyncIOMotorClient(
+        mongo_url,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=10000,
+        socketTimeoutMS=20000,
+        maxPoolSize=10,
+        minPoolSize=1,
+        retryWrites=True,
+        retryReads=True
+    )
     db = client[db_name]
 
     # JWT Configuration
