@@ -38,8 +38,14 @@ import {
   Download,
   CreditCard,
   Receipt,
-  History
+  History,
+  Send,
+  Building,
+  Calendar,
+  Hash,
+  MessageSquare
 } from 'lucide-react';
+import { Textarea } from '../components/ui/textarea';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
