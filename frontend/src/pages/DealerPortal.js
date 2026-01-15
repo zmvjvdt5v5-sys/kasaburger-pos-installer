@@ -131,6 +131,56 @@ const DealerPortal = () => {
     navigate('/dealer-login');
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('Yeni şifreler eşleşmiyor');
+      return;
+    }
+    if (passwordData.newPassword.length < 4) {
+      toast.error('Şifre en az 4 karakter olmalı');
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/dealer-portal/change-password?old_password=${passwordData.oldPassword}&new_password=${passwordData.newPassword}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Şifre değiştirilemedi');
+      }
+      toast.success('Şifre başarıyla değiştirildi');
+      setPasswordDialogOpen(false);
+      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const downloadInvoicePdf = async (invoiceId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/dealer-portal/invoices/${invoiceId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('PDF indirilemedi');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `fatura_${invoiceId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Fatura indirildi');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   const addToCart = (product) => {
     const existing = cart.find(item => item.product_id === product.id);
     if (existing) {
