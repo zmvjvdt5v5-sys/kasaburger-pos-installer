@@ -248,6 +248,57 @@ const Materials = () => {
           <p className="text-muted-foreground">Stok ve hammadde yönetimi</p>
         </div>
         <div className="flex gap-2">
+          {/* Excel Import Dialog */}
+          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="border-primary/50 hover:bg-primary/10">
+                <Upload className="h-4 w-4 mr-2" />
+                Excel'den Aktar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border">
+              <DialogHeader>
+                <DialogTitle className="font-heading flex items-center gap-2">
+                  <FileSpreadsheet className="h-5 w-5 text-primary" />
+                  Excel'den Hammadde Aktar
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Excel dosyası ile toplu hammadde ekleyebilirsiniz. Önce şablonu indirin, doldurun ve yükleyin.
+                </p>
+                <Button variant="outline" onClick={downloadTemplate} className="w-full">
+                  <Download className="h-4 w-4 mr-2" />
+                  Şablonu İndir
+                </Button>
+                <div className="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleExcelImport}
+                    className="hidden"
+                    id="material-excel-upload"
+                    disabled={importing}
+                  />
+                  <label htmlFor="material-excel-upload" className="cursor-pointer">
+                    {importing ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <span className="text-sm">Yükleniyor...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="h-8 w-8 text-primary" />
+                        <span className="text-sm">Excel dosyası seçin veya sürükleyin</span>
+                        <span className="text-xs text-muted-foreground">.xlsx veya .xls</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={movementDialogOpen} onOpenChange={setMovementDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="border-primary/50 text-primary" data-testid="add-movement-btn">
