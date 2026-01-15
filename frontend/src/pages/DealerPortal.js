@@ -361,14 +361,18 @@ const DealerPortal = () => {
       <main className="container mx-auto px-4 py-6">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-card border border-border">
+          <TabsList className="grid w-full grid-cols-4 bg-card border border-border">
             <TabsTrigger value="order" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <ShoppingCart className="h-4 w-4 mr-2" />
               Sipariş Ver
             </TabsTrigger>
-            <TabsTrigger value="payments" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="make-payment" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <CreditCard className="h-4 w-4 mr-2" />
-              Ödemeler
+              Ödeme Yap
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <History className="h-4 w-4 mr-2" />
+              Ödemelerim
             </TabsTrigger>
             <TabsTrigger value="ekstre" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <Receipt className="h-4 w-4 mr-2" />
