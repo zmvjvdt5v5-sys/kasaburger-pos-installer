@@ -274,6 +274,53 @@ const Dashboard = () => {
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Notifications */}
+        <Card className="bg-card border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="font-heading flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              Bildirimler
+              {notifications.length > 0 && (
+                <Badge className="bg-primary text-white ml-2">{notifications.length}</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {notifications.length > 0 ? (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {notifications.slice(0, 10).map((notif, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-start gap-3 p-3 rounded-md border ${
+                      notif.severity === 'error' 
+                        ? 'bg-red-500/10 border-red-500/20' 
+                        : notif.severity === 'warning'
+                        ? 'bg-amber-500/10 border-amber-500/20'
+                        : 'bg-blue-500/10 border-blue-500/20'
+                    }`}
+                  >
+                    {notif.severity === 'error' ? (
+                      <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                    ) : notif.severity === 'warning' ? (
+                      <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
+                    )}
+                    <div>
+                      <p className="font-medium text-sm">{notif.title}</p>
+                      <p className="text-xs text-muted-foreground">{notif.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Bildirim yok - Her şey yolunda! ✓
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Low Stock Alerts */}
         <Card className="bg-card border-border/50">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -312,41 +359,41 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
-
-        {/* Recent Orders */}
-        <Card className="bg-card border-border/50">
-          <CardHeader>
-            <CardTitle className="font-heading">Son Siparişler</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats?.recent_orders?.length > 0 ? (
-              <div className="space-y-3">
-                {stats.recent_orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center justify-between p-3 rounded-md bg-white/5 border border-white/10 table-row-hover"
-                  >
-                    <div>
-                      <p className="font-mono text-sm">{order.order_number}</p>
-                      <p className="text-sm text-muted-foreground">{order.dealer_name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-mono">{formatCurrency(order.total)}</p>
-                      <Badge className={getStatusColor(order.status)}>
-                        {getStatusText(order.status)}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Henüz sipariş yok
-              </p>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Recent Orders */}
+      <Card className="bg-card border-border/50">
+        <CardHeader>
+          <CardTitle className="font-heading">Son Siparişler</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats?.recent_orders?.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {stats.recent_orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between p-3 rounded-md bg-white/5 border border-white/10 table-row-hover"
+                >
+                  <div>
+                    <p className="font-mono text-sm">{order.order_number}</p>
+                    <p className="text-sm text-muted-foreground">{order.dealer_name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono">{formatCurrency(order.total)}</p>
+                    <Badge className={getStatusColor(order.status)}>
+                      {getStatusText(order.status)}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-8">
+              Henüz sipariş yok
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
