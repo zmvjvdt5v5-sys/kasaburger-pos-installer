@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Smartphone, Download, Apple, X } from 'lucide-react';
+import { Smartphone, Download, Apple, X, Share2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ const PWAInstall = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -24,9 +25,10 @@ const PWAInstall = () => {
       || document.referrer.includes('android-app://');
     setIsStandalone(isInStandaloneMode);
 
-    // Check if iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(isIOSDevice);
+    // Check device type
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
+    setIsAndroid(/android/.test(userAgent));
 
     // Check if dismissed
     const wasDismissed = localStorage.getItem('pwa-install-dismissed');
@@ -54,7 +56,7 @@ const PWAInstall = () => {
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
       }
-    } else if (isIOS) {
+    } else {
       setShowInstallDialog(true);
     }
   };
@@ -66,11 +68,6 @@ const PWAInstall = () => {
 
   // Don't show if already installed or dismissed
   if (isStandalone || dismissed) {
-    return null;
-  }
-
-  // Don't show if no install option available
-  if (!deferredPrompt && !isIOS) {
     return null;
   }
 
@@ -102,7 +99,7 @@ const PWAInstall = () => {
               className="bg-primary hover:bg-primary/90"
             >
               <Download className="h-4 w-4 mr-2" />
-              {isIOS ? 'Nasıl Yüklenir?' : 'Uygulamayı İndir'}
+              Uygulamayı İndir
             </Button>
           </div>
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
@@ -116,38 +113,52 @@ const PWAInstall = () => {
         </CardContent>
       </Card>
 
-      {/* iOS Installation Instructions Dialog */}
+      {/* Installation Instructions Dialog */}
       <Dialog open={showInstallDialog} onOpenChange={setShowInstallDialog}>
-        <DialogContent className="bg-card border-border">
+        <DialogContent className="bg-card border-border max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading flex items-center gap-2">
-              <Apple className="h-5 w-5" />
-              iPhone'a Nasıl Yüklenir?
+              <Smartphone className="h-5 w-5 text-primary" />
+              Mobil Uygulamayı İndirin
             </DialogTitle>
           </DialogHeader>
+          
+          {/* iOS Instructions */}
           <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 rounded-md bg-background/50">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">1</div>
-              <div>
-                <p className="font-medium">Safari'de Paylaş butonuna tıklayın</p>
-                <p className="text-sm text-muted-foreground">Ekranın altındaki paylaş ikonuna (kare ve yukarı ok) dokunun</p>
+            <div className="p-3 rounded-md bg-background/50 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Apple className="h-5 w-5" />
+                <span className="font-medium">iPhone / iPad</span>
               </div>
+              <ol className="text-sm text-muted-foreground space-y-2 ml-7">
+                <li>1. Safari'de bu sayfayı açın</li>
+                <li>2. <Share2 className="h-3 w-3 inline" /> Paylaş butonuna dokunun</li>
+                <li>3. "Ana Ekrana Ekle" seçin</li>
+                <li>4. "Ekle" butonuna dokunun</li>
+              </ol>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-md bg-background/50">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">2</div>
-              <div>
-                <p className="font-medium">"Ana Ekrana Ekle" seçin</p>
-                <p className="text-sm text-muted-foreground">Menüyü aşağı kaydırın ve "Ana Ekrana Ekle" seçeneğini bulun</p>
+
+            <div className="p-3 rounded-md bg-background/50 border border-border">
+              <div className="flex items-center gap-2 mb-2">
+                <Smartphone className="h-5 w-5 text-emerald-500" />
+                <span className="font-medium">Android</span>
               </div>
+              <ol className="text-sm text-muted-foreground space-y-2 ml-7">
+                <li>1. Chrome'da bu sayfayı açın</li>
+                <li>2. Sağ üstteki ⋮ menüye dokunun</li>
+                <li>3. "Uygulamayı yükle" veya "Ana ekrana ekle" seçin</li>
+                <li>4. "Yükle" butonuna dokunun</li>
+              </ol>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-md bg-background/50">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">3</div>
-              <div>
-                <p className="font-medium">"Ekle" butonuna dokunun</p>
-                <p className="text-sm text-muted-foreground">KasaBurger uygulaması ana ekranınıza eklenecek!</p>
-              </div>
+
+            <div className="text-center p-3 bg-primary/10 rounded-md">
+              <p className="text-sm font-medium text-primary">Şu anki URL:</p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                {window.location.origin}
+              </p>
             </div>
           </div>
+
           <Button onClick={() => setShowInstallDialog(false)} className="w-full mt-4">
             Anladım
           </Button>
