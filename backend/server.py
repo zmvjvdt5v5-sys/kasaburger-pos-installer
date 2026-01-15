@@ -1373,7 +1373,8 @@ try:
         query = {}
         if start_date and end_date:
             query["created_at"] = {"$gte": start_date, "$lte": end_date}
-        orders = await db.orders.find(query, {"_id": 0}).to_list(10000)
+        # Sadece gerekli alanları al - performans optimizasyonu
+        orders = await db.orders.find(query, {"_id": 0, "dealer_id": 1, "dealer_name": 1, "total": 1}).to_list(10000)
         dealer_sales = {}
         for order in orders:
             dealer_id = order.get("dealer_id", "unknown")
@@ -1389,7 +1390,8 @@ try:
         query = {}
         if start_date and end_date:
             query["created_at"] = {"$gte": start_date, "$lte": end_date}
-        orders = await db.orders.find(query, {"_id": 0}).to_list(10000)
+        # Sadece gerekli alanları al - performans optimizasyonu
+        orders = await db.orders.find(query, {"_id": 0, "items": 1}).to_list(10000)
         product_sales = {}
         for order in orders:
             for item in order.get("items", []):
@@ -1408,9 +1410,10 @@ try:
             end_date = f"{year + 1}-01-01"
         else:
             end_date = f"{year}-{str(month + 1).zfill(2)}-01"
-        orders = await db.orders.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0}).to_list(10000)
-        invoices = await db.invoices.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0}).to_list(10000)
-        transactions = await db.transactions.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0}).to_list(10000)
+        # Sadece gerekli alanları al - performans optimizasyonu
+        orders = await db.orders.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0, "total": 1}).to_list(10000)
+        invoices = await db.invoices.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0, "total": 1, "status": 1}).to_list(10000)
+        transactions = await db.transactions.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0, "type": 1, "amount": 1}).to_list(10000)
         total_orders = len(orders)
         total_order_amount = sum(o.get("total", 0) for o in orders)
         total_invoiced = sum(i.get("total", 0) for i in invoices)
