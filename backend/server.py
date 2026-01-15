@@ -776,6 +776,225 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         "in_progress_production": in_progress_production
     }
 
+# ==================== DEALER PORTAL ROUTES ====================
+
+class DealerLogin(BaseModel):
+    dealer_code: str
+    password: str
+
+class DealerOrderCreate(BaseModel):
+    items: List[OrderItem]
+    delivery_date: str
+    notes: Optional[str] = ""
+
+@api_router.post("/dealer-portal/login")
+async def dealer_portal_login(credentials: DealerLogin):
+    dealer = await db.dealers.find_one({"code": credentials.dealer_code}, {"_id": 0})
+    if not dealer:
+        raise HTTPException(status_code=401, detail="Geçersiz bayi kodu")
+    
+    # Check if dealer has password set, if not use code as default
+    stored_password = dealer.get("password", dealer["code"])
+    if credentials.password != stored_password:
+        raise HTTPException(status_code=401, detail="Geçersiz şifre")
+    
+    # Create dealer token
+    payload = {
+        "sub": dealer["id"],
+        "dealer_code": dealer["code"],
+        "dealer_name": dealer["name"],
+        "type": "dealer",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "dealer": {
+            "id": dealer["id"],
+            "name": dealer["name"],
+            "code": dealer["code"],
+            "balance": dealer.get("balance", 0)
+        }
+    }
+
+async def get_current_dealer(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "dealer":
+            raise HTTPException(status_code=401, detail="Bayi yetkisi gerekli")
+        dealer = await db.dealers.find_one({"id": payload["sub"]}, {"_id": 0})
+        if not dealer:
+            raise HTTPException(status_code=401, detail="Bayi bulunamadı")
+        return dealer
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token süresi dolmuş")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Geçersiz token")
+
+@api_router.get("/dealer-portal/me")
+async def dealer_portal_me(dealer: dict = Depends(get_current_dealer)):
+    return {
+        "id": dealer["id"],
+        "name": dealer["name"],
+        "code": dealer["code"],
+        "contact_person": dealer.get("contact_person", ""),
+        "phone": dealer.get("phone", ""),
+        "email": dealer.get("email", ""),
+        "address": dealer.get("address", ""),
+        "balance": dealer.get("balance", 0),
+        "pricing": dealer.get("pricing", [])
+    }
+
+@api_router.get("/dealer-portal/products")
+async def dealer_portal_products(dealer: dict = Depends(get_current_dealer)):
+    products = await db.products.find({}, {"_id": 0}).to_list(1000)
+    dealer_pricing = {p["product_id"]: p["special_price"] for p in dealer.get("pricing", [])}
+    
+    result = []
+    for product in products:
+        price = dealer_pricing.get(product["id"], product["base_price"])
+        result.append({
+            **product,
+            "dealer_price": price
+        })
+    return result
+
+@api_router.get("/dealer-portal/orders")
+async def dealer_portal_orders(dealer: dict = Depends(get_current_dealer)):
+    orders = await db.orders.find({"dealer_id": dealer["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return orders
+
+@api_router.post("/dealer-portal/orders")
+async def dealer_portal_create_order(order: DealerOrderCreate, dealer: dict = Depends(get_current_dealer)):
+    order_id = str(uuid.uuid4())
+    order_number = await generate_order_number()
+    
+    subtotal = sum(item.total for item in order.items)
+    tax_amount = subtotal * 0.20
+    total = subtotal + tax_amount
+    
+    order_doc = {
+        "id": order_id,
+        "order_number": order_number,
+        "dealer_id": dealer["id"],
+        "dealer_name": dealer["name"],
+        "items": [item.model_dump() for item in order.items],
+        "subtotal": subtotal,
+        "tax_amount": tax_amount,
+        "total": total,
+        "delivery_date": order.delivery_date,
+        "notes": order.notes or "",
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "source": "dealer_portal"
+    }
+    await db.orders.insert_one(order_doc)
+    return OrderResponse(**{k: v for k, v in order_doc.items() if k != "_id"})
+
+@api_router.get("/dealer-portal/invoices")
+async def dealer_portal_invoices(dealer: dict = Depends(get_current_dealer)):
+    invoices = await db.invoices.find({"dealer_id": dealer["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return invoices
+
+# ==================== E-FATURA XML EXPORT ====================
+
+@api_router.get("/invoices/{invoice_id}/xml")
+async def get_invoice_xml(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+    
+    dealer = await db.dealers.find_one({"id": invoice["dealer_id"]}, {"_id": 0})
+    
+    # Generate UBL-TR 1.2 compatible e-Invoice XML
+    xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+    <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+    <cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+    <cbc:ProfileID>TICARIFATURA</cbc:ProfileID>
+    <cbc:ID>{invoice['invoice_number']}</cbc:ID>
+    <cbc:CopyIndicator>false</cbc:CopyIndicator>
+    <cbc:UUID>{invoice['id']}</cbc:UUID>
+    <cbc:IssueDate>{invoice['created_at'][:10]}</cbc:IssueDate>
+    <cbc:InvoiceTypeCode>SATIS</cbc:InvoiceTypeCode>
+    <cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>
+    
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            <cac:PartyName>
+                <cbc:Name>KASABURGER IMALATHANESI</cbc:Name>
+            </cac:PartyName>
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    
+    <cac:AccountingCustomerParty>
+        <cac:Party>
+            <cac:PartyIdentification>
+                <cbc:ID schemeID="VKN">{dealer.get('tax_number', '') if dealer else ''}</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>{invoice['dealer_name']}</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+                <cbc:StreetName>{dealer.get('address', '') if dealer else ''}</cbc:StreetName>
+            </cac:PostalAddress>
+        </cac:Party>
+    </cac:AccountingCustomerParty>
+    
+    <cac:PaymentTerms>
+        <cbc:PaymentDueDate>{invoice['due_date']}</cbc:PaymentDueDate>
+    </cac:PaymentTerms>
+    
+    <cac:TaxTotal>
+        <cbc:TaxAmount currencyID="TRY">{invoice['tax_amount']:.2f}</cbc:TaxAmount>
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="TRY">{invoice['subtotal']:.2f}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="TRY">{invoice['tax_amount']:.2f}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cbc:TaxExemptionReasonCode/>
+                <cac:TaxScheme>
+                    <cbc:Name>KDV</cbc:Name>
+                    <cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    
+    <cac:LegalMonetaryTotal>
+        <cbc:LineExtensionAmount currencyID="TRY">{invoice['subtotal']:.2f}</cbc:LineExtensionAmount>
+        <cbc:TaxExclusiveAmount currencyID="TRY">{invoice['subtotal']:.2f}</cbc:TaxExclusiveAmount>
+        <cbc:TaxInclusiveAmount currencyID="TRY">{invoice['total']:.2f}</cbc:TaxInclusiveAmount>
+        <cbc:PayableAmount currencyID="TRY">{invoice['total']:.2f}</cbc:PayableAmount>
+    </cac:LegalMonetaryTotal>
+    
+'''
+    
+    for idx, item in enumerate(invoice['items'], 1):
+        xml_content += f'''    <cac:InvoiceLine>
+        <cbc:ID>{idx}</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="KGM">{item['quantity']}</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="TRY">{item['total']:.2f}</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Name>{item['product_name']}</cbc:Name>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="TRY">{item['unit_price']:.2f}</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+'''
+    
+    xml_content += '</Invoice>'
+    
+    return StreamingResponse(
+        io.BytesIO(xml_content.encode('utf-8')),
+        media_type="application/xml",
+        headers={"Content-Disposition": f"attachment; filename=efatura_{invoice['invoice_number']}.xml"}
+    )
+
 # ==================== HEALTH CHECK ====================
 
 @api_router.get("/")
