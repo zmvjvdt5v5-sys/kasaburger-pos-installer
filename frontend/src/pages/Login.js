@@ -36,7 +36,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{
@@ -46,7 +45,6 @@ const Login = () => {
         <div className="absolute inset-0 bg-black/80" />
       </div>
 
-      {/* Content */}
       <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm border-white/10">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-24 h-24">
@@ -59,7 +57,7 @@ const Login = () => {
           <div>
             <CardTitle className="text-3xl font-heading font-bold">KasaBurger</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Kasa Burger Kasa Burger Sipariş Portalı
+              Sipariş Portalı
             </CardDescription>
           </div>
         </CardHeader>
