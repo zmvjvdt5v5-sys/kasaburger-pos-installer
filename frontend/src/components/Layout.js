@@ -61,7 +61,11 @@ export const Layout = ({ children }) => {
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
             <div className="flex items-center gap-2">
-              <ChefHat className="h-6 w-6 text-primary" />
+              <img 
+                src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
+                alt="KasaBurger"
+                className="h-8 w-8 object-contain"
+              />
               <span className="font-heading font-bold text-lg">KasaBurger</span>
             </div>
           </div>
@@ -78,8 +82,12 @@ export const Layout = ({ children }) => {
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-md bg-primary/20 flex items-center justify-center">
-                <ChefHat className="h-6 w-6 text-primary" />
+              <div className="w-12 h-12 flex-shrink-0">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
+                  alt="KasaBurger Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <h1 className="font-heading font-bold text-xl">KasaBurger</h1>

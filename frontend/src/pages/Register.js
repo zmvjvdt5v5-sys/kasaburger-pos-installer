@@ -59,8 +59,12 @@ const Register = () => {
       {/* Content */}
       <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm border-white/10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-lg bg-primary/20 flex items-center justify-center">
-            <ChefHat className="h-8 w-8 text-primary" />
+          <div className="mx-auto w-24 h-24">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
+              alt="KasaBurger Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <CardTitle className="text-3xl font-heading font-bold">Kayıt Ol</CardTitle>
