@@ -4,6 +4,7 @@ import { formatCurrency, getStatusColor, getStatusText } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
+import axios from 'axios';
 import {
   Package,
   Users,
@@ -13,7 +14,10 @@ import {
   TrendingDown,
   AlertTriangle,
   Factory,
-  FileText
+  FileText,
+  Bell,
+  AlertCircle,
+  Clock
 } from 'lucide-react';
 import {
   AreaChart,
@@ -27,6 +31,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const StatCard = ({ title, value, icon: Icon, trend, trendValue, color = 'primary' }) => (
   <Card className="stat-card bg-card border-border/50">
