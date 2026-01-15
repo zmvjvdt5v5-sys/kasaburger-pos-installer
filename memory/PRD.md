@@ -161,3 +161,38 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Admin Panel:** Ürün, hammadde, reçete, üretim, bayi, sipariş, fatura, muhasebe, raporlar
 - **Bayi Portal:** Ürün görme, sipariş verme, geçmiş siparişler/faturalar
 - **Export:** PDF fatura, Excel rapor, E-fatura XML
+
+---
+
+## Update: January 15, 2026 - Deployment Health Check Düzeltmesi
+
+### Çözülen Sorun
+- **Problem:** Production deployment sırasında `/health` endpoint'i 404 döndürüyordu
+- **Kök Neden:** Emergent platformunda `/api/*` prefix'i olmayan istekler frontend'e yönlendiriliyor, backend'e değil
+- **Çözüm:** 
+  1. Frontend'e `setupProxy.js` eklenerek `/health` istekleri backend'e proxy'lendi
+  2. Backend'in root (`/`) endpoint'i de health check formatında döndürülecek şekilde güncellendi
+
+### Teknik Değişiklikler
+- `/app/frontend/src/setupProxy.js` - Yeni dosya, `/health` → backend proxy
+- `/app/backend/server.py` - Root endpoint artık `{"status":"healthy",...}` döndürüyor
+
+### Health Check Testleri (Hepsi ✅)
+- `localhost:8001/health` → OK
+- `localhost:8001/` → OK  
+- `localhost:3000/health` → OK (proxy)
+- External `/health` → OK
+- External `/api/health` → OK
+
+### Test Credentials
+- **Admin:** admin@kasaburger.com / admin123
+- **Bayi:** Bayi kodu = ilk şifre
+
+### Sonraki Görevler (P1)
+- [ ] E-fatura GİB gerçek entegrasyonu (şu an sadece XML export)
+- [ ] Mobil uygulama
+
+### Gelecek Görevler (P2)
+- [ ] Push notifications
+- [ ] Barkod/QR kod entegrasyonu
+- [ ] Çoklu depo yönetimi
