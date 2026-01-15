@@ -934,6 +934,19 @@ try:
         await db.dealers.update_one({"id": dealer["id"]}, {"$set": {"password": new_password}})
         return {"message": "Şifre başarıyla değiştirildi"}
 
+    @api_router.get("/dealer-portal/payments")
+    async def dealer_portal_payments(dealer: dict = Depends(get_current_dealer)):
+        """Bayinin ödeme geçmişini getirir"""
+        payments = await db.payments.find({"dealer_id": dealer["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        # Fatura numaralarını da ekle
+        for payment in payments:
+            if payment.get("invoice_id"):
+                invoice = await db.invoices.find_one({"id": payment["invoice_id"]}, {"_id": 0, "invoice_number": 1})
+                payment["invoice_number"] = invoice.get("invoice_number", "-") if invoice else "-"
+            else:
+                payment["invoice_number"] = "-"
+        return payments
+
     # ==================== DEPO/STOK YÖNETİMİ ====================
 
     class WarehouseCreate(BaseModel):
