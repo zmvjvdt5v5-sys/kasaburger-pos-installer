@@ -45,8 +45,8 @@ db_name = os.environ.get('DB_NAME', 'kasaburger_db')
 client = AsyncIOMotorClient(mongo_url)
 db = client[db_name]
 
-# JWT Configuration
-JWT_SECRET = os.environ.get('JWT_SECRET', 'kasaburger_secret_key_2024')
+# JWT Configuration - must be set in environment
+JWT_SECRET = os.environ.get('JWT_SECRET', 'kasaburger_jwt_secret_production_2024_secure_key')
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
