@@ -263,13 +263,17 @@ try:
         dealer_name: str
         items: List[OrderItem]
         subtotal: float
-        tax_rate: float
+        tax_rate: float = 20.0
         tax_amount: float
         total: float
         due_date: str
         status: str
         created_at: str
         paid_at: Optional[str] = None
+        bizimhesap_guid: Optional[str] = None
+        bizimhesap_url: Optional[str] = None
+        bizimhesap_status: Optional[str] = None
+        bizimhesap_error: Optional[str] = None
 
     class TransactionCreate(BaseModel):
         type: str
