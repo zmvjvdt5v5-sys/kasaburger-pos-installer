@@ -171,12 +171,21 @@
             });
         </script>
         <script>
-            // Register Service Worker for PWA
+            // Register Service Worker for PWA with force update
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
+                    // First unregister any existing service workers to clear cache
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for(let registration of registrations) {
+                            registration.update();
+                        }
+                    });
+                    
                     navigator.serviceWorker.register('/service-worker.js')
                         .then(function(registration) {
                             console.log('ServiceWorker registered: ', registration.scope);
+                            // Force update check
+                            registration.update();
                         })
                         .catch(function(error) {
                             console.log('ServiceWorker registration failed: ', error);
