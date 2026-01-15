@@ -583,6 +583,158 @@ class KasaBurgerAPITester:
             except Exception as e:
                 self.log_result(f"Excel export ({report_type})", False, error_msg=str(e))
 
+    def test_xml_export(self):
+        """Test E-Fatura XML export"""
+        print("\n🔍 Testing E-Fatura XML Export...")
+        
+        if not self.created_ids['invoices']:
+            print("   Skipping XML export - no invoices created")
+            return
+
+        invoice_id = self.created_ids['invoices'][0]
+        
+        # Test XML export endpoint
+        url = f"{self.base_url}/api/invoices/{invoice_id}/xml"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                # Check if response is XML
+                content_type = response.headers.get('content-type', '')
+                is_xml = 'application/xml' in content_type or 'text/xml' in content_type
+                content_length = len(response.content)
+                
+                # Check if content starts with XML declaration
+                content_text = response.text
+                has_xml_declaration = content_text.startswith('<?xml')
+                has_invoice_tag = '<Invoice' in content_text
+                
+                self.log_result("E-Fatura XML export", success and is_xml and has_xml_declaration and has_invoice_tag, 
+                              {"content_type": content_type, "size_bytes": content_length, 
+                               "has_xml_declaration": has_xml_declaration, "has_invoice_tag": has_invoice_tag})
+                
+                if not is_xml:
+                    self.log_result("XML content type check", False, 
+                                  error_msg=f"Expected XML, got {content_type}")
+            else:
+                self.log_result("E-Fatura XML export", False, 
+                              error_msg=f"Status {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("E-Fatura XML export", False, error_msg=str(e))
+
+    def test_dealer_portal_endpoints(self):
+        """Test Dealer Portal specific endpoints"""
+        print("\n🔍 Testing Dealer Portal Endpoints...")
+        
+        # First create a dealer with code BY-001 as mentioned in context
+        dealer_data = {
+            "name": "Test Bayi BY-001",
+            "code": "BY-001",
+            "contact_person": "Test Kişi",
+            "phone": "0555 123 4567",
+            "email": "by001@test.com",
+            "address": "Test Adres",
+            "tax_number": "1234567890",
+            "pricing": []
+        }
+        
+        success, response = self.make_request('POST', 'dealers', dealer_data, expected_status=200)
+        self.log_result("Create BY-001 dealer for portal testing", success, response)
+        
+        dealer_id = None
+        if success and 'id' in response:
+            dealer_id = response['id']
+            self.created_ids['dealers'].append(dealer_id)
+
+        # Test dealer portal login
+        login_data = {
+            "dealer_code": "BY-001",
+            "password": "BY-001"  # Initially code=password as mentioned
+        }
+        
+        success, response = self.make_request('POST', 'dealer-portal/login', login_data, expected_status=200)
+        self.log_result("Dealer portal login", success, response)
+        
+        dealer_token = None
+        if success and 'access_token' in response:
+            dealer_token = response['access_token']
+            print(f"   Dealer token obtained: {dealer_token[:20]}...")
+
+        if not dealer_token:
+            print("   Skipping dealer portal tests - login failed")
+            return
+
+        # Test dealer portal endpoints with dealer token
+        dealer_headers = {'Authorization': f'Bearer {dealer_token}'}
+        
+        # Test get dealer info
+        url = f"{self.base_url}/api/dealer-portal/me"
+        try:
+            response = requests.get(url, headers=dealer_headers, timeout=30)
+            success = response.status_code == 200
+            self.log_result("Get dealer portal info", success, response.json() if success else None)
+        except Exception as e:
+            self.log_result("Get dealer portal info", False, error_msg=str(e))
+
+        # Test get dealer products with pricing
+        url = f"{self.base_url}/api/dealer-portal/products"
+        try:
+            response = requests.get(url, headers=dealer_headers, timeout=30)
+            success = response.status_code == 200
+            self.log_result("Get dealer portal products", success, response.json() if success else None)
+        except Exception as e:
+            self.log_result("Get dealer portal products", False, error_msg=str(e))
+
+        # Test get dealer orders
+        url = f"{self.base_url}/api/dealer-portal/orders"
+        try:
+            response = requests.get(url, headers=dealer_headers, timeout=30)
+            success = response.status_code == 200
+            self.log_result("Get dealer portal orders", success, response.json() if success else None)
+        except Exception as e:
+            self.log_result("Get dealer portal orders", False, error_msg=str(e))
+
+        # Test get dealer invoices
+        url = f"{self.base_url}/api/dealer-portal/invoices"
+        try:
+            response = requests.get(url, headers=dealer_headers, timeout=30)
+            success = response.status_code == 200
+            self.log_result("Get dealer portal invoices", success, response.json() if success else None)
+        except Exception as e:
+            self.log_result("Get dealer portal invoices", False, error_msg=str(e))
+
+        # Test create order through dealer portal
+        if self.created_ids['products']:
+            product_id = self.created_ids['products'][0]
+            order_data = {
+                "items": [
+                    {
+                        "product_id": product_id,
+                        "product_name": "Test Burger Köftesi",
+                        "quantity": 5.0,
+                        "unit_price": 150.00,
+                        "total": 750.00
+                    }
+                ],
+                "delivery_date": (datetime.now() + timedelta(days=3)).strftime('%Y-%m-%d'),
+                "notes": "Test dealer portal order"
+            }
+            
+            url = f"{self.base_url}/api/dealer-portal/orders"
+            try:
+                response = requests.post(url, json=order_data, headers=dealer_headers, timeout=30)
+                success = response.status_code == 200
+                self.log_result("Create dealer portal order", success, response.json() if success else None)
+                
+                if success and 'id' in response.json():
+                    self.created_ids['orders'].append(response.json()['id'])
+            except Exception as e:
+                self.log_result("Create dealer portal order", False, error_msg=str(e))
+
     def cleanup_test_data(self):
         """Clean up created test data"""
         print("\n🧹 Cleaning up test data...")
