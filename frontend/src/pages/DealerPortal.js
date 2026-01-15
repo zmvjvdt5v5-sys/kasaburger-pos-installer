@@ -269,9 +269,22 @@ const DealerPortal = () => {
         })
       });
 
-      if (!response.ok) throw new Error('Sipariş gönderilemedi');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || 'Sipariş gönderilemedi');
+      }
 
-      toast.success('Sipariş başarıyla oluşturuldu!');
+      // Kredi limiti aşımı kontrolü
+      if (data.status === 'pending_approval' || data.warning) {
+        toast.warning(data.warning || 'Siparişiniz onay bekliyor', {
+          duration: 6000,
+          description: `Sipariş No: ${data.order?.order_number || ''}`
+        });
+      } else {
+        toast.success('Sipariş başarıyla oluşturuldu!');
+      }
+      
       setCart([]);
       setDeliveryDate('');
       setNotes('');
