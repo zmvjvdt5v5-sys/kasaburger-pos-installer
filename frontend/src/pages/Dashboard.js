@@ -119,7 +119,7 @@ const Dashboard = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-heading font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">İmalathanesi genel durumu</p>
+        <p className="text-muted-foreground">Sipariş portalı genel durumu</p>
       </div>
 
       {/* Stats Grid */}
