@@ -717,7 +717,7 @@ try:
             
             # Bizim Hesap API formatına dönüştür
             now = datetime.now(timezone.utc)
-            due_date = now.replace(day=now.day + 30) if now.day <= 28 else now.replace(month=now.month + 1, day=min(now.day, 28))
+            due_date = now + timedelta(days=30)
             
             # Ürün detayları
             details = []
@@ -749,20 +749,20 @@ try:
                 "firmId": BIZIMHESAP_API_KEY,
                 "invoiceNo": invoice["invoice_number"],
                 "invoiceType": 3,  # 3 = Satış faturası
-                "note": f"Sipariş No: {order['order_number']}",
+                "note": f"Sipariş No: {order.get('order_number', '')}",
                 "dates": {
                     "invoiceDate": now.strftime("%Y-%m-%dT%H:%M:%S.000+03:00"),
                     "dueDate": due_date.strftime("%Y-%m-%dT%H:%M:%S.000+03:00"),
                     "deliveryDate": now.strftime("%Y-%m-%dT%H:%M:%S.000+03:00")
                 },
                 "customer": {
-                    "customerId": dealer.get("id", ""),
-                    "title": dealer.get("name", ""),
-                    "taxOffice": dealer.get("tax_office", ""),
-                    "taxNo": dealer.get("tax_number", ""),
-                    "email": dealer.get("email", ""),
-                    "phone": dealer.get("phone", ""),
-                    "address": dealer.get("address", "")
+                    "customerId": dealer.get("id", "") if dealer else "",
+                    "title": dealer.get("name", "") if dealer else invoice.get("dealer_name", ""),
+                    "taxOffice": dealer.get("tax_office", "") if dealer else "",
+                    "taxNo": dealer.get("tax_number", "") if dealer else "",
+                    "email": dealer.get("email", "") if dealer else "",
+                    "phone": dealer.get("phone", "") if dealer else "",
+                    "address": dealer.get("address", "") if dealer else ""
                 },
                 "amounts": {
                     "currency": "TL",
