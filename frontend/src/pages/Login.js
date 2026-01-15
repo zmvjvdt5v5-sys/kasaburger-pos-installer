@@ -59,7 +59,7 @@ const Login = () => {
           <div>
             <CardTitle className="text-3xl font-heading font-bold">KasaBurger</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Sipariş Portalı
+              Kasa Burger Sipariş Portalı
             </CardDescription>
           </div>
         </CardHeader>
