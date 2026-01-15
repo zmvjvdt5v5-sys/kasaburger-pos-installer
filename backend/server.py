@@ -892,6 +892,434 @@ try:
     async def dealer_portal_invoices(dealer: dict = Depends(get_current_dealer)):
         return await db.invoices.find({"dealer_id": dealer["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
 
+    @api_router.get("/dealer-portal/invoices/{invoice_id}/pdf")
+    async def dealer_portal_invoice_pdf(invoice_id: str, dealer: dict = Depends(get_current_dealer)):
+        if not reportlab_available:
+            raise HTTPException(status_code=503, detail="PDF export not available")
+        invoice = await db.invoices.find_one({"id": invoice_id, "dealer_id": dealer["id"]}, {"_id": 0})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
+        elements = []
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle('Title', parent=styles['Title'], fontSize=24, textColor=colors.HexColor('#f97316'))
+        elements.append(Paragraph("KASABURGER", title_style))
+        elements.append(Paragraph(f"<b>Fatura No:</b> {invoice['invoice_number']}", styles['Normal']))
+        elements.append(Paragraph(f"<b>Tarih:</b> {invoice['created_at'][:10]}", styles['Normal']))
+        elements.append(Spacer(1, 10*mm))
+        table_data = [['Urun', 'Miktar', 'Birim Fiyat', 'Toplam']]
+        for item in invoice['items']:
+            table_data.append([item['product_name'], str(item['quantity']), f"{item['unit_price']:.2f} TL", f"{item['total']:.2f} TL"])
+        table = Table(table_data, colWidths=[80*mm, 25*mm, 35*mm, 35*mm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f97316')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#333333')),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 5*mm))
+        elements.append(Paragraph(f"<b>GENEL TOPLAM:</b> {invoice['total']:.2f} TL", styles['Heading2']))
+        doc.build(elements)
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=fatura_{invoice['invoice_number']}.pdf"})
+
+    @api_router.put("/dealer-portal/change-password")
+    async def dealer_change_password(old_password: str, new_password: str, dealer: dict = Depends(get_current_dealer)):
+        db_dealer = await db.dealers.find_one({"id": dealer["id"]}, {"_id": 0})
+        stored_password = db_dealer.get("password", db_dealer["code"])
+        if old_password != stored_password:
+            raise HTTPException(status_code=400, detail="Mevcut şifre yanlış")
+        await db.dealers.update_one({"id": dealer["id"]}, {"$set": {"password": new_password}})
+        return {"message": "Şifre başarıyla değiştirildi"}
+
+    # ==================== DEPO/STOK YÖNETİMİ ====================
+
+    class WarehouseCreate(BaseModel):
+        name: str
+        code: str
+        address: Optional[str] = ""
+        is_active: bool = True
+
+    @api_router.post("/warehouses")
+    async def create_warehouse(warehouse: WarehouseCreate, current_user: dict = Depends(get_current_user)):
+        warehouse_id = str(uuid.uuid4())
+        warehouse_doc = {
+            "id": warehouse_id,
+            **warehouse.model_dump(),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.warehouses.insert_one(warehouse_doc)
+        return {k: v for k, v in warehouse_doc.items() if k != "_id"}
+
+    @api_router.get("/warehouses")
+    async def get_warehouses(current_user: dict = Depends(get_current_user)):
+        warehouses = await db.warehouses.find({}, {"_id": 0}).to_list(100)
+        return warehouses
+
+    @api_router.delete("/warehouses/{warehouse_id}")
+    async def delete_warehouse(warehouse_id: str, current_user: dict = Depends(get_current_user)):
+        result = await db.warehouses.delete_one({"id": warehouse_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Depo bulunamadı")
+        return {"message": "Depo silindi"}
+
+    class StockCountCreate(BaseModel):
+        material_id: str
+        material_name: str
+        counted_quantity: float
+        system_quantity: float
+        difference: float
+        notes: Optional[str] = ""
+
+    @api_router.post("/stock-counts")
+    async def create_stock_count(count: StockCountCreate, current_user: dict = Depends(get_current_user)):
+        count_id = str(uuid.uuid4())
+        count_doc = {
+            "id": count_id,
+            **count.model_dump(),
+            "counted_by": current_user["name"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.stock_counts.insert_one(count_doc)
+        if count.difference != 0:
+            adjustment_type = "in" if count.difference > 0 else "out"
+            await db.stock_movements.insert_one({
+                "id": str(uuid.uuid4()),
+                "material_id": count.material_id,
+                "material_name": count.material_name,
+                "type": adjustment_type,
+                "quantity": abs(count.difference),
+                "reason": f"Stok sayım düzeltmesi: {count.notes}",
+                "reference_id": count_id,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            await db.materials.update_one({"id": count.material_id}, {"$set": {"stock_quantity": count.counted_quantity}})
+        return {k: v for k, v in count_doc.items() if k != "_id"}
+
+    @api_router.get("/stock-counts")
+    async def get_stock_counts(current_user: dict = Depends(get_current_user)):
+        counts = await db.stock_counts.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return counts
+
+    @api_router.get("/low-stock-alerts")
+    async def get_low_stock_alerts(current_user: dict = Depends(get_current_user)):
+        alerts = await db.materials.find({"$expr": {"$lte": ["$stock_quantity", "$min_stock"]}}, {"_id": 0}).to_list(100)
+        return alerts
+
+    # ==================== BAYİ ŞİFRE YÖNETİMİ ====================
+
+    @api_router.put("/dealers/{dealer_id}/reset-password")
+    async def reset_dealer_password(dealer_id: str, new_password: str, current_user: dict = Depends(get_current_user)):
+        result = await db.dealers.update_one({"id": dealer_id}, {"$set": {"password": new_password}})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Bayi bulunamadı")
+        return {"message": "Bayi şifresi sıfırlandı"}
+
+    # ==================== GELİŞMİŞ RAPORLAR ====================
+
+    @api_router.get("/reports/sales-by-dealer")
+    async def sales_by_dealer_report(start_date: Optional[str] = None, end_date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+        query = {}
+        if start_date and end_date:
+            query["created_at"] = {"$gte": start_date, "$lte": end_date}
+        orders = await db.orders.find(query, {"_id": 0}).to_list(10000)
+        dealer_sales = {}
+        for order in orders:
+            dealer_id = order.get("dealer_id", "unknown")
+            dealer_name = order.get("dealer_name", "Bilinmeyen")
+            if dealer_id not in dealer_sales:
+                dealer_sales[dealer_id] = {"dealer_name": dealer_name, "total_orders": 0, "total_amount": 0}
+            dealer_sales[dealer_id]["total_orders"] += 1
+            dealer_sales[dealer_id]["total_amount"] += order.get("total", 0)
+        return list(dealer_sales.values())
+
+    @api_router.get("/reports/sales-by-product")
+    async def sales_by_product_report(start_date: Optional[str] = None, end_date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+        query = {}
+        if start_date and end_date:
+            query["created_at"] = {"$gte": start_date, "$lte": end_date}
+        orders = await db.orders.find(query, {"_id": 0}).to_list(10000)
+        product_sales = {}
+        for order in orders:
+            for item in order.get("items", []):
+                product_id = item.get("product_id", "unknown")
+                product_name = item.get("product_name", "Bilinmeyen")
+                if product_id not in product_sales:
+                    product_sales[product_id] = {"product_name": product_name, "total_quantity": 0, "total_amount": 0}
+                product_sales[product_id]["total_quantity"] += item.get("quantity", 0)
+                product_sales[product_id]["total_amount"] += item.get("total", 0)
+        return list(product_sales.values())
+
+    @api_router.get("/reports/monthly-summary")
+    async def monthly_summary_report(year: int, month: int, current_user: dict = Depends(get_current_user)):
+        start_date = f"{year}-{str(month).zfill(2)}-01"
+        if month == 12:
+            end_date = f"{year + 1}-01-01"
+        else:
+            end_date = f"{year}-{str(month + 1).zfill(2)}-01"
+        orders = await db.orders.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0}).to_list(10000)
+        invoices = await db.invoices.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0}).to_list(10000)
+        transactions = await db.transactions.find({"created_at": {"$gte": start_date, "$lt": end_date}}, {"_id": 0}).to_list(10000)
+        total_orders = len(orders)
+        total_order_amount = sum(o.get("total", 0) for o in orders)
+        total_invoiced = sum(i.get("total", 0) for i in invoices)
+        paid_invoices = sum(i.get("total", 0) for i in invoices if i.get("status") == "paid")
+        total_income = sum(t.get("amount", 0) for t in transactions if t.get("type") == "income")
+        total_expense = sum(t.get("amount", 0) for t in transactions if t.get("type") == "expense")
+        return {
+            "year": year,
+            "month": month,
+            "total_orders": total_orders,
+            "total_order_amount": total_order_amount,
+            "total_invoiced": total_invoiced,
+            "paid_invoices": paid_invoices,
+            "unpaid_invoices": total_invoiced - paid_invoices,
+            "total_income": total_income,
+            "total_expense": total_expense,
+            "net_profit": total_income - total_expense
+        }
+
+    # ==================== BİLDİRİMLER ====================
+
+    @api_router.get("/notifications")
+    async def get_notifications(current_user: dict = Depends(get_current_user)):
+        notifications = []
+        low_stock = await db.materials.find({"$expr": {"$lte": ["$stock_quantity", "$min_stock"]}}, {"_id": 0}).to_list(100)
+        for material in low_stock:
+            notifications.append({
+                "type": "low_stock",
+                "severity": "warning",
+                "title": "Düşük Stok Uyarısı",
+                "message": f"{material['name']} stoğu kritik seviyede ({material['stock_quantity']} {material['unit']})",
+                "material_id": material["id"]
+            })
+        unpaid_invoices = await db.invoices.find({"status": "unpaid"}, {"_id": 0}).to_list(100)
+        for invoice in unpaid_invoices:
+            due_date = invoice.get("due_date", "")
+            if due_date and due_date < datetime.now(timezone.utc).isoformat()[:10]:
+                notifications.append({
+                    "type": "overdue_invoice",
+                    "severity": "error",
+                    "title": "Vadesi Geçmiş Fatura",
+                    "message": f"{invoice['invoice_number']} numaralı fatura vadesi geçmiş ({invoice['dealer_name']})",
+                    "invoice_id": invoice["id"]
+                })
+        pending_orders = await db.orders.find({"status": "pending"}, {"_id": 0}).to_list(100)
+        for order in pending_orders:
+            notifications.append({
+                "type": "pending_order",
+                "severity": "info",
+                "title": "Bekleyen Sipariş",
+                "message": f"{order['order_number']} numaralı sipariş onay bekliyor ({order['dealer_name']})",
+                "order_id": order["id"]
+            })
+        return notifications
+
+    # ==================== ÜRETİM GELİŞTİRMELERİ ====================
+
+    @api_router.put("/production/{production_id}/complete")
+    async def complete_production(production_id: str, current_user: dict = Depends(get_current_user)):
+        production = await db.production.find_one({"id": production_id}, {"_id": 0})
+        if not production:
+            raise HTTPException(status_code=404, detail="Üretim emri bulunamadı")
+        recipe = await db.recipes.find_one({"id": production["recipe_id"]}, {"_id": 0})
+        if recipe:
+            multiplier = production["quantity"] / recipe.get("yield_quantity", 1)
+            for ingredient in recipe.get("ingredients", []):
+                required_qty = ingredient["quantity"] * multiplier
+                await db.materials.update_one(
+                    {"id": ingredient["material_id"]},
+                    {"$inc": {"stock_quantity": -required_qty}}
+                )
+                await db.stock_movements.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "material_id": ingredient["material_id"],
+                    "material_name": ingredient["material_name"],
+                    "type": "out",
+                    "quantity": required_qty,
+                    "reason": f"Üretim: {production['product_name']} ({production_id[:8]})",
+                    "reference_id": production_id,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+        await db.production.update_one({"id": production_id}, {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc).isoformat()}})
+        return {"message": "Üretim tamamlandı ve stoklar güncellendi"}
+
+    @api_router.get("/production/{production_id}/cost")
+    async def calculate_production_cost(production_id: str, current_user: dict = Depends(get_current_user)):
+        production = await db.production.find_one({"id": production_id}, {"_id": 0})
+        if not production:
+            raise HTTPException(status_code=404, detail="Üretim emri bulunamadı")
+        recipe = await db.recipes.find_one({"id": production["recipe_id"]}, {"_id": 0})
+        if not recipe:
+            return {"production_id": production_id, "total_cost": 0, "cost_breakdown": []}
+        multiplier = production["quantity"] / recipe.get("yield_quantity", 1)
+        cost_breakdown = []
+        total_cost = 0
+        for ingredient in recipe.get("ingredients", []):
+            material = await db.materials.find_one({"id": ingredient["material_id"]}, {"_id": 0})
+            unit_price = material.get("unit_price", 0) if material else 0
+            required_qty = ingredient["quantity"] * multiplier
+            cost = required_qty * unit_price
+            total_cost += cost
+            cost_breakdown.append({
+                "material_name": ingredient["material_name"],
+                "quantity": required_qty,
+                "unit_price": unit_price,
+                "cost": cost
+            })
+        return {
+            "production_id": production_id,
+            "product_name": production["product_name"],
+            "quantity": production["quantity"],
+            "total_cost": total_cost,
+            "unit_cost": total_cost / production["quantity"] if production["quantity"] > 0 else 0,
+            "cost_breakdown": cost_breakdown
+        }
+
+    # ==================== EXCEL İMPORT ====================
+
+    from fastapi import UploadFile, File
+
+    @api_router.post("/products/import-excel")
+    async def import_products_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+        if not openpyxl_available:
+            raise HTTPException(status_code=503, detail="Excel import not available")
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Sadece Excel dosyası (.xlsx) yükleyebilirsiniz")
+        try:
+            from openpyxl import load_workbook
+            contents = await file.read()
+            wb = load_workbook(io.BytesIO(contents))
+            ws = wb.active
+            imported = 0
+            errors = []
+            headers = [cell.value for cell in ws[1]]
+            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                if not row[0]:
+                    continue
+                try:
+                    product_data = {
+                        "id": str(uuid.uuid4()),
+                        "code": str(row[0]) if row[0] else f"P-{row_idx}",
+                        "name": str(row[1]) if len(row) > 1 and row[1] else f"Ürün {row_idx}",
+                        "unit": str(row[2]) if len(row) > 2 and row[2] else "kg",
+                        "base_price": float(row[3]) if len(row) > 3 and row[3] else 0,
+                        "description": str(row[4]) if len(row) > 4 and row[4] else "",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    existing = await db.products.find_one({"code": product_data["code"]})
+                    if existing:
+                        await db.products.update_one({"code": product_data["code"]}, {"$set": {
+                            "name": product_data["name"],
+                            "unit": product_data["unit"],
+                            "base_price": product_data["base_price"],
+                            "description": product_data["description"]
+                        }})
+                    else:
+                        await db.products.insert_one(product_data)
+                    imported += 1
+                except Exception as e:
+                    errors.append(f"Satır {row_idx}: {str(e)}")
+            return {"imported": imported, "errors": errors, "message": f"{imported} ürün başarıyla içe aktarıldı"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Excel okuma hatası: {str(e)}")
+
+    @api_router.post("/materials/import-excel")
+    async def import_materials_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+        if not openpyxl_available:
+            raise HTTPException(status_code=503, detail="Excel import not available")
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Sadece Excel dosyası (.xlsx) yükleyebilirsiniz")
+        try:
+            from openpyxl import load_workbook
+            contents = await file.read()
+            wb = load_workbook(io.BytesIO(contents))
+            ws = wb.active
+            imported = 0
+            errors = []
+            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                if not row[0]:
+                    continue
+                try:
+                    material_data = {
+                        "id": str(uuid.uuid4()),
+                        "code": str(row[0]) if row[0] else f"M-{row_idx}",
+                        "name": str(row[1]) if len(row) > 1 and row[1] else f"Hammadde {row_idx}",
+                        "unit": str(row[2]) if len(row) > 2 and row[2] else "kg",
+                        "stock_quantity": float(row[3]) if len(row) > 3 and row[3] else 0,
+                        "min_stock": float(row[4]) if len(row) > 4 and row[4] else 0,
+                        "unit_price": float(row[5]) if len(row) > 5 and row[5] else 0,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    existing = await db.materials.find_one({"code": material_data["code"]})
+                    if existing:
+                        await db.materials.update_one({"code": material_data["code"]}, {"$set": {
+                            "name": material_data["name"],
+                            "unit": material_data["unit"],
+                            "stock_quantity": material_data["stock_quantity"],
+                            "min_stock": material_data["min_stock"],
+                            "unit_price": material_data["unit_price"]
+                        }})
+                    else:
+                        await db.materials.insert_one(material_data)
+                    imported += 1
+                except Exception as e:
+                    errors.append(f"Satır {row_idx}: {str(e)}")
+            return {"imported": imported, "errors": errors, "message": f"{imported} hammadde başarıyla içe aktarıldı"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Excel okuma hatası: {str(e)}")
+
+    @api_router.get("/products/template-excel")
+    async def get_products_template(current_user: dict = Depends(get_current_user)):
+        if not openpyxl_available:
+            raise HTTPException(status_code=503, detail="Excel not available")
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Ürünler"
+        headers = ["Kod", "Ürün Adı", "Birim", "Fiyat (TL)", "Açıklama"]
+        header_fill = PatternFill(start_color="F97316", end_color="F97316", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+        ws.append(["BK-001", "Klasik Burger Köftesi", "kg", "150.00", "200gr porsiyon"])
+        ws.append(["BK-002", "Acılı Burger Köftesi", "kg", "160.00", "Acı biberli"])
+        for col in ws.columns:
+            max_length = max(len(str(cell.value or "")) for cell in col)
+            ws.column_dimensions[col[0].column_letter].width = max_length + 5
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=urun_sablonu.xlsx"})
+
+    @api_router.get("/materials/template-excel")
+    async def get_materials_template(current_user: dict = Depends(get_current_user)):
+        if not openpyxl_available:
+            raise HTTPException(status_code=503, detail="Excel not available")
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Hammaddeler"
+        headers = ["Kod", "Hammadde Adı", "Birim", "Stok Miktarı", "Min Stok", "Birim Fiyat (TL)"]
+        header_fill = PatternFill(start_color="F97316", end_color="F97316", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+        ws.append(["HM-001", "Dana Kıyma", "kg", "100", "20", "250.00"])
+        ws.append(["HM-002", "Soğan", "kg", "50", "10", "15.00"])
+        ws.append(["HM-003", "Tuz", "kg", "25", "5", "8.00"])
+        for col in ws.columns:
+            max_length = max(len(str(cell.value or "")) for cell in col)
+            ws.column_dimensions[col[0].column_letter].width = max_length + 5
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=hammadde_sablonu.xlsx"})
+
     # ==================== API ROOT ====================
 
     @api_router.get("/")
