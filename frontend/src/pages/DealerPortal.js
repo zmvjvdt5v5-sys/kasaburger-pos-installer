@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '../components/ui/dialog';
 import {
   Table,
@@ -32,7 +33,9 @@ import {
   Trash2, 
   Loader2,
   Store,
-  Wallet
+  Wallet,
+  Key,
+  Download
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
