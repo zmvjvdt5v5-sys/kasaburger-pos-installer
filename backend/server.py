@@ -12,9 +12,10 @@ app = FastAPI(title="KasaBurger API", version="1.0.3")
 def health_check():
     return {"status": "healthy", "version": "1.0.3", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# Root endpoint - also returns healthy status for proxy compatibility
 @app.get("/")
 def root():
-    return {"message": "KasaBurger API v1.0.3", "status": "active"}
+    return {"status": "healthy", "version": "1.0.3", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 # Now load the rest of the application
 try:
