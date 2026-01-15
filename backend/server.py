@@ -27,10 +27,11 @@ from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+# MongoDB connection with error handling
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'kasaburger_db')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[db_name]
 
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'kasaburger_secret_key_2024')
@@ -38,13 +39,18 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
 app = FastAPI(title="KasaBurger API")
-api_router = APIRouter(prefix="/api")
-security = HTTPBearer()
 
-# Root level health check for Kubernetes/deployment probes
+# Root level health check for Kubernetes/deployment probes - MUST be before router
 @app.get("/health")
 async def root_health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@app.get("/")
+async def root():
+    return {"message": "KasaBurger API v1.0", "status": "active"}
+
+api_router = APIRouter(prefix="/api")
+security = HTTPBearer()
 
 # ==================== MODELS ====================
 
