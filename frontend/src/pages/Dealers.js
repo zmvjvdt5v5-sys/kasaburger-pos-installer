@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Users, Search, Loader2, X, Phone, Mail, MapPin, Key, Eye, EyeOff, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Search, Loader2, X, Phone, Mail, MapPin, Key, Eye, EyeOff, Copy, CreditCard } from 'lucide-react';
 
 const Dealers = () => {
   const [dealers, setDealers] = useState([]);
@@ -48,6 +48,7 @@ const Dealers = () => {
     address: '',
     tax_number: '',
     password: '',
+    credit_limit: '',
     pricing: [],
   });
   const [currentPricing, setCurrentPricing] = useState({
