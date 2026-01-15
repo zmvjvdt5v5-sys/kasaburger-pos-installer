@@ -29,7 +29,9 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { toast } from 'sonner';
-import { Plus, FileText, Search, Loader2, CheckCircle, Eye } from 'lucide-react';
+import { Plus, FileText, Search, Loader2, CheckCircle, Eye, Download } from 'lucide-react';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -116,6 +118,30 @@ const Invoices = () => {
       loadData();
     } catch (error) {
       toast.error('İşlem başarısız');
+    }
+  };
+
+  const handleDownloadPDF = async (invoice) => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/invoices/${invoice.id}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (!response.ok) throw new Error('PDF indirilemedi');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fatura_${invoice.invoice_number}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('PDF indirildi');
+    } catch (error) {
+      toast.error('PDF indirme başarısız');
     }
   };
 
@@ -309,6 +335,15 @@ const Invoices = () => {
                             data-testid={`view-invoice-${invoice.id}`}
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownloadPDF(invoice)}
+                            className="text-primary hover:text-primary"
+                            data-testid={`download-invoice-${invoice.id}`}
+                          >
+                            <Download className="h-4 w-4" />
                           </Button>
                           {invoice.status === 'unpaid' && (
                             <Button
