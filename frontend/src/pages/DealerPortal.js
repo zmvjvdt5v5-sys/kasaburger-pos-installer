@@ -616,7 +616,151 @@ const DealerPortal = () => {
             </Card>
           </TabsContent>
 
-          {/* ÖDEMELER TAB */}
+          {/* ÖDEME YAP TAB */}
+          <TabsContent value="make-payment" className="space-y-6">
+            {/* Current Balance Card */}
+            <Card className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30">
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Güncel Borcunuz</p>
+                  <p className="text-4xl font-bold font-mono text-amber-400">
+                    {formatCurrency(totalDebt)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment Form */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Send className="h-5 w-5 text-primary" />
+                  Ödeme Bildirimi Gönder
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 max-w-md">
+                  {/* Amount */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      Ödeme Tutarı *
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={paymentForm.amount}
+                        onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                        placeholder="0.00"
+                        className="bg-input/50 pl-8"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₺</span>
+                    </div>
+                  </div>
+
+                  {/* Payment Method */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Ödeme Yöntemi
+                    </Label>
+                    <select
+                      value={paymentForm.payment_method}
+                      onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
+                      className="w-full h-10 px-3 rounded-md border border-border bg-input/50 text-foreground"
+                    >
+                      <option value="mail_order">Mail Order (Kredi Kartı)</option>
+                      <option value="bank_transfer">Havale/EFT</option>
+                      <option value="cash">Nakit</option>
+                    </select>
+                  </div>
+
+                  {/* Payment Date */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Ödeme Tarihi
+                    </Label>
+                    <Input
+                      type="date"
+                      value={paymentForm.payment_date}
+                      onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
+                      className="bg-input/50"
+                    />
+                  </div>
+
+                  {/* Reference Number */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Hash className="h-4 w-4" />
+                      Referans No (Dekont/İşlem No)
+                    </Label>
+                    <Input
+                      value={paymentForm.reference_no}
+                      onChange={(e) => setPaymentForm({...paymentForm, reference_no: e.target.value})}
+                      placeholder="Havale dekont numarası veya işlem referansı"
+                      className="bg-input/50"
+                    />
+                  </div>
+
+                  {/* Notes */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Açıklama
+                    </Label>
+                    <Textarea
+                      value={paymentForm.notes}
+                      onChange={(e) => setPaymentForm({...paymentForm, notes: e.target.value})}
+                      placeholder="Ödeme ile ilgili not..."
+                      className="bg-input/50"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button 
+                    className="w-full bg-primary mt-4" 
+                    onClick={handleSubmitPayment}
+                    disabled={submittingPayment || !paymentForm.amount}
+                  >
+                    {submittingPayment ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                    Ödeme Bildir
+                  </Button>
+
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Ödeme bildiriminiz admin tarafından onaylandıktan sonra bakiyenize yansıyacaktır.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bank Info Card */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Building className="h-5 w-5 text-primary" />
+                  Banka Hesap Bilgileri
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="p-3 rounded-md bg-background/50 border border-border/50">
+                    <p className="font-medium">KasaBurger Gıda Ltd. Şti.</p>
+                    <p className="text-muted-foreground">Ziraat Bankası - İstanbul Şubesi</p>
+                    <p className="font-mono mt-2">TR00 0000 0000 0000 0000 0000 00</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Havale/EFT yaparken açıklama kısmına bayi kodunuzu ({dealer?.code}) yazınız.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ÖDEMELERİM TAB */}
           <TabsContent value="payments" className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
