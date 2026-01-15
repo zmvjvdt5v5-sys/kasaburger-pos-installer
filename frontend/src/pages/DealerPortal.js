@@ -566,6 +566,7 @@ const DealerPortal = () => {
                           <TableHead>Vade</TableHead>
                           <TableHead>Toplam</TableHead>
                           <TableHead>Durum</TableHead>
+                          <TableHead className="text-right">İşlem</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -579,6 +580,16 @@ const DealerPortal = () => {
                               <Badge className={getStatusColor(invoice.status)}>
                                 {getStatusText(invoice.status)}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => downloadInvoicePdf(invoice.id)}
+                                title="PDF İndir"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
