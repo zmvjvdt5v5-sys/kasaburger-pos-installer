@@ -202,6 +202,7 @@ try:
         tax_number: Optional[str] = ""
         pricing: Optional[List[DealerPricing]] = []
         password: Optional[str] = None  # Admin tarafından belirlenen şifre
+        credit_limit: Optional[float] = 0  # Kredi limiti (0 = limitsiz)
 
     class DealerResponse(BaseModel):
         id: str
@@ -214,6 +215,7 @@ try:
         tax_number: str
         pricing: List[DealerPricing]
         balance: float
+        credit_limit: float = 0
         created_at: str
 
     class OrderItem(BaseModel):
