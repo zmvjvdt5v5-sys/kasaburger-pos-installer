@@ -1271,7 +1271,7 @@ try:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Excel okuma hatası: {str(e)}")
 
-    @api_router.get("/products/template-excel")
+    @api_router.get("/templates/products-excel")
     async def get_products_template(current_user: dict = Depends(get_current_user)):
         if not openpyxl_available:
             raise HTTPException(status_code=503, detail="Excel not available")
