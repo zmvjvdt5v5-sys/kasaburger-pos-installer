@@ -1323,7 +1323,7 @@ try:
     # ==================== COMPANY SETTINGS ====================
 
     class CompanySettings(BaseModel):
-        name: str = "KasaBurger İmalathanesi"
+        name: str = "KasaBurger"
         address: Optional[str] = ""
         phone: Optional[str] = ""
         email: Optional[str] = ""
