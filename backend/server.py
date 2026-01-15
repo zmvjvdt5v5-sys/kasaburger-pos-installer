@@ -196,6 +196,7 @@ try:
         address: str
         tax_number: Optional[str] = ""
         pricing: Optional[List[DealerPricing]] = []
+        password: Optional[str] = None  # Admin tarafından belirlenen şifre
 
     class DealerResponse(BaseModel):
         id: str
