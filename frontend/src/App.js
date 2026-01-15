@@ -15,6 +15,7 @@ import Production from './pages/Production';
 import Dealers from './pages/Dealers';
 import Orders from './pages/Orders';
 import Invoices from './pages/Invoices';
+import Payments from './pages/Payments';
 import Accounting from './pages/Accounting';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
