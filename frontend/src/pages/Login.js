@@ -117,6 +117,11 @@ const Login = () => {
               Kayıt Ol
             </Link>
           </div>
+          <div className="mt-2 text-center">
+            <Link to="/dealer-login" className="text-sm text-muted-foreground hover:text-primary" data-testid="dealer-portal-link">
+              Bayi girişi için tıklayın
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
