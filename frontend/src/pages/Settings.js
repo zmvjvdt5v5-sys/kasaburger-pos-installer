@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -6,10 +6,15 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
-import { Settings as SettingsIcon, User, Building, Shield, Bell, Palette } from 'lucide-react';
+import { Settings as SettingsIcon, User, Building, Shield, Bell, Palette, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Settings = () => {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [companySettings, setCompanySettings] = useState({
     name: 'KasaBurger İmalathanesi',
     address: '',
@@ -19,9 +24,37 @@ const Settings = () => {
     tax_office: '',
   });
 
-  const handleSaveCompany = () => {
-    // In a real app, this would save to backend
-    toast.success('Şirket bilgileri kaydedildi');
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/settings/company`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCompanySettings(response.data);
+    } catch (error) {
+      console.error('Settings load error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveCompany = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API_URL}/api/settings/company`, companySettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Şirket bilgileri kaydedildi');
+    } catch (error) {
+      toast.error('Kaydetme başarısız');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
