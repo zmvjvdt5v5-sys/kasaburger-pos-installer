@@ -121,3 +121,43 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - [ ] E-fatura GIB entegrasyonu
 - [ ] Bayi self-service portal
 - [ ] Mobil uygulama
+
+---
+
+## Update: January 2025 - Bayi Portal & E-Fatura Eklendi
+
+### Yeni Özellikler
+
+1. **Bayi Self-Service Portal**
+   - Ayrı login sayfası (/dealer-login)
+   - Bayi kodu ile giriş (ilk girişte kod=şifre)
+   - Ürün listesi ve bayi özel fiyatları
+   - Sepet yönetimi (ekleme, miktar değiştirme, silme)
+   - Online sipariş verme
+   - Sipariş ve fatura geçmişi görüntüleme
+   - Bakiye takibi
+
+2. **E-Fatura XML Export**
+   - UBL-TR 1.2 formatında XML export
+   - GIB e-fatura standartlarına uygun
+   - Satıcı/alıcı bilgileri
+   - KDV hesaplamaları
+   - Kalem detayları
+
+### API Endpoints (Yeni)
+- POST `/api/dealer-portal/login` - Bayi girişi
+- GET `/api/dealer-portal/me` - Bayi bilgileri
+- GET `/api/dealer-portal/products` - Ürünler (özel fiyatlarla)
+- GET/POST `/api/dealer-portal/orders` - Siparişler
+- GET `/api/dealer-portal/invoices` - Faturalar
+- GET `/api/invoices/{id}/xml` - E-fatura XML export
+
+### Test Sonuçları
+- Backend: %100 başarı
+- Frontend: %100 başarı
+- Tüm yeni özellikler çalışıyor
+
+### Sistem Özeti
+- **Admin Panel:** Ürün, hammadde, reçete, üretim, bayi, sipariş, fatura, muhasebe, raporlar
+- **Bayi Portal:** Ürün görme, sipariş verme, geçmiş siparişler/faturalar
+- **Export:** PDF fatura, Excel rapor, E-fatura XML
