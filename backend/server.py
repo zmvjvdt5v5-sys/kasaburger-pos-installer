@@ -635,7 +635,183 @@ try:
         result = await db.orders.update_one({"id": order_id}, {"$set": {"status": status}})
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        # Sipariş onaylandığında otomatik fatura oluştur ve Bizim Hesap'a gönder
+        if status == "confirmed":
+            order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+            if order:
+                try:
+                    # Fatura oluştur
+                    invoice_result = await create_invoice_from_order(order, current_user)
+                    
+                    # Bizim Hesap'a gönder
+                    bizimhesap_result = await send_to_bizimhesap(invoice_result, order)
+                    
+                    return {
+                        "message": "Sipariş onaylandı, fatura oluşturuldu",
+                        "invoice_id": invoice_result.get("id"),
+                        "invoice_number": invoice_result.get("invoice_number"),
+                        "bizimhesap_status": bizimhesap_result.get("status", "pending")
+                    }
+                except Exception as e:
+                    logging.error(f"Fatura oluşturma hatası: {str(e)}")
+                    return {"message": "Sipariş onaylandı, fatura oluşturulamadı", "error": str(e)}
+        
         return {"message": "Durum güncellendi"}
+
+    async def create_invoice_from_order(order: dict, current_user: dict):
+        """Siparişten otomatik fatura oluşturur"""
+        invoice_id = str(uuid.uuid4())
+        invoice_number = await generate_invoice_number()
+        
+        # Bayi bilgilerini al
+        dealer = await db.dealers.find_one({"id": order["dealer_id"]}, {"_id": 0})
+        
+        invoice_doc = {
+            "id": invoice_id,
+            "invoice_number": invoice_number,
+            "order_id": order["id"],
+            "order_number": order["order_number"],
+            "dealer_id": order["dealer_id"],
+            "dealer_name": order["dealer_name"],
+            "items": order["items"],
+            "subtotal": order["subtotal"],
+            "tax_amount": order["tax_amount"],
+            "total": order["total"],
+            "status": "unpaid",
+            "bizimhesap_guid": None,
+            "bizimhesap_url": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["name"],
+            "paid_at": None
+        }
+        
+        await db.invoices.insert_one(invoice_doc)
+        await db.dealers.update_one({"id": order["dealer_id"]}, {"$inc": {"balance": order["total"]}})
+        
+        return {k: v for k, v in invoice_doc.items() if k != "_id"}
+
+    async def send_to_bizimhesap(invoice: dict, order: dict):
+        """Faturayı Bizim Hesap'a gönderir"""
+        if not BIZIMHESAP_API_KEY:
+            return {"status": "skipped", "message": "API key not configured"}
+        
+        try:
+            # Bayi bilgilerini al
+            dealer = await db.dealers.find_one({"id": invoice["dealer_id"]}, {"_id": 0})
+            
+            # Şirket ayarlarını al
+            settings = await db.settings.find_one({}, {"_id": 0})
+            
+            # Bizim Hesap API formatına dönüştür
+            now = datetime.now(timezone.utc)
+            due_date = now.replace(day=now.day + 30) if now.day <= 28 else now.replace(month=now.month + 1, day=min(now.day, 28))
+            
+            # Ürün detayları
+            details = []
+            for item in invoice["items"]:
+                unit_price = item["unit_price"]
+                quantity = item["quantity"]
+                gross = unit_price * quantity
+                tax_rate = 20.0  # KDV oranı
+                net = gross
+                tax = net * (tax_rate / 100)
+                total = net + tax
+                
+                details.append({
+                    "productId": item.get("product_id", ""),
+                    "productName": item["product_name"],
+                    "note": "",
+                    "barcode": "",
+                    "taxRate": f"{tax_rate:.2f}",
+                    "quantity": quantity,
+                    "unitPrice": f"{unit_price:.2f}",
+                    "grossPrice": f"{gross:.2f}",
+                    "discount": "0.00",
+                    "net": f"{net:.2f}",
+                    "tax": f"{tax:.2f}",
+                    "total": f"{total:.2f}"
+                })
+            
+            payload = {
+                "firmId": BIZIMHESAP_API_KEY,
+                "invoiceNo": invoice["invoice_number"],
+                "invoiceType": 3,  # 3 = Satış faturası
+                "note": f"Sipariş No: {order['order_number']}",
+                "dates": {
+                    "invoiceDate": now.strftime("%Y-%m-%dT%H:%M:%S.000+03:00"),
+                    "dueDate": due_date.strftime("%Y-%m-%dT%H:%M:%S.000+03:00"),
+                    "deliveryDate": now.strftime("%Y-%m-%dT%H:%M:%S.000+03:00")
+                },
+                "customer": {
+                    "customerId": dealer.get("id", ""),
+                    "title": dealer.get("name", ""),
+                    "taxOffice": dealer.get("tax_office", ""),
+                    "taxNo": dealer.get("tax_number", ""),
+                    "email": dealer.get("email", ""),
+                    "phone": dealer.get("phone", ""),
+                    "address": dealer.get("address", "")
+                },
+                "amounts": {
+                    "currency": "TL",
+                    "gross": f"{invoice['subtotal']:.2f}",
+                    "discount": "0.00",
+                    "net": f"{invoice['subtotal']:.2f}",
+                    "tax": f"{invoice['tax_amount']:.2f}",
+                    "total": f"{invoice['total']:.2f}"
+                },
+                "details": details
+            }
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{BIZIMHESAP_API_URL}/addinvoice",
+                    json=payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                
+                result = response.json()
+                
+                if result.get("guid"):
+                    # Başarılı - faturayı güncelle
+                    await db.invoices.update_one(
+                        {"id": invoice["id"]},
+                        {"$set": {
+                            "bizimhesap_guid": result["guid"],
+                            "bizimhesap_url": result.get("url", ""),
+                            "bizimhesap_status": "sent"
+                        }}
+                    )
+                    return {"status": "success", "guid": result["guid"], "url": result.get("url", "")}
+                else:
+                    # Hata
+                    await db.invoices.update_one(
+                        {"id": invoice["id"]},
+                        {"$set": {"bizimhesap_status": "error", "bizimhesap_error": result.get("error", "Bilinmeyen hata")}}
+                    )
+                    return {"status": "error", "message": result.get("error", "Bilinmeyen hata")}
+                    
+        except Exception as e:
+            logging.error(f"Bizim Hesap API hatası: {str(e)}")
+            await db.invoices.update_one(
+                {"id": invoice["id"]},
+                {"$set": {"bizimhesap_status": "error", "bizimhesap_error": str(e)}}
+            )
+            return {"status": "error", "message": str(e)}
+
+    @api_router.post("/invoices/{invoice_id}/send-bizimhesap")
+    async def resend_to_bizimhesap(invoice_id: str, current_user: dict = Depends(get_current_user)):
+        """Faturayı tekrar Bizim Hesap'a gönderir"""
+        invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+        
+        order = await db.orders.find_one({"id": invoice.get("order_id")}, {"_id": 0})
+        if not order:
+            order = {"order_number": invoice.get("invoice_number", "")}
+        
+        result = await send_to_bizimhesap(invoice, order)
+        return result
 
     @api_router.delete("/orders/{order_id}")
     async def delete_order(order_id: str, current_user: dict = Depends(get_current_user)):
