@@ -1320,6 +1320,38 @@ try:
         buffer.seek(0)
         return StreamingResponse(buffer, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=hammadde_sablonu.xlsx"})
 
+    # ==================== COMPANY SETTINGS ====================
+
+    class CompanySettings(BaseModel):
+        name: str = "KasaBurger İmalathanesi"
+        address: Optional[str] = ""
+        phone: Optional[str] = ""
+        email: Optional[str] = ""
+        tax_number: Optional[str] = ""
+        tax_office: Optional[str] = ""
+
+    @api_router.get("/settings/company")
+    async def get_company_settings(current_user: dict = Depends(get_current_user)):
+        settings = await db.settings.find_one({"type": "company"}, {"_id": 0})
+        if not settings:
+            return CompanySettings().model_dump()
+        return settings
+
+    @api_router.put("/settings/company")
+    async def update_company_settings(settings: CompanySettings, current_user: dict = Depends(get_current_user)):
+        settings_doc = {
+            "type": "company",
+            **settings.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_user["name"]
+        }
+        await db.settings.update_one(
+            {"type": "company"},
+            {"$set": settings_doc},
+            upsert=True
+        )
+        return {"message": "Şirket bilgileri kaydedildi", "settings": settings_doc}
+
     # ==================== API ROOT ====================
 
     @api_router.get("/")
