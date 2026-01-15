@@ -18,6 +18,8 @@ import Invoices from './pages/Invoices';
 import Accounting from './pages/Accounting';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import DealerLogin from './pages/DealerLogin';
+import DealerPortal from './pages/DealerPortal';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -77,6 +79,10 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      
+      {/* Dealer Portal Routes */}
+      <Route path="/dealer-login" element={<DealerLogin />} />
+      <Route path="/dealer" element={<DealerPortal />} />
 
       {/* Protected Routes */}
       <Route
