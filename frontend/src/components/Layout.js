@@ -91,7 +91,7 @@ export const Layout = ({ children }) => {
               </div>
               <div>
                 <h1 className="font-heading font-bold text-xl">KasaBurger</h1>
-                <p className="text-xs text-muted-foreground">İmalathanesi</p>
+                <p className="text-xs text-muted-foreground">Sipariş Portalı</p>
               </div>
             </div>
           </div>
