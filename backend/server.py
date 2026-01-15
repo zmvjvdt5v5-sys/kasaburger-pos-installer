@@ -667,20 +667,28 @@ try:
         # Bayi bilgilerini al
         dealer = await db.dealers.find_one({"id": order["dealer_id"]}, {"_id": 0})
         
+        # Vade tarihi (30 gün sonra)
+        now = datetime.now(timezone.utc)
+        due_date = (now + timedelta(days=30)).strftime("%Y-%m-%d")
+        
         invoice_doc = {
             "id": invoice_id,
             "invoice_number": invoice_number,
             "order_id": order["id"],
-            "order_number": order["order_number"],
+            "order_number": order.get("order_number", ""),
             "dealer_id": order["dealer_id"],
             "dealer_name": order["dealer_name"],
             "items": order["items"],
             "subtotal": order["subtotal"],
+            "tax_rate": 20.0,
             "tax_amount": order["tax_amount"],
             "total": order["total"],
+            "due_date": due_date,
             "status": "unpaid",
             "bizimhesap_guid": None,
             "bizimhesap_url": None,
+            "bizimhesap_status": None,
+            "bizimhesap_error": None,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "created_by": current_user["name"],
             "paid_at": None
