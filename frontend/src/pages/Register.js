@@ -69,7 +69,7 @@ const Register = () => {
           <div>
             <CardTitle className="text-3xl font-heading font-bold">Kayıt Ol</CardTitle>
             <CardDescription className="text-muted-foreground">
-              KasaBurger Yönetim Sistemine hoş geldiniz
+              KasaBurger Sipariş Portalına hoş geldiniz
             </CardDescription>
           </div>
         </CardHeader>
