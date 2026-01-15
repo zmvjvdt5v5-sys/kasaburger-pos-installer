@@ -955,6 +955,84 @@ try:
             payment["invoice_number"] = invoice_map.get(payment.get("invoice_id"), "-")
         return payments
 
+    class DealerPaymentSubmit(BaseModel):
+        amount: float
+        payment_method: str = "mail_order"
+        payment_date: str
+        reference_no: Optional[str] = ""
+        notes: Optional[str] = ""
+
+    @api_router.post("/dealer-portal/submit-payment")
+    async def dealer_submit_payment(payment: DealerPaymentSubmit, dealer: dict = Depends(get_current_dealer)):
+        """Bayi ödeme bildirimi gönderir - Admin onayı bekler"""
+        payment_id = str(uuid.uuid4())
+        payment_doc = {
+            "id": payment_id,
+            "dealer_id": dealer["id"],
+            "dealer_name": dealer["name"],
+            "amount": payment.amount,
+            "payment_method": payment.payment_method,
+            "payment_date": payment.payment_date,
+            "reference_no": payment.reference_no,
+            "notes": payment.notes,
+            "status": "pending",  # Admin onayı bekliyor
+            "submitted_by": "dealer",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.payment_submissions.insert_one(payment_doc)
+        return {"message": "Ödeme bildiriminiz alındı", "payment_id": payment_id}
+
+    @api_router.get("/payment-submissions")
+    async def get_payment_submissions(current_user: dict = Depends(get_current_user)):
+        """Admin için bekleyen ödeme bildirimleri"""
+        submissions = await db.payment_submissions.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return submissions
+
+    @api_router.put("/payment-submissions/{submission_id}/approve")
+    async def approve_payment_submission(submission_id: str, current_user: dict = Depends(get_current_user)):
+        """Ödeme bildirimini onayla ve gerçek ödeme olarak kaydet"""
+        submission = await db.payment_submissions.find_one({"id": submission_id}, {"_id": 0})
+        if not submission:
+            raise HTTPException(status_code=404, detail="Ödeme bildirimi bulunamadı")
+        if submission["status"] != "pending":
+            raise HTTPException(status_code=400, detail="Bu bildirim zaten işlenmiş")
+        
+        # Gerçek ödeme kaydı oluştur
+        payment_id = str(uuid.uuid4())
+        payment_doc = {
+            "id": payment_id,
+            "dealer_id": submission["dealer_id"],
+            "dealer_name": submission["dealer_name"],
+            "amount": submission["amount"],
+            "payment_method": submission["payment_method"],
+            "payment_date": submission["payment_date"],
+            "reference_no": submission.get("reference_no", ""),
+            "notes": f"Bayi bildirimi: {submission.get('notes', '')}",
+            "invoice_id": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["name"]
+        }
+        await db.payments.insert_one(payment_doc)
+        
+        # Bayi bakiyesini güncelle
+        await db.dealers.update_one({"id": submission["dealer_id"]}, {"$inc": {"balance": -submission["amount"]}})
+        
+        # Bildirimi onayla
+        await db.payment_submissions.update_one({"id": submission_id}, {"$set": {"status": "approved", "approved_by": current_user["name"], "approved_at": datetime.now(timezone.utc).isoformat()}})
+        
+        return {"message": "Ödeme onaylandı", "payment_id": payment_id}
+
+    @api_router.put("/payment-submissions/{submission_id}/reject")
+    async def reject_payment_submission(submission_id: str, reason: str = "", current_user: dict = Depends(get_current_user)):
+        """Ödeme bildirimini reddet"""
+        result = await db.payment_submissions.update_one(
+            {"id": submission_id, "status": "pending"},
+            {"$set": {"status": "rejected", "rejected_by": current_user["name"], "rejection_reason": reason, "rejected_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Ödeme bildirimi bulunamadı veya zaten işlenmiş")
+        return {"message": "Ödeme reddedildi"}
+
     # ==================== DEPO/STOK YÖNETİMİ ====================
 
     class WarehouseCreate(BaseModel):
