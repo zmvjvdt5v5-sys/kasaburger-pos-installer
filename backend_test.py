@@ -512,6 +512,77 @@ class KasaBurgerAPITester:
         success, response = self.make_request('GET', 'dashboard/stats', expected_status=200)
         self.log_result("Get dashboard stats", success, response)
 
+    def test_pdf_export(self):
+        """Test PDF invoice export"""
+        print("\n🔍 Testing PDF Export...")
+        
+        if not self.created_ids['invoices']:
+            print("   Skipping PDF export - no invoices created")
+            return
+
+        invoice_id = self.created_ids['invoices'][0]
+        
+        # Test PDF export endpoint
+        url = f"{self.base_url}/api/invoices/{invoice_id}/pdf"
+        headers = {'Authorization': f'Bearer {self.token}'}
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            success = response.status_code == 200
+            
+            if success:
+                # Check if response is PDF
+                content_type = response.headers.get('content-type', '')
+                is_pdf = 'application/pdf' in content_type
+                content_length = len(response.content)
+                
+                self.log_result("PDF invoice export", success and is_pdf, 
+                              {"content_type": content_type, "size_bytes": content_length})
+                
+                if not is_pdf:
+                    self.log_result("PDF content type check", False, 
+                                  error_msg=f"Expected PDF, got {content_type}")
+            else:
+                self.log_result("PDF invoice export", False, 
+                              error_msg=f"Status {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("PDF invoice export", False, error_msg=str(e))
+
+    def test_excel_export(self):
+        """Test Excel report export"""
+        print("\n🔍 Testing Excel Export...")
+        
+        # Test Excel export endpoint with different report types
+        report_types = ['all', 'orders', 'invoices', 'transactions', 'stock']
+        
+        for report_type in report_types:
+            url = f"{self.base_url}/api/reports/excel?report_type={report_type}"
+            headers = {'Authorization': f'Bearer {self.token}'}
+            
+            try:
+                response = requests.get(url, headers=headers, timeout=30)
+                success = response.status_code == 200
+                
+                if success:
+                    # Check if response is Excel
+                    content_type = response.headers.get('content-type', '')
+                    is_excel = 'spreadsheetml' in content_type or 'excel' in content_type
+                    content_length = len(response.content)
+                    
+                    self.log_result(f"Excel export ({report_type})", success and is_excel,
+                                  {"content_type": content_type, "size_bytes": content_length})
+                    
+                    if not is_excel:
+                        self.log_result(f"Excel content type check ({report_type})", False,
+                                      error_msg=f"Expected Excel, got {content_type}")
+                else:
+                    self.log_result(f"Excel export ({report_type})", False,
+                                  error_msg=f"Status {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_result(f"Excel export ({report_type})", False, error_msg=str(e))
+
     def cleanup_test_data(self):
         """Clean up created test data"""
         print("\n🧹 Cleaning up test data...")
