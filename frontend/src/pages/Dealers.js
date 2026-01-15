@@ -101,6 +101,12 @@ const Dealers = () => {
       toast.error('Lütfen zorunlu alanları doldurun');
       return;
     }
+    
+    // Yeni bayi için şifre zorunlu
+    if (!editingDealer && !formData.password) {
+      toast.error('Yeni bayi için şifre belirlemelisiniz');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -117,7 +123,7 @@ const Dealers = () => {
         toast.success('Bayi güncellendi');
       } else {
         await dealersAPI.create(data);
-        toast.success('Bayi oluşturuldu');
+        toast.success(`Bayi oluşturuldu! Giriş bilgileri: Kod: ${formData.code}, Şifre: ${formData.password}`);
       }
 
       setDialogOpen(false);
