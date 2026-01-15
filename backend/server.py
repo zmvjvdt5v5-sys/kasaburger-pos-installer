@@ -50,7 +50,7 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'kasaburger_secret_key_2024')
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 
-app = FastAPI(title="KasaBurger API", version="1.0.1")
+app = FastAPI(title="KasaBurger API", version="1.0.2")
 
 # Add CORS middleware first
 app.add_middleware(
@@ -70,7 +70,7 @@ async def root_health_check():
 @app.get("/", tags=["Root"])
 async def root():
     """Root endpoint"""
-    return {"message": "KasaBurger API v1.0.1", "status": "active"}
+    return {"message": "KasaBurger API v1.0.2", "status": "active"}
 
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
