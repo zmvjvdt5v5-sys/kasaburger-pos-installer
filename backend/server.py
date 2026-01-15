@@ -786,6 +786,198 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# ==================== PDF & EXCEL EXPORT ROUTES ====================
+
+@api_router.get("/invoices/{invoice_id}/pdf")
+async def get_invoice_pdf(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+    
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
+    
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Title
+    title_style = ParagraphStyle('Title', parent=styles['Title'], fontSize=24, textColor=colors.HexColor('#f97316'))
+    elements.append(Paragraph("KASABURGER", title_style))
+    elements.append(Paragraph("Burger Koftesi Imalathanesi", styles['Normal']))
+    elements.append(Spacer(1, 10*mm))
+    
+    # Invoice Info
+    elements.append(Paragraph(f"<b>Fatura No:</b> {invoice['invoice_number']}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Tarih:</b> {invoice['created_at'][:10]}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Vade:</b> {invoice['due_date']}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Durum:</b> {'Odendi' if invoice['status'] == 'paid' else 'Odenmedi'}", styles['Normal']))
+    elements.append(Spacer(1, 5*mm))
+    
+    # Customer
+    elements.append(Paragraph(f"<b>Bayi:</b> {invoice['dealer_name']}", styles['Normal']))
+    elements.append(Spacer(1, 10*mm))
+    
+    # Items Table
+    table_data = [['Urun', 'Miktar', 'Birim Fiyat', 'Toplam']]
+    for item in invoice['items']:
+        table_data.append([
+            item['product_name'],
+            str(item['quantity']),
+            f"{item['unit_price']:.2f} TL",
+            f"{item['total']:.2f} TL"
+        ])
+    
+    table = Table(table_data, colWidths=[80*mm, 25*mm, 35*mm, 35*mm])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f97316')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#1a1a1a')),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#333333')),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 5*mm))
+    
+    # Totals
+    elements.append(Paragraph(f"<b>Ara Toplam:</b> {invoice['subtotal']:.2f} TL", styles['Normal']))
+    elements.append(Paragraph(f"<b>KDV (%{invoice['tax_rate']}):</b> {invoice['tax_amount']:.2f} TL", styles['Normal']))
+    elements.append(Paragraph(f"<b>GENEL TOPLAM:</b> {invoice['total']:.2f} TL", styles['Heading2']))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=fatura_{invoice['invoice_number']}.pdf"}
+    )
+
+@api_router.get("/reports/excel")
+async def export_reports_excel(report_type: str = "all", current_user: dict = Depends(get_current_user)):
+    wb = Workbook()
+    
+    # Style definitions
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="F97316", end_color="F97316", fill_type="solid")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    if report_type in ["all", "orders"]:
+        ws_orders = wb.active if report_type == "orders" else wb.create_sheet("Siparisler")
+        ws_orders.title = "Siparisler"
+        orders = await db.orders.find({}, {"_id": 0}).to_list(1000)
+        
+        headers = ["Siparis No", "Bayi", "Toplam", "Durum", "Teslimat Tarihi", "Olusturma Tarihi"]
+        ws_orders.append(headers)
+        for col in range(1, len(headers) + 1):
+            cell = ws_orders.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.border = thin_border
+        
+        for order in orders:
+            ws_orders.append([
+                order.get('order_number', ''),
+                order.get('dealer_name', ''),
+                order.get('total', 0),
+                order.get('status', ''),
+                order.get('delivery_date', ''),
+                order.get('created_at', '')[:10] if order.get('created_at') else ''
+            ])
+    
+    if report_type in ["all", "invoices"]:
+        ws_invoices = wb.create_sheet("Faturalar") if report_type == "all" else wb.active
+        if report_type != "all":
+            ws_invoices.title = "Faturalar"
+        invoices = await db.invoices.find({}, {"_id": 0}).to_list(1000)
+        
+        headers = ["Fatura No", "Bayi", "Ara Toplam", "KDV", "Toplam", "Durum", "Vade"]
+        ws_invoices.append(headers)
+        for col in range(1, len(headers) + 1):
+            cell = ws_invoices.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+        
+        for inv in invoices:
+            ws_invoices.append([
+                inv.get('invoice_number', ''),
+                inv.get('dealer_name', ''),
+                inv.get('subtotal', 0),
+                inv.get('tax_amount', 0),
+                inv.get('total', 0),
+                inv.get('status', ''),
+                inv.get('due_date', '')
+            ])
+    
+    if report_type in ["all", "transactions"]:
+        ws_trans = wb.create_sheet("Muhasebe") if report_type == "all" else wb.active
+        if report_type != "all":
+            ws_trans.title = "Muhasebe"
+        transactions = await db.transactions.find({}, {"_id": 0}).to_list(1000)
+        
+        headers = ["Tarih", "Tip", "Kategori", "Tutar", "Aciklama"]
+        ws_trans.append(headers)
+        for col in range(1, len(headers) + 1):
+            cell = ws_trans.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+        
+        for trans in transactions:
+            ws_trans.append([
+                trans.get('created_at', '')[:10] if trans.get('created_at') else '',
+                'Gelir' if trans.get('type') == 'income' else 'Gider',
+                trans.get('category', ''),
+                trans.get('amount', 0),
+                trans.get('description', '')
+            ])
+    
+    if report_type in ["all", "stock"]:
+        ws_stock = wb.create_sheet("Stok") if report_type == "all" else wb.active
+        if report_type != "all":
+            ws_stock.title = "Stok"
+        materials = await db.materials.find({}, {"_id": 0}).to_list(1000)
+        
+        headers = ["Kod", "Hammadde", "Stok", "Min Stok", "Birim", "Birim Fiyat"]
+        ws_stock.append(headers)
+        for col in range(1, len(headers) + 1):
+            cell = ws_stock.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+        
+        for mat in materials:
+            ws_stock.append([
+                mat.get('code', ''),
+                mat.get('name', ''),
+                mat.get('stock_quantity', 0),
+                mat.get('min_stock', 0),
+                mat.get('unit', ''),
+                mat.get('unit_price', 0)
+            ])
+    
+    # Remove default empty sheet if exists
+    if "Sheet" in wb.sheetnames and len(wb.sheetnames) > 1:
+        del wb["Sheet"]
+    
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=kasaburger_rapor_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
 # Include router and configure app
 app.include_router(api_router)
 
