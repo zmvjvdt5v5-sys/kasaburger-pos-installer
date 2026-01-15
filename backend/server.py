@@ -647,6 +647,24 @@ async def pay_invoice(invoice_id: str, current_user: dict = Depends(get_current_
     
     return {"message": "Fatura ödendi"}
 
+@api_router.delete("/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+    
+    # If unpaid, reverse the dealer balance
+    if invoice["status"] == "unpaid":
+        await db.dealers.update_one(
+            {"id": invoice["dealer_id"]},
+            {"$inc": {"balance": -invoice["total"]}}
+        )
+    
+    result = await db.invoices.delete_one({"id": invoice_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Fatura bulunamadı")
+    return {"message": "Fatura silindi"}
+
 # ==================== TRANSACTION ROUTES ====================
 
 @api_router.post("/transactions", response_model=TransactionResponse)
