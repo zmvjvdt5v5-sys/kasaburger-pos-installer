@@ -266,7 +266,7 @@ try:
         tax_rate: float = 20.0
         tax_amount: float
         total: float
-        due_date: str
+        due_date: Optional[str] = None
         status: str
         created_at: str
         paid_at: Optional[str] = None
