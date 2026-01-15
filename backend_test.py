@@ -791,6 +791,10 @@ class KasaBurgerAPITester:
             # New export features test
             self.test_pdf_export()
             self.test_excel_export()
+            self.test_xml_export()
+            
+            # Dealer portal tests
+            self.test_dealer_portal_endpoints()
             
             # Cleanup
             self.cleanup_test_data()
