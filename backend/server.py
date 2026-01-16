@@ -1743,6 +1743,124 @@ try:
         )
         return {"message": "Şirket bilgileri kaydedildi", "settings": settings_doc}
 
+    # Bildirim Ayarları (NetGSM & SMTP)
+    class NotificationSettings(BaseModel):
+        netgsm_usercode: Optional[str] = ""
+        netgsm_password: Optional[str] = ""
+        netgsm_header: Optional[str] = ""
+        smtp_host: Optional[str] = ""
+        smtp_port: Optional[int] = 587
+        smtp_user: Optional[str] = ""
+        smtp_password: Optional[str] = ""
+        smtp_from: Optional[str] = ""
+
+    @api_router.get("/settings/notifications")
+    async def get_notification_settings(current_user: dict = Depends(get_current_user)):
+        settings = await db.settings.find_one({"type": "notifications"}, {"_id": 0})
+        if not settings:
+            return {
+                "netgsm_usercode": "",
+                "netgsm_password": "",
+                "netgsm_header": "",
+                "smtp_host": "",
+                "smtp_port": 587,
+                "smtp_user": "",
+                "smtp_password": "",
+                "smtp_from": ""
+            }
+        # Şifreleri maskele
+        if settings.get("netgsm_password"):
+            settings["netgsm_password"] = "********"
+        if settings.get("smtp_password"):
+            settings["smtp_password"] = "********"
+        return settings
+
+    @api_router.put("/settings/notifications")
+    async def update_notification_settings(settings: NotificationSettings, current_user: dict = Depends(get_current_user)):
+        # Mevcut ayarları al
+        existing = await db.settings.find_one({"type": "notifications"}, {"_id": 0})
+        
+        settings_doc = {
+            "type": "notifications",
+            **settings.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Şifre ******** ise eski şifreyi koru
+        if settings.netgsm_password == "********" and existing:
+            settings_doc["netgsm_password"] = existing.get("netgsm_password", "")
+        if settings.smtp_password == "********" and existing:
+            settings_doc["smtp_password"] = existing.get("smtp_password", "")
+        
+        await db.settings.update_one(
+            {"type": "notifications"},
+            {"$set": settings_doc},
+            upsert=True
+        )
+        return {"message": "Bildirim ayarları kaydedildi"}
+
+    @api_router.post("/settings/test-sms")
+    async def test_sms_settings(phone: str, current_user: dict = Depends(get_current_user)):
+        """SMS ayarlarını test et"""
+        settings = await db.settings.find_one({"type": "notifications"}, {"_id": 0})
+        if not settings or not settings.get("netgsm_usercode"):
+            raise HTTPException(status_code=400, detail="NetGSM ayarları yapılmamış")
+        
+        # Test SMS gönder
+        phone = phone.replace(" ", "").replace("-", "")
+        if phone.startswith("0"):
+            phone = "90" + phone[1:]
+        elif not phone.startswith("90"):
+            phone = "90" + phone
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    "https://api.netgsm.com.tr/sms/send/get",
+                    params={
+                        "usercode": settings["netgsm_usercode"],
+                        "password": settings["netgsm_password"],
+                        "gsmno": phone,
+                        "message": "KasaBurger SMS test mesajı. Bu mesajı aldıysanız ayarlarınız doğru çalışıyor.",
+                        "msgheader": settings["netgsm_header"],
+                        "dil": "TR"
+                    }
+                )
+                result = response.text.strip()
+                if result.startswith("00") or result.startswith("01") or result.startswith("02"):
+                    return {"status": "success", "message": "Test SMS gönderildi"}
+                else:
+                    return {"status": "error", "message": f"NetGSM hatası: {result}"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"SMS gönderim hatası: {str(e)}")
+
+    @api_router.post("/settings/test-email")
+    async def test_email_settings(email: str, current_user: dict = Depends(get_current_user)):
+        """Email ayarlarını test et"""
+        import smtplib
+        from email.mime.text import MIMEText
+        
+        settings = await db.settings.find_one({"type": "notifications"}, {"_id": 0})
+        if not settings or not settings.get("smtp_host"):
+            raise HTTPException(status_code=400, detail="SMTP ayarları yapılmamış")
+        
+        try:
+            server = smtplib.SMTP(settings["smtp_host"], int(settings.get("smtp_port", 587)))
+            server.starttls()
+            server.login(settings["smtp_user"], settings["smtp_password"])
+            
+            msg = MIMEText("Bu bir test mesajıdır. Email ayarlarınız doğru çalışıyor.", "plain", "utf-8")
+            msg["Subject"] = "KasaBurger - Email Test"
+            msg["From"] = settings["smtp_from"]
+            msg["To"] = email
+            
+            server.sendmail(settings["smtp_from"], email, msg.as_string())
+            server.quit()
+            
+            return {"status": "success", "message": "Test email gönderildi"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Email gönderim hatası: {str(e)}")
+
     # ==================== ÖDEME (PAYMENTS) MODÜLÜ ====================
 
     class PaymentCreate(BaseModel):
