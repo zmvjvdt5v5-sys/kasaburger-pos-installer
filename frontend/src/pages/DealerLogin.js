@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -13,7 +12,6 @@ const DealerLogin = () => {
   const [dealerCode, setDealerCode] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,15 +25,13 @@ const DealerLogin = () => {
       const response = await fetch(`${BACKEND_URL}/api/dealer-portal/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dealer_code: dealerCode, password }),
+        body: JSON.stringify({ dealer_code: dealerCode, password })
       });
 
-      // Safely parse JSON response
       let data;
       try {
         data = await response.json();
       } catch (jsonError) {
-        console.error('JSON parse error:', jsonError);
         throw new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
       }
       
@@ -46,10 +42,9 @@ const DealerLogin = () => {
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
       toast.success('Giriş başarılı!');
-      // Full page reload to ensure state is properly set
       setTimeout(() => {
-        window.location.replace('/dealer');
-      }, 500);
+        window.location.href = '/dealer';
+      }, 300);
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.message || 'Giriş başarısız');
@@ -62,9 +57,7 @@ const DealerLogin = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')`,
-        }}
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')` }}
       >
         <div className="absolute inset-0 bg-black/80" />
       </div>
@@ -80,9 +73,7 @@ const DealerLogin = () => {
           </div>
           <div>
             <CardTitle className="text-3xl font-heading font-bold">Bayi Portalı</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Sipariş vermek için giriş yapın
-            </CardDescription>
+            <CardDescription>Sipariş vermek için giriş yapın</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
