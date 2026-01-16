@@ -19,6 +19,7 @@ import Payments from './pages/Payments';
 import Accounting from './pages/Accounting';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Campaigns from './pages/Campaigns';
 import DealerLogin from './pages/DealerLogin';
 import DealerPortal from './pages/DealerPortal';
 
@@ -179,6 +180,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/campaigns"
+        element={
+          <ProtectedRoute>
+            <Campaigns />
           </ProtectedRoute>
         }
       />
