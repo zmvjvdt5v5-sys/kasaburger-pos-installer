@@ -102,12 +102,10 @@ const Login = () => {
         localStorage.setItem('kasaburger_token', data.access_token);
         localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
         toast.success('Giriş başarılı!');
-        // Use navigate for better SPA experience, fallback to location
-        try {
-          navigate('/dashboard');
-        } catch (navErr) {
-          window.location.href = '/dashboard';
-        }
+        // Full page reload to ensure AuthContext picks up the new token
+        setTimeout(() => {
+          window.location.replace('/dashboard');
+        }, 500);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -146,12 +144,10 @@ const Login = () => {
       localStorage.setItem('kasaburger_token', data.access_token);
       localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
       toast.success('Giriş başarılı!');
-      // Use navigate for better SPA experience
-      try {
-        navigate('/dashboard');
-      } catch (navErr) {
-        window.location.href = '/dashboard';
-      }
+      // Full page reload to ensure AuthContext picks up the new token
+      setTimeout(() => {
+        window.location.replace('/dashboard');
+      }, 500);
     } catch (error) {
       toast.error(error.message || '2FA doğrulaması başarısız');
     } finally {
