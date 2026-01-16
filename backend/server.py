@@ -612,8 +612,24 @@ try:
             raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
         return {"message": "Kullanıcı silindi"}
 
-    @api_router.post("/auth/login", response_model=TokenResponse)
-    async def login(credentials: UserLogin, request: Request):
+    # ==================== CAPTCHA ENDPOINTS ====================
+    
+    @api_router.get("/auth/captcha")
+    async def get_captcha():
+        """Yeni captcha al"""
+        captcha = generate_captcha()
+        captcha_storage[captcha["id"]] = {
+            "answer": captcha["answer"],
+            "created_at": time.time()
+        }
+        # 5 dakika sonra expire olacak captcha'ları temizle
+        expired = [k for k, v in captcha_storage.items() if time.time() - v["created_at"] > 300]
+        for k in expired:
+            del captcha_storage[k]
+        return {"captcha_id": captcha["id"], "question": captcha["question"]}
+
+    @api_router.post("/auth/login")
+    async def login(credentials: UserLogin, request: Request, captcha_id: Optional[str] = None):
         client_ip = request.client.host if request.client else "unknown"
         current_time = time.time()
         
@@ -635,25 +651,69 @@ try:
             if current_time - t < LOGIN_BLOCK_DURATION
         ]
         
+        # Captcha kontrolü - 2 veya daha fazla başarısız deneme varsa zorunlu
+        if len(failed_login_attempts[client_ip]) >= 2:
+            if not captcha_id or not credentials.captcha_answer:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Captcha doğrulaması gerekli",
+                    headers={"X-Captcha-Required": "true"}
+                )
+            
+            if captcha_id not in captcha_storage:
+                raise HTTPException(status_code=400, detail="Geçersiz veya süresi dolmuş captcha")
+            
+            if captcha_storage[captcha_id]["answer"] != credentials.captcha_answer:
+                raise HTTPException(status_code=400, detail="Yanlış captcha yanıtı")
+            
+            # Kullanılmış captcha'yı sil
+            del captcha_storage[captcha_id]
+        
         user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
         if not user or not verify_password(credentials.password, user["password"]):
             # Record failed attempt
             failed_login_attempts[client_ip].append(current_time)
             
+            # Log failed attempt
+            log_audit("LOGIN_FAILED", "unknown", credentials.email, client_ip, "Invalid credentials")
+            
             # Block IP if too many failed attempts
             if len(failed_login_attempts[client_ip]) >= LOGIN_ATTEMPT_LIMIT:
                 blocked_ips[client_ip] = current_time + LOGIN_BLOCK_DURATION
                 logging.warning(f"IP blocked due to failed login attempts: {client_ip}")
+                log_audit("IP_BLOCKED", "unknown", credentials.email, client_ip, "Too many failed attempts")
                 raise HTTPException(
                     status_code=429, 
                     detail=f"Çok fazla başarısız giriş denemesi. {LOGIN_BLOCK_DURATION // 60} dakika engellendi."
                 )
             
             remaining_attempts = LOGIN_ATTEMPT_LIMIT - len(failed_login_attempts[client_ip])
+            captcha_required = len(failed_login_attempts[client_ip]) >= 2
             raise HTTPException(
                 status_code=401, 
-                detail=f"Geçersiz email veya şifre. Kalan deneme: {remaining_attempts}"
+                detail=f"Geçersiz email veya şifre. Kalan deneme: {remaining_attempts}",
+                headers={"X-Captcha-Required": str(captcha_required).lower()}
             )
+        
+        # Check if 2FA is enabled for this user
+        if user.get("two_factor_enabled", False):
+            # Generate and store 2FA code
+            code = generate_2fa_code()
+            two_factor_codes[user["email"]] = {
+                "code": code,
+                "created_at": time.time(),
+                "user_id": user["id"]
+            }
+            
+            # Log 2FA code generation
+            log_audit("2FA_CODE_GENERATED", user["id"], user["email"], client_ip)
+            logging.info(f"2FA code for {user['email']}: {code}")  # Production'da email ile gönderilecek
+            
+            return {
+                "requires_2fa": True,
+                "message": "2FA kodu email adresinize gönderildi",
+                "email": user["email"]
+            }
         
         # Clear failed attempts on successful login
         failed_login_attempts[client_ip] = []
@@ -664,13 +724,74 @@ try:
             email=user["email"],
             name=user["name"],
             role=user["role"],
-            created_at=user["created_at"]
+            created_at=user["created_at"],
+            two_factor_enabled=user.get("two_factor_enabled", False)
         )
         
         # Log successful login
+        log_audit("LOGIN_SUCCESS", user["id"], user["email"], client_ip)
         logging.info(f"Successful login: {user['email']} from IP: {client_ip}")
         
-        return TokenResponse(access_token=token, user=user_response)
+        return {"access_token": token, "token_type": "bearer", "user": user_response, "requires_2fa": False}
+
+    @api_router.post("/auth/verify-2fa")
+    async def verify_2fa(data: TwoFactorVerify, request: Request):
+        """2FA kodunu doğrula"""
+        client_ip = request.client.host if request.client else "unknown"
+        
+        if data.email not in two_factor_codes:
+            raise HTTPException(status_code=400, detail="2FA kodu bulunamadı veya süresi dolmuş")
+        
+        stored = two_factor_codes[data.email]
+        
+        # 5 dakika içinde girilmeli
+        if time.time() - stored["created_at"] > 300:
+            del two_factor_codes[data.email]
+            raise HTTPException(status_code=400, detail="2FA kodunun süresi dolmuş")
+        
+        if stored["code"] != data.code:
+            log_audit("2FA_FAILED", stored["user_id"], data.email, client_ip, "Invalid code")
+            raise HTTPException(status_code=400, detail="Geçersiz 2FA kodu")
+        
+        # Kod doğru - token oluştur
+        del two_factor_codes[data.email]
+        
+        user = await db.users.find_one({"email": data.email}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+        
+        token = create_token(user["id"], user["email"], user["role"])
+        user_response = UserResponse(
+            id=user["id"],
+            email=user["email"],
+            name=user["name"],
+            role=user["role"],
+            created_at=user["created_at"],
+            two_factor_enabled=True
+        )
+        
+        log_audit("2FA_SUCCESS", user["id"], data.email, client_ip)
+        
+        return {"access_token": token, "token_type": "bearer", "user": user_response}
+
+    @api_router.post("/auth/toggle-2fa")
+    async def toggle_2fa(current_user: dict = Depends(get_current_user)):
+        """2FA'yı aç/kapat"""
+        user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+        current_status = user.get("two_factor_enabled", False)
+        new_status = not current_status
+        
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"two_factor_enabled": new_status}}
+        )
+        
+        log_audit("2FA_TOGGLED", current_user["id"], current_user["email"], "system", f"2FA {'enabled' if new_status else 'disabled'}")
+        
+        return {
+            "two_factor_enabled": new_status,
+            "message": f"2FA {'aktif edildi' if new_status else 'devre dışı bırakıldı'}"
+        }
 
     @api_router.get("/auth/me", response_model=UserResponse)
     async def get_me(current_user: dict = Depends(get_current_user)):
