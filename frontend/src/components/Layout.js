@@ -105,7 +105,9 @@ export const Layout = ({ children }) => {
           {/* Navigation */}
           <ScrollArea className="flex-1 py-4">
             <nav className="px-3 space-y-1">
-              {navItems.map((item) => {
+              {navItems
+                .filter(item => !item.adminOnly || user?.email === SUPER_ADMIN_EMAIL)
+                .map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
                 return (
