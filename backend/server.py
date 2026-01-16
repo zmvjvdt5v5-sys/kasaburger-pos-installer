@@ -468,6 +468,35 @@ try:
             created_at=current_user["created_at"]
         )
 
+    class ChangePasswordRequest(BaseModel):
+        current_password: str
+        new_password: str
+
+    @api_router.put("/auth/change-password")
+    async def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+        """Admin kullanıcısının şifresini değiştir"""
+        # Mevcut kullanıcıyı veritabanından al (şifre dahil)
+        user = await db.users.find_one({"id": current_user["id"]})
+        if not user:
+            raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+        
+        # Mevcut şifreyi doğrula
+        if not verify_password(request.current_password, user["password"]):
+            raise HTTPException(status_code=400, detail="Mevcut şifre yanlış")
+        
+        # Yeni şifre en az 6 karakter olmalı
+        if len(request.new_password) < 6:
+            raise HTTPException(status_code=400, detail="Yeni şifre en az 6 karakter olmalı")
+        
+        # Yeni şifreyi hashle ve güncelle
+        hashed_password = hash_password(request.new_password)
+        await db.users.update_one(
+            {"id": current_user["id"]},
+            {"$set": {"password": hashed_password}}
+        )
+        
+        return {"message": "Şifre başarıyla değiştirildi"}
+
     # ==================== PRODUCT ROUTES ====================
 
     @api_router.post("/products", response_model=ProductResponse)
