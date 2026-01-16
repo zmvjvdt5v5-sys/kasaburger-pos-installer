@@ -425,7 +425,7 @@ const Orders = () => {
                             )}
                             {order.status === 'pending' && (
                               <>
-                                <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'processing')}>
+                                <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'confirmed')}>
                                   <CheckCircle className="h-4 w-4 mr-2" /> Onayla
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'delivered')}>
