@@ -4,6 +4,17 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from './components/ui/sonner';
 import { Layout } from './components/Layout';
 
+// Suppress postMessage errors globally
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    if (e.message && (e.message.includes('postMessage') || e.message.includes('cloned') || e.message.includes('Request object'))) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
+}
+
 // Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
