@@ -213,8 +213,8 @@ function AppRoutes() {
         }
       />
 
-      {/* Default Redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      {/* Default Redirect - Check domain for kiosk */}
+      <Route path="/" element={<HomeRedirect />} />
       
       {/* Self-Service Kiosk - No Auth Required */}
       <Route path="/kiosk" element={<KioskPage />} />
@@ -223,6 +223,19 @@ function AppRoutes() {
     </Routes>
   );
 }
+
+// Home redirect component - redirects based on domain
+const HomeRedirect = () => {
+  const hostname = window.location.hostname;
+  
+  // If accessing from kasaburger.net, go to kiosk
+  if (hostname === 'kasaburger.net' || hostname === 'www.kasaburger.net' || hostname.includes('kiosk')) {
+    return <Navigate to="/kiosk" replace />;
+  }
+  
+  // Otherwise go to dashboard (admin panel)
+  return <Navigate to="/dashboard" replace />;
+};
 
 function App() {
   return (
