@@ -46,7 +46,10 @@ const DealerLogin = () => {
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
       toast.success('Giriş başarılı!');
-      navigate('/dealer');
+      // Full page reload to ensure state is properly set
+      setTimeout(() => {
+        window.location.replace('/dealer');
+      }, 500);
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.message || 'Giriş başarısız');
