@@ -18,6 +18,43 @@
         <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
         <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
         <title>KasaBurger Sipariş Portalı</title>
+        <script>
+            // CRITICAL: Suppress postMessage cloning errors and clean up service workers IMMEDIATELY
+            (function() {
+                // Override postMessage to catch cloning errors
+                var originalPostMessage = window.postMessage;
+                window.postMessage = function(message, targetOrigin, transfer) {
+                    try {
+                        return originalPostMessage.call(window, message, targetOrigin, transfer);
+                    } catch (e) {
+                        if (e.message && e.message.includes('could not be cloned')) {
+                            console.warn('PostMessage cloning suppressed');
+                            return;
+                        }
+                        throw e;
+                    }
+                };
+
+                // Immediately unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                        regs.forEach(function(reg) { reg.unregister(); });
+                    }).catch(function(){});
+                    
+                    // Prevent new service worker registrations
+                    navigator.serviceWorker.register = function() {
+                        return Promise.resolve({ unregister: function() { return Promise.resolve(true); } });
+                    };
+                }
+
+                // Clear all caches immediately
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(name) { caches.delete(name); });
+                    }).catch(function(){});
+                }
+            })();
+        </script>
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
         <!--
         These two scripts have been added for the Visual Edits, please do not edit or remove them
