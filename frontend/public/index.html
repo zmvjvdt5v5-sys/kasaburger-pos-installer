@@ -176,23 +176,28 @@
         <script>
             // Register Service Worker for PWA with force update
             if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                    // First unregister any existing service workers to clear cache
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        for(let registration of registrations) {
-                            registration.update();
+                window.addEventListener('load', async function() {
+                    try {
+                        // Unregister all existing service workers first to clear problematic cache
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const registration of registrations) {
+                            await registration.unregister();
+                            console.log('ServiceWorker unregistered');
                         }
-                    });
-                    
-                    navigator.serviceWorker.register('/service-worker.js')
-                        .then(function(registration) {
-                            console.log('ServiceWorker registered: ', registration.scope);
-                            // Force update check
-                            registration.update();
-                        })
-                        .catch(function(error) {
-                            console.log('ServiceWorker registration failed: ', error);
-                        });
+                        
+                        // Clear all caches
+                        if ('caches' in window) {
+                            const cacheNames = await caches.keys();
+                            await Promise.all(cacheNames.map(name => caches.delete(name)));
+                            console.log('All caches cleared');
+                        }
+                        
+                        // Register fresh service worker
+                        const registration = await navigator.serviceWorker.register('/service-worker.js');
+                        console.log('ServiceWorker registered: ', registration.scope);
+                    } catch (error) {
+                        console.log('ServiceWorker error: ', error);
+                    }
                 });
             }
         </script>
