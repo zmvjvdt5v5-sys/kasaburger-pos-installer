@@ -1258,13 +1258,53 @@ try:
     # ==================== DEALER PORTAL ====================
 
     @api_router.post("/dealer-portal/login")
-    async def dealer_portal_login(credentials: DealerLogin):
+    async def dealer_portal_login(credentials: DealerLogin, request: Request):
+        client_ip = request.client.host if request.client else "unknown"
+        current_time = time.time()
+        dealer_key = f"dealer_{client_ip}"
+        
+        # Check if IP is blocked due to too many failed attempts
+        if dealer_key in blocked_ips:
+            if current_time < blocked_ips[dealer_key]:
+                remaining = int(blocked_ips[dealer_key] - current_time)
+                raise HTTPException(
+                    status_code=429, 
+                    detail=f"Çok fazla başarısız giriş denemesi. {remaining} saniye sonra tekrar deneyin."
+                )
+            else:
+                del blocked_ips[dealer_key]
+                failed_login_attempts[dealer_key] = []
+        
+        # Clean old failed attempts
+        failed_login_attempts[dealer_key] = [
+            t for t in failed_login_attempts[dealer_key] 
+            if current_time - t < LOGIN_BLOCK_DURATION
+        ]
+        
         dealer = await db.dealers.find_one({"code": credentials.dealer_code}, {"_id": 0})
         if not dealer:
+            failed_login_attempts[dealer_key].append(current_time)
+            if len(failed_login_attempts[dealer_key]) >= LOGIN_ATTEMPT_LIMIT:
+                blocked_ips[dealer_key] = current_time + LOGIN_BLOCK_DURATION
+                logging.warning(f"Dealer IP blocked due to failed login attempts: {client_ip}")
             raise HTTPException(status_code=401, detail="Geçersiz bayi kodu")
+        
         stored_password = dealer.get("password", dealer["code"])
         if credentials.password != stored_password:
-            raise HTTPException(status_code=401, detail="Geçersiz şifre")
+            failed_login_attempts[dealer_key].append(current_time)
+            if len(failed_login_attempts[dealer_key]) >= LOGIN_ATTEMPT_LIMIT:
+                blocked_ips[dealer_key] = current_time + LOGIN_BLOCK_DURATION
+                logging.warning(f"Dealer IP blocked due to failed login attempts: {client_ip}")
+                raise HTTPException(
+                    status_code=429, 
+                    detail=f"Çok fazla başarısız giriş denemesi. {LOGIN_BLOCK_DURATION // 60} dakika engellendi."
+                )
+            remaining_attempts = LOGIN_ATTEMPT_LIMIT - len(failed_login_attempts[dealer_key])
+            raise HTTPException(status_code=401, detail=f"Geçersiz şifre. Kalan deneme: {remaining_attempts}")
+        
+        # Clear failed attempts on successful login
+        failed_login_attempts[dealer_key] = []
+        
         from datetime import timedelta
         payload = {
             "sub": dealer["id"],
@@ -1274,6 +1314,10 @@ try:
             "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
         }
         token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        
+        # Log successful login
+        logging.info(f"Successful dealer login: {dealer['code']} from IP: {client_ip}")
+        
         return {"access_token": token, "token_type": "bearer", "dealer": {"id": dealer["id"], "name": dealer["name"], "code": dealer["code"], "balance": dealer.get("balance", 0)}}
 
     @api_router.get("/dealer-portal/me")
