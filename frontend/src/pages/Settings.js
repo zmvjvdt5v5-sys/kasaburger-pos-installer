@@ -5,8 +5,19 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Settings as SettingsIcon, User, Building, Shield, Bell, Palette, Loader2 } from 'lucide-react';
+import { 
+  Settings as SettingsIcon, 
+  User, 
+  Building, 
+  Bell, 
+  Loader2, 
+  MessageSquare, 
+  Mail,
+  Save,
+  TestTube
+} from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -15,6 +26,10 @@ const Settings = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [testingSms, setTestingSms] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
+  
   const [companySettings, setCompanySettings] = useState({
     name: 'KasaBurger',
     address: '',
@@ -24,17 +39,39 @@ const Settings = () => {
     tax_office: '',
   });
 
+  const [notificationSettings, setNotificationSettings] = useState({
+    netgsm_usercode: '',
+    netgsm_password: '',
+    netgsm_header: '',
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_from: '',
+  });
+
+  const [testPhone, setTestPhone] = useState('');
+  const [testEmail, setTestEmailAddr] = useState('');
+
+  const token = localStorage.getItem('kasaburger_token');
+
   useEffect(() => {
     loadSettings();
   }, []);
 
   const loadSettings = async () => {
     try {
-      const token = localStorage.getItem('kasaburger_token');
-      const response = await axios.get(`${API_URL}/api/settings/company`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCompanySettings(response.data);
+      const [companyRes, notificationRes] = await Promise.all([
+        axios.get(`${API_URL}/api/settings/company`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: companySettings })),
+        axios.get(`${API_URL}/api/settings/notifications`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: notificationSettings }))
+      ]);
+      
+      setCompanySettings(companyRes.data);
+      setNotificationSettings(notificationRes.data);
     } catch (error) {
       console.error('Settings load error:', error);
     } finally {
@@ -45,7 +82,6 @@ const Settings = () => {
   const handleSaveCompany = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('kasaburger_token');
       await axios.put(`${API_URL}/api/settings/company`, companySettings, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -57,6 +93,74 @@ const Settings = () => {
     }
   };
 
+  const handleSaveNotifications = async () => {
+    setSavingNotifications(true);
+    try {
+      await axios.put(`${API_URL}/api/settings/notifications`, notificationSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Bildirim ayarları kaydedildi');
+    } catch (error) {
+      toast.error('Kaydetme başarısız');
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  const handleTestSms = async () => {
+    if (!testPhone) {
+      toast.error('Test telefon numarası girin');
+      return;
+    }
+    setTestingSms(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/test-sms`, 
+        { phone: testPhone, message: 'KasaBurger test SMS mesajı' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.status === 'success') {
+        toast.success('Test SMS gönderildi!');
+      } else {
+        toast.error(response.data.message || 'SMS gönderilemedi');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'SMS test başarısız');
+    } finally {
+      setTestingSms(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Test email adresi girin');
+      return;
+    }
+    setTestingEmail(true);
+    try {
+      const response = await axios.post(`${API_URL}/api/test-email`, 
+        { email: testEmail, subject: 'KasaBurger Test', body: 'Bu bir test emailidir.' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.status === 'success') {
+        toast.success('Test email gönderildi!');
+      } else {
+        toast.error(response.data.message || 'Email gönderilemedi');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Email test başarısız');
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="settings-page">
       {/* Header */}
@@ -65,39 +169,28 @@ const Settings = () => {
         <p className="text-muted-foreground">Sistem ve hesap ayarlarını yönetin</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sidebar Navigation */}
-        <div className="lg:col-span-1">
-          <Card className="bg-card border-border/50">
-            <CardContent className="p-4">
-              <nav className="space-y-1">
-                {[
-                  { icon: User, label: 'Profil', active: true },
-                  { icon: Building, label: 'Şirket Bilgileri', active: false },
-                  { icon: Shield, label: 'Güvenlik', active: false },
-                  { icon: Bell, label: 'Bildirimler', active: false },
-                  { icon: Palette, label: 'Görünüm', active: false },
-                ].map((item, index) => (
-                  <button
-                    key={index}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-left ${
-                      item.active
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                ))}
-              </nav>
-            </CardContent>
-          </Card>
-        </div>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="bg-card border border-border/50">
+          <TabsTrigger value="profile" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Profil
+          </TabsTrigger>
+          <TabsTrigger value="company" className="flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            Şirket
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Bildirimler
+          </TabsTrigger>
+          <TabsTrigger value="system" className="flex items-center gap-2">
+            <SettingsIcon className="h-4 w-4" />
+            Sistem
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Profile Section */}
+        {/* Profile Tab */}
+        <TabsContent value="profile">
           <Card className="bg-card border-border/50">
             <CardHeader>
               <CardTitle className="font-heading flex items-center gap-2">
@@ -123,8 +216,10 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Company Settings */}
+        {/* Company Tab */}
+        <TabsContent value="company">
           <Card className="bg-card border-border/50">
             <CardHeader>
               <CardTitle className="font-heading flex items-center gap-2">
@@ -201,14 +296,195 @@ const Settings = () => {
               <Separator className="my-4" />
               <div className="flex justify-end">
                 <Button onClick={handleSaveCompany} className="bg-primary" disabled={saving} data-testid="save-company-btn">
-                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   Kaydet
                 </Button>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* System Info */}
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <div className="grid gap-6">
+            {/* SMS Settings - NetGSM */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-green-500" />
+                  SMS Ayarları (NetGSM)
+                </CardTitle>
+                <CardDescription>
+                  Kampanya SMS bildirimleri için NetGSM hesap bilgilerinizi girin.
+                  <a href="https://www.netgsm.com.tr" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline ml-1">
+                    NetGSM'e Git
+                  </a>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Kullanıcı Kodu</Label>
+                    <Input
+                      value={notificationSettings.netgsm_usercode}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, netgsm_usercode: e.target.value })}
+                      placeholder="8501234567"
+                      className="bg-input/50"
+                      data-testid="netgsm-usercode"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Şifre</Label>
+                    <Input
+                      type="password"
+                      value={notificationSettings.netgsm_password}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, netgsm_password: e.target.value })}
+                      placeholder="••••••••"
+                      className="bg-input/50"
+                      data-testid="netgsm-password"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Başlık (Header)</Label>
+                    <Input
+                      value={notificationSettings.netgsm_header}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, netgsm_header: e.target.value })}
+                      placeholder="KASABURGER"
+                      className="bg-input/50"
+                      data-testid="netgsm-header"
+                    />
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground">Test SMS Gönder</Label>
+                    <Input
+                      value={testPhone}
+                      onChange={(e) => setTestPhone(e.target.value)}
+                      placeholder="5XX XXX XX XX"
+                      className="bg-input/50 mt-1"
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleTestSms} 
+                    disabled={testingSms}
+                    className="mt-5"
+                  >
+                    {testingSms ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4 mr-1" />}
+                    Test
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Email Settings - SMTP */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-blue-500" />
+                  Email Ayarları (SMTP)
+                </CardTitle>
+                <CardDescription>
+                  Kampanya email bildirimleri için SMTP sunucu bilgilerinizi girin.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>SMTP Sunucu</Label>
+                    <Input
+                      value={notificationSettings.smtp_host}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, smtp_host: e.target.value })}
+                      placeholder="smtp.gmail.com"
+                      className="bg-input/50"
+                      data-testid="smtp-host"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Port</Label>
+                    <Input
+                      type="number"
+                      value={notificationSettings.smtp_port}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, smtp_port: parseInt(e.target.value) || 587 })}
+                      placeholder="587"
+                      className="bg-input/50"
+                      data-testid="smtp-port"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Kullanıcı Adı</Label>
+                    <Input
+                      value={notificationSettings.smtp_user}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, smtp_user: e.target.value })}
+                      placeholder="email@domain.com"
+                      className="bg-input/50"
+                      data-testid="smtp-user"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Şifre</Label>
+                    <Input
+                      type="password"
+                      value={notificationSettings.smtp_password}
+                      onChange={(e) => setNotificationSettings({ ...notificationSettings, smtp_password: e.target.value })}
+                      placeholder="••••••••"
+                      className="bg-input/50"
+                      data-testid="smtp-password"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Gönderen Email Adresi</Label>
+                  <Input
+                    type="email"
+                    value={notificationSettings.smtp_from}
+                    onChange={(e) => setNotificationSettings({ ...notificationSettings, smtp_from: e.target.value })}
+                    placeholder="noreply@kasaburger.com"
+                    className="bg-input/50"
+                    data-testid="smtp-from"
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground">Test Email Gönder</Label>
+                    <Input
+                      type="email"
+                      value={testEmail}
+                      onChange={(e) => setTestEmailAddr(e.target.value)}
+                      placeholder="test@example.com"
+                      className="bg-input/50 mt-1"
+                    />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleTestEmail} 
+                    disabled={testingEmail}
+                    className="mt-5"
+                  >
+                    {testingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4 mr-1" />}
+                    Test
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <Button onClick={handleSaveNotifications} className="bg-primary" disabled={savingNotifications}>
+                {savingNotifications ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                Bildirim Ayarlarını Kaydet
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* System Tab */}
+        <TabsContent value="system">
           <Card className="bg-card border-border/50">
             <CardHeader>
               <CardTitle className="font-heading flex items-center gap-2">
@@ -220,7 +496,7 @@ const Settings = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Versiyon</span>
-                  <span className="font-mono">1.0.0</span>
+                  <span className="font-mono">1.0.3</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Veritabanı</span>
@@ -237,8 +513,8 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
