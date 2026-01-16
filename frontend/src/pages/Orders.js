@@ -395,6 +395,9 @@ const Orders = () => {
                         <Badge className={getStatusColor(order.status)}>
                           {getStatusText(order.status)}
                         </Badge>
+                        {order.approval_reason && (
+                          <p className="text-xs text-orange-500 mt-1">{order.approval_reason}</p>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -404,6 +407,22 @@ const Orders = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-card border-border">
+                            {order.status === 'pending_approval' && (
+                              <>
+                                <DropdownMenuItem 
+                                  onClick={() => handleStatusUpdate(order.id, 'confirmed')}
+                                  className="text-green-500 focus:text-green-600"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" /> ✓ Onayla
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleStatusUpdate(order.id, 'cancelled')}
+                                  className="text-red-500 focus:text-red-600"
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" /> ✗ Reddet
+                                </DropdownMenuItem>
+                              </>
+                            )}
                             {order.status === 'pending' && (
                               <>
                                 <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'processing')}>
@@ -419,7 +438,7 @@ const Orders = () => {
                                 <CheckCircle className="h-4 w-4 mr-2" /> Teslim Edildi
                               </DropdownMenuItem>
                             )}
-                            {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                            {order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'pending_approval' && (
                               <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'cancelled')}>
                                 <XCircle className="h-4 w-4 mr-2" /> İptal Et
                               </DropdownMenuItem>
