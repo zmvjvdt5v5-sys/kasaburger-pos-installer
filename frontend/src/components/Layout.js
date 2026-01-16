@@ -27,7 +27,7 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/products', label: 'Ürünler', icon: Package },
   { path: '/materials', label: 'Hammaddeler', icon: Boxes },
-  { path: '/recipes', label: 'Reçeteler', icon: FlaskConical },
+  { path: '/recipes', label: 'Reçeteler', icon: FlaskConical, adminOnly: true },
   { path: '/production', label: 'Üretim', icon: Factory },
   { path: '/dealers', label: 'Bayiler', icon: Users },
   { path: '/orders', label: 'Siparişler', icon: ShoppingCart },
@@ -38,6 +38,8 @@ const navItems = [
   { path: '/reports', label: 'Raporlar', icon: BarChart3 },
   { path: '/settings', label: 'Ayarlar', icon: Settings },
 ];
+
+const SUPER_ADMIN_EMAIL = 'admin@kasaburger.net.tr';
 
 export const Layout = ({ children }) => {
   const { user, logout } = useAuth();
