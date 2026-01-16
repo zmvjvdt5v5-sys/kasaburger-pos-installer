@@ -51,14 +51,8 @@ const DEFAULT_MENU = {
     { id: 'cajun-fries', name: 'Prison Hot Lockdown Fries', description: 'Cajun baharatlı acılı patates', price: 160, category: 'atistirmalik', image: 'https://images.unsplash.com/photo-1598679253544-2c97992403ea?w=400' },
     
     // İçecekler
-    { id: 'cola', name: 'Coca Cola', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400' },
-    { id: 'cola-zero', name: 'Coca Cola Zero', description: '330ml kutu şekersiz', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1624552184280-9e9631bbeee9?w=400' },
-    { id: 'fanta', name: 'Fanta', description: '330ml kutu portakal', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=400' },
-    { id: 'sprite', name: 'Sprite', description: '330ml kutu limon', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400' },
     { id: 'ayran', name: 'Ayran', description: '300ml', price: 35, category: 'icecek', image: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400' },
     { id: 'su', name: 'Su', description: '500ml', price: 20, category: 'icecek', image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400' },
-    { id: 'ice-tea-seftali', name: 'Ice Tea Şeftali', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400' },
-    { id: 'ice-tea-limon', name: 'Ice Tea Limon', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=400' },
     { id: 'limonata', name: 'Ev Yapımı Limonata', description: 'Taze sıkılmış', price: 55, category: 'icecek', image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400' },
     { id: 'milkshake-cikolata', name: 'Milkshake Çikolata', description: 'Kremalı çikolatalı', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400' },
     { id: 'milkshake-cilek', name: 'Milkshake Çilek', description: 'Kremalı çilekli', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=400' },
