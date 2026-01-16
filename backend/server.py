@@ -2759,20 +2759,37 @@ try:
                 "brute_force_protection": True,
                 "cors_restricted": True,
                 "security_headers": True,
-                "ip_blocking": True
+                "ip_blocking": True,
+                "captcha": True,
+                "two_factor_auth": True,
+                "password_policy": True,
+                "audit_logging": True
             },
             "settings": {
                 "rate_limit_requests": RATE_LIMIT_REQUESTS,
                 "rate_limit_window_seconds": RATE_LIMIT_WINDOW,
                 "login_attempt_limit": LOGIN_ATTEMPT_LIMIT,
                 "login_block_duration_seconds": LOGIN_BLOCK_DURATION,
-                "bulk_request_limit": BULK_REQUEST_LIMIT
+                "bulk_request_limit": BULK_REQUEST_LIMIT,
+                "password_min_length": PASSWORD_MIN_LENGTH,
+                "captcha_after_failed_attempts": 2
             },
             "current_stats": {
                 "blocked_ips_count": len(blocked_ips),
-                "tracked_ips_count": len(rate_limit_storage)
+                "tracked_ips_count": len(rate_limit_storage),
+                "pending_2fa_codes": len(two_factor_codes),
+                "audit_log_entries": len(audit_logs)
             }
         }
+
+    @api_router.get("/security/audit-logs")
+    async def get_audit_logs(current_user: dict = Depends(get_current_user), limit: int = 50):
+        """Admin için audit loglarını getir"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Yetkiniz yok")
+        
+        # Son logları döndür (en yeniden en eskiye)
+        return audit_logs[-limit:][::-1]
 
     @api_router.post("/security/unblock-ip")
     async def unblock_ip(ip_address: str, current_user: dict = Depends(get_current_user)):
@@ -2782,15 +2799,28 @@ try:
         
         if ip_address in blocked_ips:
             del blocked_ips[ip_address]
+            log_audit("IP_UNBLOCKED", current_user["id"], current_user["email"], "admin", ip_address)
             return {"message": f"IP adresi engeli kaldırıldı: {ip_address}"}
         
         # Check dealer blocked IPs too
         dealer_key = f"dealer_{ip_address}"
         if dealer_key in blocked_ips:
             del blocked_ips[dealer_key]
+            log_audit("IP_UNBLOCKED", current_user["id"], current_user["email"], "admin", ip_address)
             return {"message": f"Bayi IP adresi engeli kaldırıldı: {ip_address}"}
         
         return {"message": "Bu IP adresi engelli değil"}
+
+    @api_router.get("/security/password-policy")
+    async def get_password_policy():
+        """Şifre politikasını getir"""
+        return {
+            "min_length": PASSWORD_MIN_LENGTH,
+            "require_uppercase": PASSWORD_REQUIRE_UPPERCASE,
+            "require_lowercase": PASSWORD_REQUIRE_LOWERCASE,
+            "require_number": PASSWORD_REQUIRE_NUMBER,
+            "require_special": PASSWORD_REQUIRE_SPECIAL
+        }
 
     # Include router
     app.include_router(api_router)
