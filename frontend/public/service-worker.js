@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kasaburger-v3';
+const CACHE_NAME = 'kasaburger-v4';
 const urlsToCache = [
   '/',
   '/manifest.json'
@@ -18,18 +18,28 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch event - network first strategy, skip caching for API calls
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Skip caching for API requests and POST/PUT/DELETE methods
+  if (url.pathname.startsWith('/api') || 
+      event.request.method !== 'GET' ||
+      url.protocol !== 'https:') {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request.clone())
       .then((response) => {
-        // Always get fresh from network
-        if (response && response.status === 200) {
+        // Only cache successful GET requests for static assets
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
             .then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
+              cache.put(event.request.clone(), responseToCache);
+            })
+            .catch(() => {});
         }
         return response;
       })
@@ -47,7 +57,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
