@@ -174,31 +174,21 @@
             });
         </script>
         <script>
-            // Register Service Worker for PWA with force update
+            // Disable Service Worker - unregister all existing ones
             if ('serviceWorker' in navigator) {
-                window.addEventListener('load', async function() {
-                    try {
-                        // Unregister all existing service workers first to clear problematic cache
-                        const registrations = await navigator.serviceWorker.getRegistrations();
-                        for (const registration of registrations) {
-                            await registration.unregister();
-                            console.log('ServiceWorker unregistered');
-                        }
-                        
-                        // Clear all caches
-                        if ('caches' in window) {
-                            const cacheNames = await caches.keys();
-                            await Promise.all(cacheNames.map(name => caches.delete(name)));
-                            console.log('All caches cleared');
-                        }
-                        
-                        // Register fresh service worker
-                        const registration = await navigator.serviceWorker.register('/service-worker.js');
-                        console.log('ServiceWorker registered: ', registration.scope);
-                    } catch (error) {
-                        console.log('ServiceWorker error: ', error);
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (var i = 0; i < registrations.length; i++) {
+                        registrations[i].unregister();
                     }
                 });
+                // Clear all caches
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        for (var i = 0; i < names.length; i++) {
+                            caches.delete(names[i]);
+                        }
+                    });
+                }
             }
         </script>
     </body>
