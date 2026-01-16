@@ -102,7 +102,12 @@ const Login = () => {
         localStorage.setItem('kasaburger_token', data.access_token);
         localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
         toast.success('Giriş başarılı!');
-        window.location.href = '/dashboard';
+        // Use navigate for better SPA experience, fallback to location
+        try {
+          navigate('/dashboard');
+        } catch (navErr) {
+          window.location.href = '/dashboard';
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -310,9 +315,15 @@ const Login = () => {
               Giriş Yap
             </Button>
           </form>
-          <div className="mt-6 text-center">
-            <Link to="/dealer-login" className="text-sm text-primary hover:underline" data-testid="dealer-link">
-              Bayi girişi için tıklayın
+          <div className="mt-6 pt-4 border-t border-white/10 text-center">
+            <p className="text-xs text-muted-foreground mb-2">Bayi misiniz?</p>
+            <Link 
+              to="/dealer-login" 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 transition-colors font-medium" 
+              data-testid="dealer-link"
+            >
+              <Store className="h-4 w-4" />
+              Bayi Girişi
             </Link>
           </div>
         </CardContent>
