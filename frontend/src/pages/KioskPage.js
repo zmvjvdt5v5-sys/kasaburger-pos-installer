@@ -4,15 +4,18 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { toast } from 'sonner';
-import { ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote, ArrowLeft, CheckCircle, Receipt, X } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote, ArrowLeft, CheckCircle, Receipt, Package, UtensilsCrossed } from 'lucide-react';
 
-// Kasa Burger Menü Verileri (www.kasaburger.com.tr'den)
-const MENU_DATA = {
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+// Default Menu Data
+const DEFAULT_MENU = {
   categories: [
     { id: 'et-burger', name: 'Et Burger', icon: '🍔' },
     { id: 'premium', name: 'Premium Gourmet', icon: '👑' },
     { id: 'tavuk', name: 'Tavuk Burger', icon: '🍗' },
     { id: 'atistirmalik', name: 'Atıştırmalıklar', icon: '🍟' },
+    { id: 'icecek', name: 'İçecekler', icon: '🥤' },
     { id: 'tatli', name: 'Tatlılar', icon: '🍫' },
   ],
   products: [
@@ -47,6 +50,20 @@ const MENU_DATA = {
     { id: 'truffle-fries', name: 'Prison Truffle Fries', description: 'Trüf soslu patates', price: 175, category: 'atistirmalik', image: 'https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?w=400' },
     { id: 'cajun-fries', name: 'Prison Hot Lockdown Fries', description: 'Cajun baharatlı acılı patates', price: 160, category: 'atistirmalik', image: 'https://images.unsplash.com/photo-1598679253544-2c97992403ea?w=400' },
     
+    // İçecekler
+    { id: 'cola', name: 'Coca Cola', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400' },
+    { id: 'cola-zero', name: 'Coca Cola Zero', description: '330ml kutu şekersiz', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1624552184280-9e9631bbeee9?w=400' },
+    { id: 'fanta', name: 'Fanta', description: '330ml kutu portakal', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=400' },
+    { id: 'sprite', name: 'Sprite', description: '330ml kutu limon', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?w=400' },
+    { id: 'ayran', name: 'Ayran', description: '300ml', price: 35, category: 'icecek', image: 'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400' },
+    { id: 'su', name: 'Su', description: '500ml', price: 20, category: 'icecek', image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400' },
+    { id: 'ice-tea-seftali', name: 'Ice Tea Şeftali', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400' },
+    { id: 'ice-tea-limon', name: 'Ice Tea Limon', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=400' },
+    { id: 'limonata', name: 'Ev Yapımı Limonata', description: 'Taze sıkılmış', price: 55, category: 'icecek', image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400' },
+    { id: 'milkshake-cikolata', name: 'Milkshake Çikolata', description: 'Kremalı çikolatalı', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400' },
+    { id: 'milkshake-cilek', name: 'Milkshake Çilek', description: 'Kremalı çilekli', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=400' },
+    { id: 'milkshake-vanilya', name: 'Milkshake Vanilya', description: 'Kremalı vanilyalı', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1568901839119-631418a3910d?w=400' },
+    
     // Tatlılar
     { id: 'choco-bomb', name: 'Kasa Choco Bomb', description: 'Çikolata patlaması', price: 200, category: 'tatli', image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400' },
     { id: 'churros', name: 'Churros', description: 'Taze kızartılmış churros, çikolata sos', price: 180, category: 'tatli', image: 'https://images.unsplash.com/photo-1624371414361-e670edf7bb3b?w=400' },
@@ -59,15 +76,37 @@ const formatCurrency = (amount) => {
 };
 
 const KioskPage = () => {
+  const [menuData, setMenuData] = useState(DEFAULT_MENU);
   const [selectedCategory, setSelectedCategory] = useState('et-burger');
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [showServiceType, setShowServiceType] = useState(false);
+  const [serviceType, setServiceType] = useState(null); // 'paket' or 'masa'
   const [showPayment, setShowPayment] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [orderNumber, setOrderNumber] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [tableNumber, setTableNumber] = useState('');
 
-  const filteredProducts = MENU_DATA.products.filter(p => p.category === selectedCategory);
+  // Load menu from backend
+  useEffect(() => {
+    const loadMenu = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/kiosk/menu`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.products && data.products.length > 0) {
+            setMenuData(data);
+          }
+        }
+      } catch (error) {
+        console.log('Using default menu');
+      }
+    };
+    loadMenu();
+  }, []);
+
+  const filteredProducts = menuData.products.filter(p => p.category === selectedCategory);
   
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -109,15 +148,49 @@ const KioskPage = () => {
     setShowCart(false);
   };
 
+  const selectServiceType = (type) => {
+    setServiceType(type);
+    setShowServiceType(false);
+    setShowPayment(true);
+  };
+
   const processPayment = async (method) => {
     setProcessing(true);
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate order number
-    const newOrderNumber = `KB-${Date.now().toString().slice(-6)}`;
-    setOrderNumber(newOrderNumber);
+    try {
+      // Save order to backend
+      const orderData = {
+        items: cart.map(item => ({
+          product_id: item.id,
+          product_name: item.name,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total: item.price * item.quantity
+        })),
+        total: cartTotal,
+        service_type: serviceType,
+        table_number: serviceType === 'masa' ? tableNumber : null,
+        payment_method: method
+      };
+
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      let newOrderNumber;
+      if (response.ok) {
+        const data = await response.json();
+        newOrderNumber = data.order_number;
+      } else {
+        newOrderNumber = `KB-${Date.now().toString().slice(-6)}`;
+      }
+      
+      setOrderNumber(newOrderNumber);
+    } catch (error) {
+      setOrderNumber(`KB-${Date.now().toString().slice(-6)}`);
+    }
     
     setProcessing(false);
     setShowPayment(false);
@@ -128,10 +201,11 @@ const KioskPage = () => {
     setCart([]);
     setShowReceipt(false);
     setOrderNumber(null);
+    setServiceType(null);
+    setTableNumber('');
     toast.success('Siparişiniz alındı! İyi günler dileriz.');
   };
 
-  // Auto-hide cart panel when empty
   useEffect(() => {
     if (cart.length === 0 && showCart) {
       setShowCart(false);
@@ -155,7 +229,6 @@ const KioskPage = () => {
             </div>
           </div>
           
-          {/* Cart Button */}
           <Button 
             onClick={() => setShowCart(true)}
             className="relative bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-xl rounded-2xl shadow-lg shadow-orange-500/30"
@@ -176,7 +249,7 @@ const KioskPage = () => {
         {/* Categories Sidebar */}
         <aside className="w-48 bg-black/30 border-r border-white/10 p-4 space-y-3">
           <h2 className="text-lg font-semibold text-zinc-400 mb-4">Kategoriler</h2>
-          {MENU_DATA.categories.map(category => (
+          {menuData.categories.map(category => (
             <Button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
@@ -196,7 +269,7 @@ const KioskPage = () => {
         {/* Products Grid */}
         <main className="flex-1 p-6 overflow-y-auto">
           <h2 className="text-2xl font-bold mb-6 text-orange-400">
-            {MENU_DATA.categories.find(c => c.id === selectedCategory)?.name}
+            {menuData.categories.find(c => c.id === selectedCategory)?.name}
           </h2>
           
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -304,11 +377,49 @@ const KioskPage = () => {
               </Button>
               <Button 
                 className="flex-1 py-6 bg-orange-500 hover:bg-orange-600 text-lg"
-                onClick={() => { setShowCart(false); setShowPayment(true); }}
+                onClick={() => { setShowCart(false); setShowServiceType(true); }}
               >
-                Ödemeye Geç
+                Devam Et
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Service Type Selection Dialog */}
+      <Dialog open={showServiceType} onOpenChange={setShowServiceType}>
+        <DialogContent className="bg-zinc-900 border-zinc-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center">Servis Türü Seçin</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-6">
+            <Button 
+              className="w-full py-12 text-xl bg-blue-600 hover:bg-blue-700 flex flex-col items-center gap-3"
+              onClick={() => selectServiceType('paket')}
+            >
+              <Package className="h-12 w-12" />
+              <span>Paket Servis</span>
+              <span className="text-sm opacity-70">Siparişimi paket olarak alacağım</span>
+            </Button>
+            
+            <Button 
+              className="w-full py-12 text-xl bg-green-600 hover:bg-green-700 flex flex-col items-center gap-3"
+              onClick={() => selectServiceType('masa')}
+            >
+              <UtensilsCrossed className="h-12 w-12" />
+              <span>Masaya Servis</span>
+              <span className="text-sm opacity-70">Siparişim masama getirilsin</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full py-6"
+              onClick={() => { setShowServiceType(false); setShowCart(true); }}
+            >
+              <ArrowLeft className="mr-2 h-5 w-5" />
+              Geri Dön
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -328,9 +439,29 @@ const KioskPage = () => {
           ) : (
             <div className="space-y-4 py-6">
               <div className="bg-zinc-800/50 p-4 rounded-xl mb-6">
+                <div className="flex items-center gap-2 mb-2">
+                  {serviceType === 'paket' ? (
+                    <><Package className="h-5 w-5 text-blue-400" /><span className="text-blue-400">Paket Servis</span></>
+                  ) : (
+                    <><UtensilsCrossed className="h-5 w-5 text-green-400" /><span className="text-green-400">Masaya Servis</span></>
+                  )}
+                </div>
                 <p className="text-zinc-400 mb-2">Ödenecek Tutar</p>
                 <p className="text-4xl font-bold text-orange-400">{formatCurrency(cartTotal)}</p>
               </div>
+
+              {serviceType === 'masa' && (
+                <div className="mb-4">
+                  <label className="text-sm text-zinc-400 mb-2 block">Masa Numarası</label>
+                  <input
+                    type="text"
+                    value={tableNumber}
+                    onChange={(e) => setTableNumber(e.target.value)}
+                    placeholder="Masa numaranızı girin"
+                    className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-4 py-3 text-white text-center text-xl"
+                  />
+                </div>
+              )}
               
               <Button 
                 className="w-full py-8 text-xl bg-green-600 hover:bg-green-700"
@@ -351,7 +482,7 @@ const KioskPage = () => {
               <Button 
                 variant="outline" 
                 className="w-full py-6"
-                onClick={() => { setShowPayment(false); setShowCart(true); }}
+                onClick={() => { setShowPayment(false); setShowServiceType(true); }}
               >
                 <ArrowLeft className="mr-2 h-5 w-5" />
                 Geri Dön
@@ -387,6 +518,13 @@ const KioskPage = () => {
               <p className="text-sm text-zinc-500">Sipariş Numaranız</p>
               <p className="text-5xl font-bold text-orange-500 my-2">{orderNumber}</p>
               <p className="text-xs text-zinc-400">{new Date().toLocaleString('tr-TR')}</p>
+              <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100">
+                {serviceType === 'paket' ? (
+                  <><Package className="h-4 w-4" /><span>Paket Servis</span></>
+                ) : (
+                  <><UtensilsCrossed className="h-4 w-4" /><span>Masa: {tableNumber || '-'}</span></>
+                )}
+              </div>
             </div>
             
             <div className="border-t border-dashed border-zinc-300 pt-4 space-y-2">
@@ -421,8 +559,8 @@ const KioskPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Footer Cart Summary (Fixed) */}
-      {cart.length > 0 && !showCart && !showPayment && !showReceipt && (
+      {/* Footer Cart Summary */}
+      {cart.length > 0 && !showCart && !showServiceType && !showPayment && !showReceipt && (
         <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm border-t border-orange-500/30 p-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
