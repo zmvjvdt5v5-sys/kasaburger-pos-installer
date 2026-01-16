@@ -26,7 +26,7 @@ import {
   Lock,
   RefreshCw
 } from 'lucide-react';
-import axios from 'axios';
+// axios removed - using fetch
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -79,17 +79,16 @@ const Settings = () => {
 
   const loadSettings = async () => {
     try {
-      const [companyRes, notificationRes] = await Promise.all([
-        axios.get(`${API_URL}/api/settings/company`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: companySettings })),
-        axios.get(`${API_URL}/api/settings/notifications`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: notificationSettings }))
+      const headers = { Authorization: `Bearer ${token}` };
+      const fetchJson = (url) => fetch(url, { headers }).then(r => r.ok ? r.json() : null).catch(() => null);
+      
+      const [companyData, notificationData] = await Promise.all([
+        fetchJson(`${API_URL}/api/settings/company`),
+        fetchJson(`${API_URL}/api/settings/notifications`)
       ]);
       
-      setCompanySettings(companyRes.data);
-      setNotificationSettings(notificationRes.data);
+      if (companyData) setCompanySettings(companyData);
+      if (notificationData) setNotificationSettings(notificationData);
     } catch (error) {
       console.error('Settings load error:', error);
     } finally {
@@ -100,9 +99,12 @@ const Settings = () => {
   const handleSaveCompany = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API_URL}/api/settings/company`, companySettings, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/api/settings/company`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(companySettings)
       });
+      if (!response.ok) throw new Error('Failed');
       toast.success('Şirket bilgileri kaydedildi');
     } catch (error) {
       toast.error('Kaydetme başarısız');
@@ -114,9 +116,12 @@ const Settings = () => {
   const handleSaveNotifications = async () => {
     setSavingNotifications(true);
     try {
-      await axios.put(`${API_URL}/api/settings/notifications`, notificationSettings, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/api/settings/notifications`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(notificationSettings)
       });
+      if (!response.ok) throw new Error('Failed');
       toast.success('Bildirim ayarları kaydedildi');
     } catch (error) {
       toast.error('Kaydetme başarısız');
@@ -132,17 +137,19 @@ const Settings = () => {
     }
     setTestingSms(true);
     try {
-      const response = await axios.post(`${API_URL}/api/test-sms`, 
-        { phone: testPhone, message: 'KasaBurger test SMS mesajı' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (response.data.status === 'success') {
+      const response = await fetch(`${API_URL}/api/test-sms`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: testPhone, message: 'KasaBurger test SMS mesajı' })
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
         toast.success('Test SMS gönderildi!');
       } else {
-        toast.error(response.data.message || 'SMS gönderilemedi');
+        toast.error(data.message || 'SMS gönderilemedi');
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'SMS test başarısız');
+      toast.error('SMS test başarısız');
     } finally {
       setTestingSms(false);
     }
@@ -155,17 +162,19 @@ const Settings = () => {
     }
     setTestingEmail(true);
     try {
-      const response = await axios.post(`${API_URL}/api/test-email`, 
-        { email: testEmail, subject: 'KasaBurger Test', body: 'Bu bir test emailidir.' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (response.data.status === 'success') {
+      const response = await fetch(`${API_URL}/api/test-email`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: testEmail, subject: 'KasaBurger Test', body: 'Bu bir test emailidir.' })
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
         toast.success('Test email gönderildi!');
       } else {
-        toast.error(response.data.message || 'Email gönderilemedi');
+        toast.error(data.message || 'Email gönderilemedi');
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Email test başarısız');
+      toast.error('Email test başarısız');
     } finally {
       setTestingEmail(false);
     }
@@ -192,17 +201,19 @@ const Settings = () => {
 
     setSavingPassword(true);
     try {
-      await axios.put(`${API_URL}/api/auth/change-password`, 
-        { 
-          current_password: passwordForm.currentPassword, 
-          new_password: passwordForm.newPassword 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_password: passwordForm.currentPassword, new_password: passwordForm.newPassword })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || 'Failed');
+      }
       toast.success('Şifreniz başarıyla değiştirildi');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Şifre değiştirilemedi');
+      toast.error(error.message || 'Şifre değiştirilemedi');
     } finally {
       setSavingPassword(false);
     }
