@@ -922,10 +922,10 @@ try:
         await db.recipes.insert_one(recipe_doc)
         return RecipeResponse(**{k: v for k, v in recipe_doc.items() if k != "_id"})
 
-    @api_router.get("/recipes", response_model=List[RecipeResponse])
+    @api_router.get("/recipes", response_model=List[dict])
     async def get_recipes(current_user: dict = Depends(get_current_user)):
         recipes = await db.recipes.find({}, {"_id": 0}).to_list(1000)
-        return [RecipeResponse(**r) for r in recipes]
+        return recipes
 
     @api_router.delete("/recipes/{recipe_id}")
     async def delete_recipe(recipe_id: str, current_user: dict = Depends(get_current_user)):
