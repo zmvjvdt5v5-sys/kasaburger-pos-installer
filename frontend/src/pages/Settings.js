@@ -363,10 +363,7 @@ const Settings = () => {
                 <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
                   <h4 className="font-semibold text-blue-400 text-sm mb-2">Şifre Politikası</h4>
                   <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>✓ En az 8 karakter</li>
-                    <li>✓ En az bir büyük harf (A-Z)</li>
-                    <li>✓ En az bir küçük harf (a-z)</li>
-                    <li>✓ En az bir rakam (0-9)</li>
+                    <li>✓ En az 6 karakter</li>
                   </ul>
                 </div>
               </CardContent>
