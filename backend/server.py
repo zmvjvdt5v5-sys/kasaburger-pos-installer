@@ -1770,6 +1770,176 @@ try:
             raise HTTPException(status_code=404, detail="Ödeme bildirimi bulunamadı veya zaten işlenmiş")
         return {"message": "Ödeme reddedildi"}
 
+    # ==================== IYZICO SANAL POS ====================
+    
+    class IyzicoPaymentRequest(BaseModel):
+        amount: float
+        card_holder_name: str
+        card_number: str
+        expire_month: str
+        expire_year: str
+        cvc: str
+        installment: int = 1
+
+    @api_router.post("/dealer-portal/iyzico-payment")
+    async def process_iyzico_payment(payment: IyzicoPaymentRequest, request: Request, dealer: dict = Depends(get_current_dealer)):
+        """iyzico ile kredi kartı ödemesi işle"""
+        if not iyzico_available:
+            raise HTTPException(status_code=503, detail="Ödeme sistemi şu anda kullanılamıyor")
+        
+        if not IYZICO_API_KEY or not IYZICO_SECRET_KEY:
+            raise HTTPException(status_code=503, detail="Ödeme sistemi yapılandırılmamış")
+        
+        try:
+            # iyzico options
+            options = {
+                'api_key': IYZICO_API_KEY,
+                'secret_key': IYZICO_SECRET_KEY,
+                'base_url': IYZICO_BASE_URL
+            }
+            
+            # Generate unique IDs
+            conversation_id = str(uuid.uuid4())
+            basket_id = f"DEALER-{dealer['id']}-{int(time.time())}"
+            
+            # Get client IP
+            client_ip = request.client.host if request.client else "0.0.0.0"
+            
+            # Prepare payment request
+            payment_request = {
+                'locale': 'tr',
+                'conversationId': conversation_id,
+                'price': str(payment.amount),
+                'paidPrice': str(payment.amount),
+                'installment': str(payment.installment),
+                'basketId': basket_id,
+                'paymentChannel': 'WEB',
+                'paymentGroup': 'PRODUCT',
+                'currency': 'TRY',
+                'paymentCard': {
+                    'cardHolderName': payment.card_holder_name,
+                    'cardNumber': payment.card_number.replace(' ', ''),
+                    'expireMonth': payment.expire_month,
+                    'expireYear': payment.expire_year,
+                    'cvc': payment.cvc,
+                    'registerCard': '0'
+                },
+                'buyer': {
+                    'id': dealer['id'],
+                    'name': dealer['name'].split()[0] if ' ' in dealer['name'] else dealer['name'],
+                    'surname': dealer['name'].split()[-1] if ' ' in dealer['name'] else dealer['name'],
+                    'gsmNumber': dealer.get('phone', '+905000000000'),
+                    'email': dealer.get('email', 'bayi@kasaburger.com.tr'),
+                    'identityNumber': '11111111111',
+                    'registrationAddress': dealer.get('address', 'İstanbul'),
+                    'ip': client_ip,
+                    'city': 'Istanbul',
+                    'country': 'Turkey'
+                },
+                'shippingAddress': {
+                    'contactName': dealer['name'],
+                    'city': 'Istanbul',
+                    'country': 'Turkey',
+                    'address': dealer.get('address', 'İstanbul')
+                },
+                'billingAddress': {
+                    'contactName': dealer['name'],
+                    'city': 'Istanbul',
+                    'country': 'Turkey',
+                    'address': dealer.get('address', 'İstanbul')
+                },
+                'basketItems': [
+                    {
+                        'id': 'ODEME',
+                        'name': 'Bayi Borç Ödemesi',
+                        'category1': 'Ödeme',
+                        'itemType': 'VIRTUAL',
+                        'price': str(payment.amount)
+                    }
+                ]
+            }
+            
+            # Process payment
+            payment_response = iyzipay.Payment().create(payment_request, options)
+            response_dict = payment_response.read().decode('utf-8')
+            import json
+            result = json.loads(response_dict)
+            
+            if result.get('status') == 'success':
+                # Save successful payment
+                payment_id = str(uuid.uuid4())
+                payment_doc = {
+                    "id": payment_id,
+                    "dealer_id": dealer["id"],
+                    "dealer_name": dealer["name"],
+                    "amount": payment.amount,
+                    "payment_method": "sanal_pos",
+                    "payment_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                    "reference_no": result.get('paymentId', ''),
+                    "notes": f"iyzico ödeme - Conversation: {conversation_id}",
+                    "iyzico_payment_id": result.get('paymentId'),
+                    "card_last_four": payment.card_number[-4:],
+                    "invoice_id": None,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": "dealer_portal"
+                }
+                await db.payments.insert_one(payment_doc)
+                
+                # Update dealer balance
+                await db.dealers.update_one(
+                    {"id": dealer["id"]},
+                    {"$inc": {"balance": -payment.amount}}
+                )
+                
+                return {
+                    "status": "success",
+                    "message": "Ödeme başarıyla tamamlandı!",
+                    "payment_id": payment_id,
+                    "iyzico_payment_id": result.get('paymentId'),
+                    "amount": payment.amount
+                }
+            else:
+                # Payment failed
+                error_message = result.get('errorMessage', 'Ödeme işlemi başarısız')
+                logging.error(f"iyzico payment failed: {result}")
+                raise HTTPException(status_code=400, detail=error_message)
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            logging.error(f"iyzico payment error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Ödeme işlemi sırasında hata oluştu: {str(e)}")
+
+    @api_router.post("/dealer-portal/iyzico-bin-check")
+    async def check_card_bin(bin_number: str, price: float, dealer: dict = Depends(get_current_dealer)):
+        """Kart BIN kontrolü - taksit seçeneklerini getir"""
+        if not iyzico_available:
+            raise HTTPException(status_code=503, detail="Ödeme sistemi şu anda kullanılamıyor")
+        
+        try:
+            options = {
+                'api_key': IYZICO_API_KEY,
+                'secret_key': IYZICO_SECRET_KEY,
+                'base_url': IYZICO_BASE_URL
+            }
+            
+            request_data = {
+                'locale': 'tr',
+                'conversationId': str(uuid.uuid4()),
+                'binNumber': bin_number[:6],
+                'price': str(price)
+            }
+            
+            bin_check = iyzipay.BinNumber().retrieve(request_data, options)
+            response_dict = bin_check.read().decode('utf-8')
+            import json
+            result = json.loads(response_dict)
+            
+            return result
+        except Exception as e:
+            logging.error(f"BIN check error: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
+
     # ==================== DEPO/STOK YÖNETİMİ ====================
 
     class WarehouseCreate(BaseModel):
