@@ -9,6 +9,33 @@ import { Mail, Lock, Loader2, Shield, RefreshCw, Store } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Simple XHR-based API call to avoid any postMessage issues
+const apiCall = (method, url, data = null) => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({ ok: true, status: xhr.status, data: response });
+          } else {
+            resolve({ ok: false, status: xhr.status, data: response });
+          }
+        } catch (e) {
+          reject(new Error('Sunucu yanıtı işlenemedi'));
+        }
+      }
+    };
+    xhr.onerror = function() {
+      reject(new Error('Bağlantı hatası'));
+    };
+    xhr.send(data ? JSON.stringify(data) : null);
+  });
+};
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,10 +49,9 @@ const Login = () => {
 
   const loadCaptcha = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/captcha`);
-      if (response.ok) {
-        const data = await response.json();
-        setCaptcha(data);
+      const result = await apiCall('GET', `${API_URL}/api/auth/captcha`);
+      if (result.ok) {
+        setCaptcha(result.data);
         setCaptchaAnswer('');
       }
     } catch (error) {
@@ -63,29 +89,17 @@ const Login = () => {
         ? `${API_URL}/api/auth/login?captcha_id=${captcha.captcha_id}`
         : `${API_URL}/api/auth/login`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData)
-      });
+      const result = await apiCall('POST', url, loginData);
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonErr) {
-        throw new Error('Sunucu yanıtı işlenemedi');
-      }
-
-      if (!response.ok) {
-        const captchaHeader = response.headers.get('x-captcha-required');
-        if (captchaHeader === 'true' || (data.detail && data.detail.includes('Captcha'))) {
+      if (!result.ok) {
+        if (result.data?.detail?.includes('Captcha')) {
           setCaptchaRequired(true);
-        }
-        if (captchaRequired) {
           loadCaptcha();
         }
-        throw new Error(data.detail || 'Giriş başarısız');
+        throw new Error(result.data?.detail || 'Giriş başarısız');
       }
+
+      const data = result.data;
 
       if (data.requires_2fa) {
         setRequires2FA(true);
@@ -116,23 +130,13 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/verify-2fa`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: twoFAEmail, code: twoFACode })
-      });
+      const result = await apiCall('POST', `${API_URL}/api/auth/verify-2fa`, { email: twoFAEmail, code: twoFACode });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonErr) {
-        throw new Error('Sunucu yanıtı işlenemedi');
+      if (!result.ok) {
+        throw new Error(result.data?.detail || '2FA doğrulaması başarısız');
       }
 
-      if (!response.ok) {
-        throw new Error(data.detail || '2FA doğrulaması başarısız');
-      }
-
+      const data = result.data;
       localStorage.setItem('kasaburger_token', data.access_token);
       localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
       toast.success('Giriş başarılı!');
