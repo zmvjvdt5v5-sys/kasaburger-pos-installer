@@ -380,8 +380,48 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 
 ### Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
-- **Bayi:** MEKGRUP / Mekgrup2024
+- **Bayi:** MEKGRUP / 1234
 - **Preview URL:** https://kasa-manager-1.preview.emergentagent.com
+
+---
+
+## Update: January 16, 2026 - Ürün Kategorilendirme ve Filtreleme
+
+### ✅ Tamamlanan Özellikler
+
+#### 1. Otomatik Kategori Ataması
+201 ürüne otomatik kategori atandı:
+- Diğer: 83 ürün
+- Soslar: 31 ürün  
+- Ambalaj: 27 ürün
+- Burger Köfteleri: 17 ürün
+- Temizlik: 10 ürün
+- Unlu Ürünler: 8 ürün
+- Peynirler: 6 ürün
+- İçecekler: 5 ürün
+- Patates: 5 ürün
+- Yağlar: 4 ürün
+- Tavuk Ürünleri: 3 ürün
+- Baharatlar: 2 ürün
+
+#### 2. Bayi Portalı Kategori Filtreleme
+- Kategori butonları ile filtreleme
+- Ürün arama özelliği
+- Her üründe kategori etiketi
+- Filtrelenmiş ürün sayısı gösterimi
+- ScrollArea ile 500px yüksekliğinde kaydırılabilir liste
+
+### Teknik Değişiklikler
+- `/app/frontend/src/pages/DealerPortal.js`:
+  - `selectedCategory` ve `searchQuery` state eklendi
+  - `categories` ve `filteredProducts` useMemo hooks
+  - Kategori butonları ve arama UI
+  - Her üründe Badge ile kategori gösterimi
+
+### Test Sonuçları
+- ✅ Kategori filtreleme çalışıyor
+- ✅ Ürün arama çalışıyor
+- ✅ Kombine filtreleme (kategori + arama) çalışıyor
 
 ---
 
