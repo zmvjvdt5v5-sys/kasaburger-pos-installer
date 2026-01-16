@@ -1,116 +1,137 @@
-import axios from 'axios';
-
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_BASE = `${BACKEND_URL}/api`;
 
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
+// Simple fetch wrapper without axios to avoid postMessage cloning issues
+const fetchAPI = async (endpoint, options = {}) => {
   const token = localStorage.getItem('kasaburger_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  };
 
-// Handle auth errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, config);
+    
+    // Handle 401 unauthorized
+    if (response.status === 401) {
       localStorage.removeItem('kasaburger_token');
       localStorage.removeItem('kasaburger_user');
       window.location.href = '/login';
+      return null;
     }
-    return Promise.reject(error);
+
+    // Try to parse JSON response
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = null;
+      }
+    } else {
+      data = await response.text();
+    }
+
+    if (!response.ok) {
+      const error = new Error(data?.detail || 'Request failed');
+      error.response = { status: response.status, data };
+      throw error;
+    }
+
+    return { data, status: response.status };
+  } catch (error) {
+    if (error.response) {
+      throw error;
+    }
+    throw new Error('Network error');
   }
-);
+};
 
-// Auth
+// Auth API
 export const authAPI = {
-  login: (data) => api.post('/auth/login', data),
-  register: (data) => api.post('/auth/register', data),
-  getMe: () => api.get('/auth/me'),
+  login: (data) => fetchAPI('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  register: (data) => fetchAPI('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  getMe: () => fetchAPI('/auth/me'),
 };
 
-// Products
+// Products API
 export const productsAPI = {
-  getAll: () => api.get('/products'),
-  getOne: (id) => api.get(`/products/${id}`),
-  create: (data) => api.post('/products', data),
-  update: (id, data) => api.put(`/products/${id}`, data),
-  delete: (id) => api.delete(`/products/${id}`),
+  getAll: () => fetchAPI('/products'),
+  getOne: (id) => fetchAPI(`/products/${id}`),
+  create: (data) => fetchAPI('/products', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => fetchAPI(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => fetchAPI(`/products/${id}`, { method: 'DELETE' }),
 };
 
-// Materials
+// Materials API
 export const materialsAPI = {
-  getAll: () => api.get('/materials'),
-  create: (data) => api.post('/materials', data),
-  update: (id, data) => api.put(`/materials/${id}`, data),
-  delete: (id) => api.delete(`/materials/${id}`),
+  getAll: () => fetchAPI('/materials'),
+  create: (data) => fetchAPI('/materials', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => fetchAPI(`/materials/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => fetchAPI(`/materials/${id}`, { method: 'DELETE' }),
 };
 
-// Recipes
+// Recipes API
 export const recipesAPI = {
-  getAll: () => api.get('/recipes'),
-  create: (data) => api.post('/recipes', data),
-  delete: (id) => api.delete(`/recipes/${id}`),
+  getAll: () => fetchAPI('/recipes'),
+  create: (data) => fetchAPI('/recipes', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => fetchAPI(`/recipes/${id}`, { method: 'DELETE' }),
 };
 
-// Production
+// Production API
 export const productionAPI = {
-  getAll: () => api.get('/production'),
-  create: (data) => api.post('/production', data),
-  updateStatus: (id, status) => api.put(`/production/${id}/status?status=${status}`),
-  delete: (id) => api.delete(`/production/${id}`),
+  getAll: () => fetchAPI('/production'),
+  create: (data) => fetchAPI('/production', { method: 'POST', body: JSON.stringify(data) }),
+  updateStatus: (id, status) => fetchAPI(`/production/${id}/status?status=${status}`, { method: 'PUT' }),
+  delete: (id) => fetchAPI(`/production/${id}`, { method: 'DELETE' }),
 };
 
-// Dealers
+// Dealers API
 export const dealersAPI = {
-  getAll: () => api.get('/dealers'),
-  getOne: (id) => api.get(`/dealers/${id}`),
-  create: (data) => api.post('/dealers', data),
-  update: (id, data) => api.put(`/dealers/${id}`, data),
-  delete: (id) => api.delete(`/dealers/${id}`),
+  getAll: () => fetchAPI('/dealers'),
+  getOne: (id) => fetchAPI(`/dealers/${id}`),
+  create: (data) => fetchAPI('/dealers', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => fetchAPI(`/dealers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => fetchAPI(`/dealers/${id}`, { method: 'DELETE' }),
 };
 
-// Orders
+// Orders API
 export const ordersAPI = {
-  getAll: () => api.get('/orders'),
-  create: (data) => api.post('/orders', data),
-  updateStatus: (id, status) => api.put(`/orders/${id}/status?status=${status}`),
-  delete: (id) => api.delete(`/orders/${id}`),
+  getAll: () => fetchAPI('/orders'),
+  create: (data) => fetchAPI('/orders', { method: 'POST', body: JSON.stringify(data) }),
+  updateStatus: (id, status) => fetchAPI(`/orders/${id}/status?status=${status}`, { method: 'PUT' }),
+  delete: (id) => fetchAPI(`/orders/${id}`, { method: 'DELETE' }),
 };
 
-// Invoices
+// Invoices API
 export const invoicesAPI = {
-  getAll: () => api.get('/invoices'),
-  create: (data) => api.post('/invoices', data),
-  pay: (id) => api.put(`/invoices/${id}/pay`),
+  getAll: () => fetchAPI('/invoices'),
+  create: (data) => fetchAPI('/invoices', { method: 'POST', body: JSON.stringify(data) }),
+  pay: (id) => fetchAPI(`/invoices/${id}/pay`, { method: 'PUT' }),
 };
 
-// Transactions
+// Transactions API
 export const transactionsAPI = {
-  getAll: () => api.get('/transactions'),
-  create: (data) => api.post('/transactions', data),
-  delete: (id) => api.delete(`/transactions/${id}`),
+  getAll: () => fetchAPI('/transactions'),
+  create: (data) => fetchAPI('/transactions', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => fetchAPI(`/transactions/${id}`, { method: 'DELETE' }),
 };
 
-// Stock Movements
+// Stock Movements API
 export const stockMovementsAPI = {
-  getAll: () => api.get('/stock-movements'),
-  create: (data) => api.post('/stock-movements', data),
+  getAll: () => fetchAPI('/stock-movements'),
+  create: (data) => fetchAPI('/stock-movements', { method: 'POST', body: JSON.stringify(data) }),
 };
 
-// Dashboard
+// Dashboard API
 export const dashboardAPI = {
-  getStats: () => api.get('/dashboard/stats'),
+  getStats: () => fetchAPI('/dashboard/stats'),
 };
 
-export default api;
+export default fetchAPI;
