@@ -10,14 +10,23 @@ from starlette.middleware.cors import CORSMiddleware
 # Create app immediately
 app = FastAPI(title="KasaBurger API", version="1.0.3")
 
-origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
-# print(":white_tick: CORS Origins:", origins)
+# CORS Configuration - Allow all origins if not specified
+cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+if cors_origins_env == "*":
+    origins = ["*"]
+else:
+    origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+    if not origins:
+        origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Health check - FIRST route, no dependencies
