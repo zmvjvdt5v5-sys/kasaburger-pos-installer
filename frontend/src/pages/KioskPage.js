@@ -63,6 +63,13 @@ const DEFAULT_MENU = {
     { id: 'milkshake-cikolata', name: 'Milkshake Çikolata', description: 'Kremalı çikolatalı', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400' },
     { id: 'milkshake-cilek', name: 'Milkshake Çilek', description: 'Kremalı çilekli', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?w=400' },
     { id: 'milkshake-vanilya', name: 'Milkshake Vanilya', description: 'Kremalı vanilyalı', price: 85, category: 'icecek', image: 'https://images.unsplash.com/photo-1568901839119-631418a3910d?w=400' },
+    // Pepsi Grubu
+    { id: 'pepsi', name: 'Pepsi', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1553456558-aff63285bdd1?w=400' },
+    { id: 'pepsi-max', name: 'Pepsi Max', description: '330ml kutu şekersiz', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1630152835334-5cd64e5d6e91?w=400' },
+    { id: 'yedigun', name: 'Yedigün', description: '330ml kutu portakal', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400' },
+    { id: 'fruko', name: 'Fruko', description: '330ml kutu gazoz', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1527960471264-932f39eb5846?w=400' },
+    { id: 'lipton-seftali', name: 'Lipton Ice Tea Şeftali', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400' },
+    { id: 'lipton-limon', name: 'Lipton Ice Tea Limon', description: '330ml kutu', price: 45, category: 'icecek', image: 'https://images.unsplash.com/photo-1507281549113-040fcfef650e?w=400' },
     
     // Tatlılar
     { id: 'choco-bomb', name: 'Kasa Choco Bomb', description: 'Çikolata patlaması', price: 200, category: 'tatli', image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400' },
