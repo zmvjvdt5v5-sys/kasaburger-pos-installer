@@ -29,7 +29,7 @@ import {
 } from '../components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Trash2, CreditCard, Search, Loader2, Banknote, Building, Receipt, Wallet } from 'lucide-react';
-import axios from 'axios';
+// axios removed - using fetch
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -62,16 +62,17 @@ const Payments = () => {
 
   const loadData = async () => {
     try {
-      const [paymentsRes, invoicesRes, dealersRes, summaryRes] = await Promise.all([
-        axios.get(`${API_URL}/api/payments`, { headers }),
-        axios.get(`${API_URL}/api/invoices`, { headers }),
-        axios.get(`${API_URL}/api/dealers`, { headers }),
-        axios.get(`${API_URL}/api/payments/summary`, { headers }),
+      const fetchWithAuth = (url) => fetch(url, { headers }).then(r => r.json());
+      const [paymentsData, invoicesData, dealersData, summaryData] = await Promise.all([
+        fetchWithAuth(`${API_URL}/api/payments`),
+        fetchWithAuth(`${API_URL}/api/invoices`),
+        fetchWithAuth(`${API_URL}/api/dealers`),
+        fetchWithAuth(`${API_URL}/api/payments/summary`),
       ]);
-      setPayments(paymentsRes.data);
-      setInvoices(invoicesRes.data.filter(i => i.status !== 'paid'));
-      setDealers(dealersRes.data);
-      setSummary(summaryRes.data);
+      setPayments(paymentsData);
+      setInvoices(invoicesData.filter(i => i.status !== 'paid'));
+      setDealers(dealersData);
+      setSummary(summaryData);
     } catch (error) {
       console.error('Load error:', error);
       toast.error('Veriler yüklenemedi');
@@ -103,16 +104,21 @@ const Payments = () => {
 
     setSaving(true);
     try {
-      await axios.post(`${API_URL}/api/payments`, {
-        ...formData,
-        amount: parseFloat(formData.amount),
-      }, { headers });
+      const response = await fetch(`${API_URL}/api/payments`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, amount: parseFloat(formData.amount) })
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || 'Failed');
+      }
       toast.success('Ödeme kaydedildi');
       setDialogOpen(false);
       resetForm();
       loadData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Kaydetme başarısız');
+      toast.error(error.message || 'Kaydetme başarısız');
     } finally {
       setSaving(false);
     }
@@ -121,7 +127,8 @@ const Payments = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Bu ödemeyi silmek istediğinize emin misiniz?')) return;
     try {
-      await axios.delete(`${API_URL}/api/payments/${id}`, { headers });
+      const response = await fetch(`${API_URL}/api/payments/${id}`, { method: 'DELETE', headers });
+      if (!response.ok) throw new Error('Failed');
       toast.success('Ödeme silindi');
       loadData();
     } catch (error) {
