@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -8,30 +8,48 @@ import { Store, KeyRound, Loader2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Simple XHR-based API call to avoid any postMessage issues
-const apiCall = (method, url, data = null) => {
+// Direct login function
+const directLogin = (url, data) => {
   return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Bağlantı zaman aşımı'));
+    }, 15000);
+
     const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
+    xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        try {
-          const response = JSON.parse(xhr.responseText);
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve({ ok: true, status: xhr.status, data: response });
-          } else {
-            resolve({ ok: false, status: xhr.status, data: response });
-          }
-        } catch (e) {
-          reject(new Error('Sunucu yanıtı işlenemedi'));
+    xhr.timeout = 10000;
+    
+    xhr.onload = function() {
+      clearTimeout(timeout);
+      try {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(response);
+        } else {
+          reject(new Error(response.detail || 'Giriş başarısız'));
         }
+      } catch(e) {
+        reject(new Error('Sunucu yanıtı işlenemedi'));
       }
     };
+    
     xhr.onerror = function() {
+      clearTimeout(timeout);
       reject(new Error('Bağlantı hatası'));
     };
-    xhr.send(data ? JSON.stringify(data) : null);
+    
+    xhr.ontimeout = function() {
+      clearTimeout(timeout);
+      reject(new Error('Bağlantı zaman aşımı'));
+    };
+
+    try {
+      xhr.send(JSON.stringify(data));
+    } catch(e) {
+      clearTimeout(timeout);
+      reject(new Error('İstek gönderilemedi'));
+    }
   });
 };
 
@@ -40,53 +58,60 @@ const DealerLogin = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Suppress errors on mount
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.message && (e.message.includes('postMessage') || e.message.includes('cloned'))) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+    window.addEventListener('error', handler, true);
+    return () => window.removeEventListener('error', handler, true);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!dealerCode || !password) {
       toast.error('Lütfen tüm alanları doldurun');
       return;
     }
 
     setLoading(true);
+    
     try {
-      const result = await apiCall('POST', `${BACKEND_URL}/api/dealer-portal/login`, { dealer_code: dealerCode, password });
-      
-      if (!result.ok) {
-        throw new Error(result.data?.detail || 'Giriş başarısız');
-      }
+      const data = await directLogin(`${BACKEND_URL}/api/dealer-portal/login`, { 
+        dealer_code: dealerCode, 
+        password: password 
+      });
 
-      const data = result.data;
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
       toast.success('Giriş başarılı!');
+      
       setTimeout(() => {
-        window.location.href = '/dealer';
-      }, 300);
+        window.location.replace('/dealer');
+      }, 500);
+      
     } catch (error) {
       console.error('Login error:', error);
       toast.error(error.message || 'Giriş başarısız');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')` }}
-      >
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')` }}>
         <div className="absolute inset-0 bg-black/80" />
       </div>
-
       <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm border-white/10">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-24 h-24">
-            <img 
-              src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
-              alt="KasaBurger Logo"
-              className="w-full h-full object-contain"
-            />
+            <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="KasaBurger Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <CardTitle className="text-3xl font-heading font-bold">Bayi Portalı</CardTitle>
@@ -99,53 +124,23 @@ const DealerLogin = () => {
               <Label htmlFor="dealerCode">Bayi Kodu</Label>
               <div className="relative">
                 <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="dealerCode"
-                  type="text"
-                  placeholder="BY-001"
-                  value={dealerCode}
-                  onChange={(e) => setDealerCode(e.target.value)}
-                  className="pl-10 bg-input/50 border-input"
-                  data-testid="dealer-login-code"
-                />
+                <Input id="dealerCode" type="text" placeholder="BY-001" value={dealerCode} onChange={(e) => setDealerCode(e.target.value)} className="pl-10 bg-input/50 border-input" data-testid="dealer-login-code" autoComplete="username" />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Şifre</Label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 bg-input/50 border-input"
-                  data-testid="dealer-login-password"
-                />
+                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 bg-input/50 border-input" data-testid="dealer-login-password" autoComplete="current-password" />
               </div>
               <p className="text-xs text-muted-foreground">İlk girişte bayi kodunuzu şifre olarak kullanın</p>
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
-              disabled={loading}
-              data-testid="dealer-login-submit"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Giriş yapılıyor...
-                </>
-              ) : (
-                'Giriş Yap'
-              )}
+            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20" disabled={loading} data-testid="dealer-login-submit">
+              {loading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Giriş yapılıyor...</>) : 'Giriş Yap'}
             </Button>
           </form>
           <div className="mt-6 text-center">
-            <a href="/login" className="text-sm text-muted-foreground hover:text-primary">
-              Yönetici girişi için tıklayın
-            </a>
+            <a href="/login" className="text-sm text-muted-foreground hover:text-primary">Yönetici girişi için tıklayın</a>
           </div>
         </CardContent>
       </Card>
