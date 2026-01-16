@@ -819,9 +819,10 @@ try:
         if not verify_password(request.current_password, user["password"]):
             raise HTTPException(status_code=400, detail="Mevcut şifre yanlış")
         
-        # Yeni şifre en az 6 karakter olmalı
-        if len(request.new_password) < 6:
-            raise HTTPException(status_code=400, detail="Yeni şifre en az 6 karakter olmalı")
+        # Şifre politikası kontrolü
+        is_valid, message = validate_password_strength(request.new_password)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=message)
         
         # Yeni şifreyi hashle ve güncelle
         hashed_password = hash_password(request.new_password)
@@ -829,6 +830,9 @@ try:
             {"id": current_user["id"]},
             {"$set": {"password": hashed_password}}
         )
+        
+        # Audit log
+        log_audit("PASSWORD_CHANGED", current_user["id"], current_user["email"], "system")
         
         return {"message": "Şifre başarıyla değiştirildi"}
 
