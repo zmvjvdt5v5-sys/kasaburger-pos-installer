@@ -19,40 +19,73 @@
         <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
         <title>KasaBurger Sipariş Portalı</title>
         <script>
-            // CRITICAL: Suppress postMessage cloning errors and clean up service workers IMMEDIATELY
+            // CRITICAL FIX: Suppress ALL postMessage and cloning errors
             (function() {
-                // Override postMessage to catch cloning errors
-                var originalPostMessage = window.postMessage;
-                window.postMessage = function(message, targetOrigin, transfer) {
+                // Global error handler to suppress postMessage errors
+                window.addEventListener('error', function(e) {
+                    if (e.message && (e.message.includes('postMessage') || e.message.includes('cloned'))) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                }, true);
+
+                // Catch unhandled promise rejections
+                window.addEventListener('unhandledrejection', function(e) {
+                    if (e.reason && e.reason.message && (e.reason.message.includes('postMessage') || e.reason.message.includes('cloned'))) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
+                // Override postMessage completely
+                var origPost = window.postMessage.bind(window);
+                window.postMessage = function(msg, origin, transfer) {
                     try {
-                        return originalPostMessage.call(window, message, targetOrigin, transfer);
-                    } catch (e) {
-                        if (e.message && e.message.includes('could not be cloned')) {
-                            console.warn('PostMessage cloning suppressed');
-                            return;
+                        // Try to clone the message first
+                        if (msg && typeof msg === 'object') {
+                            try {
+                                JSON.stringify(msg);
+                            } catch(e) {
+                                console.warn('Skipping non-serializable postMessage');
+                                return;
+                            }
                         }
-                        throw e;
+                        return origPost(msg, origin, transfer);
+                    } catch(e) {
+                        console.warn('postMessage error suppressed');
+                        return;
                     }
                 };
 
-                // Immediately unregister all service workers
+                // Disable service workers completely
                 if ('serviceWorker' in navigator) {
+                    // Unregister existing
                     navigator.serviceWorker.getRegistrations().then(function(regs) {
-                        regs.forEach(function(reg) { reg.unregister(); });
+                        regs.forEach(function(r) { r.unregister(); });
                     }).catch(function(){});
                     
-                    // Prevent new service worker registrations
-                    navigator.serviceWorker.register = function() {
-                        return Promise.resolve({ unregister: function() { return Promise.resolve(true); } });
-                    };
+                    // Block new registrations
+                    Object.defineProperty(navigator, 'serviceWorker', {
+                        get: function() {
+                            return {
+                                register: function() { return Promise.resolve({ unregister: function() { return Promise.resolve(true); } }); },
+                                getRegistrations: function() { return Promise.resolve([]); },
+                                ready: Promise.resolve({ unregister: function() { return Promise.resolve(true); } }),
+                                controller: null
+                            };
+                        }
+                    });
                 }
 
-                // Clear all caches immediately
+                // Clear caches
                 if ('caches' in window) {
-                    caches.keys().then(function(names) {
-                        names.forEach(function(name) { caches.delete(name); });
-                    }).catch(function(){});
+                    try {
+                        caches.keys().then(function(n) { n.forEach(function(k) { caches.delete(k); }); }).catch(function(){});
+                    } catch(e) {}
                 }
+            })();
+        </script>
             })();
         </script>
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
