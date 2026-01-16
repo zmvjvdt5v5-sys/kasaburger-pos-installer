@@ -700,12 +700,13 @@ const DealerPortal = () => {
                           </div>
 
                           <Button 
-                            className="w-full bg-primary" 
+                            className="w-full bg-primary hover:bg-primary/90" 
                             onClick={handleSubmitOrder}
                             disabled={submitting || cart.length === 0}
+                            data-testid="submit-order-btn"
                           >
                             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                            Sipariş Ver
+                            {!deliveryDate && cart.length > 0 ? '⚠️ Tarih Seçin' : 'Sipariş Ver'}
                           </Button>
                         </div>
                       </div>
