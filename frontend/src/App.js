@@ -206,6 +206,10 @@ function AppRoutes() {
 
       {/* Default Redirect */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      
+      {/* Self-Service Kiosk - No Auth Required */}
+      <Route path="/kiosk" element={<KioskPage />} />
+      
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
