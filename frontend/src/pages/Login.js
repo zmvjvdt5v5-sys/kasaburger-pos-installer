@@ -26,9 +26,12 @@ const Login = () => {
 
   const loadCaptcha = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/auth/captcha`);
-      setCaptcha(response.data);
-      setCaptchaAnswer('');
+      const response = await fetch(`${API_URL}/api/auth/captcha`);
+      if (response.ok) {
+        const data = await response.json();
+        setCaptcha(data);
+        setCaptchaAnswer('');
+      }
     } catch (error) {
       console.error('Captcha yüklenemedi:', error);
     }
@@ -64,32 +67,47 @@ const Login = () => {
         ? `${API_URL}/api/auth/login?captcha_id=${captcha.captcha_id}`
         : `${API_URL}/api/auth/login`;
 
-      const response = await axios.post(url, loginData);
+      // Use fetch instead of axios to avoid postMessage cloning issues
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData)
+      });
 
-      if (response.data.requires_2fa) {
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        console.error('JSON parse error:', jsonErr);
+        throw new Error('Sunucu yanıtı işlenemedi');
+      }
+
+      if (!response.ok) {
+        // Check if captcha is required
+        const captchaHeader = response.headers.get('x-captcha-required');
+        if (captchaHeader === 'true' || (data.detail && data.detail.includes('Captcha'))) {
+          setCaptchaRequired(true);
+        }
+        if (captchaRequired) {
+          loadCaptcha();
+        }
+        throw new Error(data.detail || 'Giriş başarısız');
+      }
+
+      if (data.requires_2fa) {
         setRequires2FA(true);
-        setTwoFAEmail(response.data.email || email);
+        setTwoFAEmail(data.email || email);
         toast.info('2FA kodu email adresinize gönderildi');
       } else {
         // Normal login success
-        localStorage.setItem('kasaburger_token', response.data.access_token);
-        localStorage.setItem('kasaburger_user', JSON.stringify(response.data.user));
+        localStorage.setItem('kasaburger_token', data.access_token);
+        localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
         toast.success('Giriş başarılı!');
         window.location.href = '/dashboard';
       }
     } catch (error) {
-      const detail = error.response?.data?.detail || 'Giriş başarısız';
-      toast.error(detail);
-      
-      // Check if captcha is required
-      if (error.response?.headers?.['x-captcha-required'] === 'true' || detail.includes('Captcha')) {
-        setCaptchaRequired(true);
-      }
-      
-      // Reload captcha if exists
-      if (captchaRequired) {
-        loadCaptcha();
-      }
+      console.error('Login error:', error);
+      toast.error(error.message || 'Giriş başarısız');
     } finally {
       setLoading(false);
     }
@@ -104,17 +122,29 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/api/auth/verify-2fa`, {
-        email: twoFAEmail,
-        code: twoFACode
+      const response = await fetch(`${API_URL}/api/auth/verify-2fa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: twoFAEmail, code: twoFACode })
       });
 
-      localStorage.setItem('kasaburger_token', response.data.access_token);
-      localStorage.setItem('kasaburger_user', JSON.stringify(response.data.user));
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        throw new Error('Sunucu yanıtı işlenemedi');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.detail || '2FA doğrulaması başarısız');
+      }
+
+      localStorage.setItem('kasaburger_token', data.access_token);
+      localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
       toast.success('Giriş başarılı!');
       window.location.href = '/dashboard';
     } catch (error) {
-      toast.error(error.response?.data?.detail || '2FA doğrulaması başarısız');
+      toast.error(error.message || '2FA doğrulaması başarısız');
     } finally {
       setLoading(false);
     }
