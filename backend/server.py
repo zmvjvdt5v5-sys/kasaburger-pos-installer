@@ -19,30 +19,124 @@ def root():
 
 # Now load the rest of the application
 try:
-    from fastapi import APIRouter, HTTPException, Depends, status
+    from fastapi import APIRouter, HTTPException, Depends, status, Request
     from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-    from fastapi.responses import StreamingResponse
+    from fastapi.responses import StreamingResponse, JSONResponse
     from dotenv import load_dotenv
     from starlette.middleware.cors import CORSMiddleware
+    from starlette.middleware.base import BaseHTTPMiddleware
     from motor.motor_asyncio import AsyncIOMotorClient
     import os
     import logging
     from pathlib import Path
     from pydantic import BaseModel, Field, EmailStr
-    from typing import List, Optional
+    from typing import List, Optional, Dict
     import uuid
     import jwt
     import bcrypt
     import io
     import httpx
+    import time
+    from collections import defaultdict
+    import hashlib
 
-    # Add CORS
+    # ==================== SECURITY CONFIGURATION ====================
+    
+    # Rate limiting storage (in-memory, resets on restart)
+    rate_limit_storage: Dict[str, List[float]] = defaultdict(list)
+    failed_login_attempts: Dict[str, List[float]] = defaultdict(list)
+    blocked_ips: Dict[str, float] = {}
+    
+    # Security settings
+    RATE_LIMIT_REQUESTS = 100  # Max requests per window
+    RATE_LIMIT_WINDOW = 60  # Window in seconds
+    LOGIN_ATTEMPT_LIMIT = 5  # Max failed login attempts
+    LOGIN_BLOCK_DURATION = 300  # Block duration in seconds (5 minutes)
+    BULK_REQUEST_LIMIT = 10  # Max bulk requests (like get all products) per minute
+    
+    # Allowed origins (production domains)
+    ALLOWED_ORIGINS = [
+        "https://kasa-erp.preview.emergentagent.com",
+        "https://kasaburger.net.tr",
+        "https://www.kasaburger.net.tr",
+        "http://localhost:3000",
+    ]
+
+    # ==================== SECURITY MIDDLEWARE ====================
+    
+    class SecurityMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request: Request, call_next):
+            client_ip = request.client.host if request.client else "unknown"
+            path = request.url.path
+            method = request.method
+            
+            # Skip security for health checks
+            if path in ["/health", "/", "/api/health"]:
+                return await call_next(request)
+            
+            # Check if IP is blocked
+            if client_ip in blocked_ips:
+                if time.time() < blocked_ips[client_ip]:
+                    return JSONResponse(
+                        status_code=429,
+                        content={"detail": "IP adresi geçici olarak engellendi. Lütfen daha sonra tekrar deneyin."}
+                    )
+                else:
+                    del blocked_ips[client_ip]
+            
+            # Rate limiting
+            current_time = time.time()
+            rate_limit_storage[client_ip] = [
+                t for t in rate_limit_storage[client_ip] 
+                if current_time - t < RATE_LIMIT_WINDOW
+            ]
+            
+            if len(rate_limit_storage[client_ip]) >= RATE_LIMIT_REQUESTS:
+                # Log suspicious activity
+                logging.warning(f"Rate limit exceeded for IP: {client_ip}, Path: {path}")
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Çok fazla istek gönderildi. Lütfen bir dakika bekleyin."}
+                )
+            
+            rate_limit_storage[client_ip].append(current_time)
+            
+            # Extra protection for bulk data endpoints
+            bulk_endpoints = ["/api/products", "/api/dealers", "/api/orders", "/api/invoices", "/api/payments"]
+            if path in bulk_endpoints and method == "GET":
+                bulk_key = f"{client_ip}_bulk"
+                rate_limit_storage[bulk_key] = [
+                    t for t in rate_limit_storage[bulk_key] 
+                    if current_time - t < 60
+                ]
+                if len(rate_limit_storage[bulk_key]) >= BULK_REQUEST_LIMIT:
+                    logging.warning(f"Bulk request limit exceeded for IP: {client_ip}")
+                    return JSONResponse(
+                        status_code=429,
+                        content={"detail": "Toplu veri istekleri sınırlandırıldı. Lütfen bekleyin."}
+                    )
+                rate_limit_storage[bulk_key].append(current_time)
+            
+            # Add security headers to response
+            response = await call_next(request)
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+            
+            return response
+    
+    # Add security middleware
+    app.add_middleware(SecurityMiddleware)
+
+    # Add CORS with restricted origins
     app.add_middleware(
         CORSMiddleware,
         allow_credentials=True,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_origins=ALLOWED_ORIGINS,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
     )
 
     ROOT_DIR = Path(__file__).parent
