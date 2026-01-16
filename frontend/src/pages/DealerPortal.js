@@ -43,7 +43,12 @@ import {
   Building,
   Calendar,
   Hash,
-  MessageSquare
+  MessageSquare,
+  Megaphone,
+  Percent,
+  Tag,
+  Bell,
+  Sparkles
 } from 'lucide-react';
 import { Textarea } from '../components/ui/textarea';
 
