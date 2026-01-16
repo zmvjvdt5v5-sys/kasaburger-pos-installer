@@ -961,7 +961,7 @@ const DealerPortal = () => {
                       <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg">
                         <p className="text-sm text-blue-400 mb-2 flex items-center gap-2">
                           <CreditCard className="h-4 w-4" />
-                          <strong>💳 Kredi Kartı ile Ödeme</strong>
+                          <strong>💳 Kredi Kartı ile Ödeme (iyzico)</strong>
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Kart bilgilerinizi girin ve güvenli ödeme yapın.
@@ -976,7 +976,7 @@ const DealerPortal = () => {
                             type="text"
                             value={cardForm.cardHolderName}
                             onChange={(e) => setCardForm({...cardForm, cardHolderName: e.target.value.toUpperCase()})}
-                            placeholder="JOHN DOE"
+                            placeholder="AD SOYAD"
                             className="bg-input/50 uppercase"
                           />
                         </div>
@@ -991,7 +991,7 @@ const DealerPortal = () => {
                               const formatted = val.replace(/(\d{4})(?=\d)/g, '$1 ');
                               setCardForm({...cardForm, cardNumber: formatted});
                             }}
-                            placeholder="5528 7900 0000 0008"
+                            placeholder="0000 0000 0000 0000"
                             className="bg-input/50 font-mono"
                             maxLength={19}
                           />
@@ -1042,10 +1042,6 @@ const DealerPortal = () => {
                               maxLength={4}
                             />
                           </div>
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground mt-2 p-2 bg-yellow-500/10 rounded">
-                          🔒 Sandbox Test Kartı: <code className="bg-background px-1 rounded">5528 7900 0000 0008</code> | CVC: 123 | Tarih: Gelecek ay/yıl
                         </div>
                       </div>
                     </div>
