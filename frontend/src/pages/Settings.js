@@ -713,6 +713,10 @@ const Settings = () => {
                     <li>✓ Güvenlik header'ları (XSS, CSRF koruması)</li>
                     <li>✓ Sadece izin verilen domainlerden erişim</li>
                     <li>✓ Token tabanlı kimlik doğrulama</li>
+                    <li>✓ Captcha doğrulama (başarısız girişlerde)</li>
+                    <li>✓ 2FA (İki Faktörlü Doğrulama) desteği</li>
+                    <li>✓ Güçlü şifre politikası</li>
+                    <li>✓ Audit logging (işlem kayıtları)</li>
                   </ul>
                 </div>
               </CardContent>
@@ -730,7 +734,7 @@ const Settings = () => {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Versiyon</span>
-                    <span className="font-mono">1.0.3</span>
+                    <span className="font-mono">1.0.4</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Veritabanı</span>
@@ -746,6 +750,18 @@ const Settings = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Güvenlik</span>
+                    <span className="font-mono text-green-500">Gelişmiş</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Captcha</span>
+                    <span className="font-mono text-green-500">Aktif</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">2FA</span>
+                    <span className="font-mono text-green-500">Destekleniyor</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Audit Log</span>
                     <span className="font-mono text-green-500">Aktif</span>
                   </div>
                 </div>
