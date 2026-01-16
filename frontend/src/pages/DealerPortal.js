@@ -122,7 +122,7 @@ const DealerPortal = () => {
 
   const token = localStorage.getItem('dealer_token');
   
-  // Kategorileri hesapla
+  // Kategorileri hesapla - alfabetik sırala
   const categories = React.useMemo(() => {
     const cats = {};
     products.forEach(p => {
@@ -130,13 +130,21 @@ const DealerPortal = () => {
       if (!cats[cat]) cats[cat] = 0;
       cats[cat]++;
     });
-    return Object.entries(cats).sort((a, b) => b[1] - a[1]);
+    // Alfabetik sırala (Türkçe karakterleri destekle)
+    return Object.entries(cats).sort((a, b) => a[0].localeCompare(b[0], 'tr'));
   }, [products]);
+  
+  // İlk kategoriyi varsayılan olarak seç
+  React.useEffect(() => {
+    if (categories.length > 0 && selectedCategory === 'all') {
+      setSelectedCategory(categories[0][0]);
+    }
+  }, [categories]);
   
   // Filtrelenmiş ürünler
   const filteredProducts = React.useMemo(() => {
     return products.filter(p => {
-      const matchesCategory = selectedCategory === 'all' || (p.category || 'Diğer') === selectedCategory;
+      const matchesCategory = (p.category || 'Diğer') === selectedCategory;
       const matchesSearch = !searchQuery || 
         p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.code?.toLowerCase().includes(searchQuery.toLowerCase());
