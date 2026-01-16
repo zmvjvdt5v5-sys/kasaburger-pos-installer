@@ -2123,7 +2123,7 @@ try:
     # NetGSM SMS Gönderimi
     async def send_campaign_sms(campaign: dict, dealers: list):
         """NetGSM ile SMS gönderir"""
-        settings = await db.settings.find_one({}, {"_id": 0})
+        settings = await db.settings.find_one({"type": "notifications"}, {"_id": 0})
         
         netgsm_usercode = settings.get("netgsm_usercode") if settings else None
         netgsm_password = settings.get("netgsm_password") if settings else None
@@ -2187,7 +2187,7 @@ try:
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
         
-        settings = await db.settings.find_one({}, {"_id": 0})
+        settings = await db.settings.find_one({"type": "notifications"}, {"_id": 0})
         
         smtp_host = settings.get("smtp_host") if settings else None
         smtp_port = settings.get("smtp_port", 587) if settings else 587
