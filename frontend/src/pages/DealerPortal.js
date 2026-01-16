@@ -1098,15 +1098,28 @@ const DealerPortal = () => {
                   <Button 
                     className="w-full bg-primary mt-4" 
                     onClick={handleSubmitPayment}
-                    disabled={submittingPayment || !paymentForm.amount}
+                    disabled={submittingPayment || processingCard || !paymentForm.amount}
                   >
-                    {submittingPayment ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                    Ödeme Bildir
+                    {(submittingPayment || processingCard) ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <CreditCard className="h-4 w-4 mr-2" />
+                    )}
+                    {paymentForm.payment_method === 'sanal_pos' 
+                      ? (processingCard ? 'Ödeme İşleniyor...' : '💳 Kartla Öde')
+                      : 'Ödeme Bildir'
+                    }
                   </Button>
 
-                  <p className="text-xs text-muted-foreground text-center mt-2">
-                    Ödeme bildiriminiz admin tarafından onaylandıktan sonra bakiyenize yansıyacaktır.
-                  </p>
+                  {paymentForm.payment_method === 'sanal_pos' ? (
+                    <p className="text-xs text-green-500 text-center mt-2">
+                      🔒 Ödemeniz iyzico güvencesiyle işlenecektir.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      Ödeme bildiriminiz admin tarafından onaylandıktan sonra bakiyenize yansıyacaktır.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
