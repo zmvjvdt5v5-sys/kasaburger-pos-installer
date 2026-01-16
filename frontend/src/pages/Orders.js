@@ -426,10 +426,10 @@ const Orders = () => {
                             {order.status === 'pending' && (
                               <>
                                 <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'processing')}>
-                                  <Truck className="h-4 w-4 mr-2" /> İşleme Al
+                                  <CheckCircle className="h-4 w-4 mr-2" /> Onayla
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleStatusUpdate(order.id, 'delivered')}>
-                                  <CheckCircle className="h-4 w-4 mr-2" /> Teslim Edildi
+                                  <Truck className="h-4 w-4 mr-2" /> Teslim Edildi
                                 </DropdownMenuItem>
                               </>
                             )}
