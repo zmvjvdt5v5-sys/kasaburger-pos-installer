@@ -61,7 +61,7 @@ export function getStatusText(status) {
     overdue: 'Gecikmiş',
     planned: 'Planlandı',
     delivered: 'Teslim Edildi',
-    processing: 'İşleniyor',
+    processing: 'Onaylandı',
   };
   return texts[status] || status;
 }
