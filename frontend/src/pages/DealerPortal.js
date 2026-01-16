@@ -551,58 +551,75 @@ const DealerPortal = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {products.map((product) => {
-                        const discountedPrice = getDiscountedPrice(product.base_price);
-                        return (
-                          <div
-                            key={product.id}
-                            className={`p-4 rounded-lg border bg-background/50 hover:border-primary/50 transition-colors relative ${
-                              activeDiscountCampaign ? 'border-green-500/50 ring-1 ring-green-500/20' : 'border-border/50'
-                            }`}
-                          >
-                            {activeDiscountCampaign && (
-                              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                                <Percent className="h-3 w-3" />
-                                {activeDiscountCampaign.discount_type === 'percent' 
-                                  ? `%${activeDiscountCampaign.discount_value}` 
-                                  : `${activeDiscountCampaign.discount_value}TL`}
-                              </div>
-                            )}
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
-                                <h3 className="font-medium">{product.name}</h3>
-                                <p className="text-xs text-muted-foreground">{product.code}</p>
-                              </div>
-                              <div className="text-right">
-                                {discountedPrice ? (
-                                  <>
-                                    <span className="text-xs text-muted-foreground line-through block">
-                                      {formatCurrency(product.base_price)}
-                                    </span>
-                                    <span className="font-mono text-green-500 font-bold">
-                                      {formatCurrency(discountedPrice)}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <span className="font-mono text-primary font-bold">
-                                    {formatCurrency(product.base_price)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="w-full mt-2"
-                              onClick={() => addToCart(product)}
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Sepete Ekle
-                            </Button>
+                    {/* Ürünleri kategoriye göre grupla */}
+                    {(() => {
+                      const groupedProducts = products.reduce((acc, product) => {
+                        const category = product.category || 'Diğer';
+                        if (!acc[category]) acc[category] = [];
+                        acc[category].push(product);
+                        return acc;
+                      }, {});
+                      
+                      return Object.entries(groupedProducts).map(([category, categoryProducts]) => (
+                        <div key={category} className="mb-6">
+                          <h3 className="text-lg font-bold text-primary mb-3 border-b border-border pb-2">
+                            {category} ({categoryProducts.length})
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {categoryProducts.map((product) => {
+                              const discountedPrice = getDiscountedPrice(product.base_price);
+                              return (
+                                <div
+                                  key={product.id}
+                                  className={`p-3 rounded-lg border bg-background/50 hover:border-primary/50 transition-colors relative ${
+                                    activeDiscountCampaign ? 'border-green-500/50 ring-1 ring-green-500/20' : 'border-border/50'
+                                  }`}
+                                >
+                                  {activeDiscountCampaign && (
+                                    <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                                      <Percent className="h-3 w-3" />
+                                      {activeDiscountCampaign.discount_type === 'percent' 
+                                        ? `%${activeDiscountCampaign.discount_value}` 
+                                        : `${activeDiscountCampaign.discount_value}TL`}
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      <h4 className="font-medium text-sm">{product.name}</h4>
+                                      <p className="text-xs text-muted-foreground">{product.code}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      {discountedPrice ? (
+                                        <>
+                                          <span className="text-xs text-muted-foreground line-through block">
+                                            {formatCurrency(product.base_price)}
+                                          </span>
+                                          <span className="font-mono text-green-500 font-bold text-sm">
+                                            {formatCurrency(discountedPrice)}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <span className="font-mono text-primary font-bold text-sm">
+                                          {formatCurrency(product.base_price)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    className="w-full mt-2"
+                                    onClick={() => addToCart(product)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Sepete Ekle
+                                  </Button>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      ));
+                    })()}
                   </CardContent>
                 </Card>
               </div>
