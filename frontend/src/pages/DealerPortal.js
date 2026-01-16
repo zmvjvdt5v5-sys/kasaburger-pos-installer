@@ -576,82 +576,114 @@ const DealerPortal = () => {
               {/* Products */}
               <div className="lg:col-span-2">
                 <Card className="bg-card border-border/50">
-                  <CardHeader>
+                  <CardHeader className="pb-2">
                     <CardTitle className="font-heading flex items-center gap-2">
                       <Package className="h-5 w-5 text-primary" />
-                      Ürünler
+                      Ürünler ({filteredProducts.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {/* Ürünleri kategoriye göre grupla */}
-                    {(() => {
-                      const groupedProducts = products.reduce((acc, product) => {
-                        const category = product.category || 'Diğer';
-                        if (!acc[category]) acc[category] = [];
-                        acc[category].push(product);
-                        return acc;
-                      }, {});
+                    {/* Kategori Filtreleme */}
+                    <div className="mb-4 space-y-3">
+                      {/* Arama */}
+                      <div className="relative">
+                        <Input
+                          placeholder="Ürün ara..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="bg-input/50 pl-10"
+                        />
+                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      </div>
                       
-                      return Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-                        <div key={category} className="mb-6">
-                          <h3 className="text-lg font-bold text-primary mb-3 border-b border-border pb-2">
-                            {category} ({categoryProducts.length})
-                          </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {categoryProducts.map((product) => {
-                              const discountedPrice = getDiscountedPrice(product.base_price);
-                              return (
-                                <div
-                                  key={product.id}
-                                  className={`p-3 rounded-lg border bg-background/50 hover:border-primary/50 transition-colors relative ${
-                                    activeDiscountCampaign ? 'border-green-500/50 ring-1 ring-green-500/20' : 'border-border/50'
-                                  }`}
-                                >
-                                  {activeDiscountCampaign && (
-                                    <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-                                      <Percent className="h-3 w-3" />
-                                      {activeDiscountCampaign.discount_type === 'percent' 
-                                        ? `%${activeDiscountCampaign.discount_value}` 
-                                        : `${activeDiscountCampaign.discount_value}TL`}
-                                    </div>
-                                  )}
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                      <h4 className="font-medium text-sm">{product.name}</h4>
-                                      <p className="text-xs text-muted-foreground">{product.code}</p>
-                                    </div>
-                                    <div className="text-right">
-                                      {discountedPrice ? (
-                                        <>
-                                          <span className="text-xs text-muted-foreground line-through block">
-                                            {formatCurrency(product.base_price)}
-                                          </span>
-                                          <span className="font-mono text-green-500 font-bold text-sm">
-                                            {formatCurrency(discountedPrice)}
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <span className="font-mono text-primary font-bold text-sm">
-                                          {formatCurrency(product.base_price)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <Button
-                                    size="sm"
-                                    className="w-full mt-2"
-                                    onClick={() => addToCart(product)}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Sepete Ekle
-                                  </Button>
+                      {/* Kategori Butonları */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                          onClick={() => setSelectedCategory('all')}
+                          className="text-xs"
+                        >
+                          Tümü ({products.length})
+                        </Button>
+                        {categories.map(([cat, count]) => (
+                          <Button
+                            key={cat}
+                            size="sm"
+                            variant={selectedCategory === cat ? 'default' : 'outline'}
+                            onClick={() => setSelectedCategory(cat)}
+                            className="text-xs"
+                          >
+                            {cat} ({count})
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Ürün Listesi */}
+                    <ScrollArea className="h-[500px] pr-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {filteredProducts.map((product) => {
+                          const discountedPrice = getDiscountedPrice(product.base_price);
+                          return (
+                            <div
+                              key={product.id}
+                              className={`p-3 rounded-lg border bg-background/50 hover:border-primary/50 transition-colors relative ${
+                                activeDiscountCampaign ? 'border-green-500/50 ring-1 ring-green-500/20' : 'border-border/50'
+                              }`}
+                            >
+                              {activeDiscountCampaign && (
+                                <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                                  <Percent className="h-3 w-3" />
+                                  {activeDiscountCampaign.discount_type === 'percent' 
+                                    ? `%${activeDiscountCampaign.discount_value}` 
+                                    : `${activeDiscountCampaign.discount_value}TL`}
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ));
-                    })()}
+                              )}
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 className="font-medium text-sm">{product.name}</h4>
+                                  <p className="text-xs text-muted-foreground">{product.code}</p>
+                                  <Badge variant="outline" className="mt-1 text-xs">
+                                    {product.category || 'Diğer'}
+                                  </Badge>
+                                </div>
+                                <div className="text-right">
+                                  {discountedPrice ? (
+                                    <>
+                                      <span className="text-xs text-muted-foreground line-through block">
+                                        {formatCurrency(product.base_price)}
+                                      </span>
+                                      <span className="font-mono text-green-500 font-bold text-sm">
+                                        {formatCurrency(discountedPrice)}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="font-mono text-primary font-bold text-sm">
+                                      {formatCurrency(product.base_price)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="w-full mt-2"
+                                onClick={() => addToCart(product)}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Sepete Ekle
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {filteredProducts.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">
+                          Bu kategoride ürün bulunamadı
+                        </p>
+                      )}
+                    </ScrollArea>
                   </CardContent>
                 </Card>
               </div>
