@@ -168,6 +168,20 @@ try:
     BIZIMHESAP_API_KEY = os.environ.get('BIZIMHESAP_API_KEY', '')
     BIZIMHESAP_API_URL = os.environ.get('BIZIMHESAP_API_URL', 'https://bizimhesap.com/api/b2b')
 
+    # iyzico Payment Gateway Configuration
+    IYZICO_API_KEY = os.environ.get('IYZICO_API_KEY', '')
+    IYZICO_SECRET_KEY = os.environ.get('IYZICO_SECRET_KEY', '')
+    IYZICO_BASE_URL = os.environ.get('IYZICO_BASE_URL', 'https://sandbox-api.iyzipay.com')
+    
+    # Import iyzipay
+    try:
+        import iyzipay
+        iyzico_available = True
+        logging.info("iyzico payment gateway initialized")
+    except ImportError:
+        iyzico_available = False
+        logging.warning("iyzipay not installed - payment gateway disabled")
+
     api_router = APIRouter(prefix="/api")
     security = HTTPBearer()
 
