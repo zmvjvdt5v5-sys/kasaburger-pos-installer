@@ -30,7 +30,14 @@ const DealerLogin = () => {
         body: JSON.stringify({ dealer_code: dealerCode, password }),
       });
 
-      const data = await response.json();
+      // Safely parse JSON response
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('JSON parse error:', jsonError);
+        throw new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || 'Giriş başarısız');
@@ -41,6 +48,7 @@ const DealerLogin = () => {
       toast.success('Giriş başarılı!');
       navigate('/dealer');
     } catch (error) {
+      console.error('Login error:', error);
       toast.error(error.message || 'Giriş başarısız');
     } finally {
       setLoading(false);
