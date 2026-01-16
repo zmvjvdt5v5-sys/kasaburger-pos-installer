@@ -922,8 +922,13 @@ try:
         await db.recipes.insert_one(recipe_doc)
         return RecipeResponse(**{k: v for k, v in recipe_doc.items() if k != "_id"})
 
+    SUPER_ADMIN_EMAIL = "admin@kasaburger.net.tr"
+    
     @api_router.get("/recipes", response_model=List[dict])
     async def get_recipes(current_user: dict = Depends(get_current_user)):
+        # Only super admin can access recipes
+        if current_user.get("email") != SUPER_ADMIN_EMAIL:
+            raise HTTPException(status_code=403, detail="Bu sayfaya erişim yetkiniz yok")
         recipes = await db.recipes.find({}, {"_id": 0}).to_list(1000)
         return recipes
 
