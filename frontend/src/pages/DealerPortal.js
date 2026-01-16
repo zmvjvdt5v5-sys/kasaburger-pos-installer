@@ -96,6 +96,7 @@ const DealerPortal = () => {
   const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
@@ -131,11 +132,12 @@ const DealerPortal = () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       
-      const [productsRes, ordersRes, invoicesRes, paymentsRes] = await Promise.all([
+      const [productsRes, ordersRes, invoicesRes, paymentsRes, campaignsRes] = await Promise.all([
         fetch(`${BACKEND_URL}/api/dealer-portal/products`, { headers }),
         fetch(`${BACKEND_URL}/api/dealer-portal/orders`, { headers }),
         fetch(`${BACKEND_URL}/api/dealer-portal/invoices`, { headers }),
         fetch(`${BACKEND_URL}/api/dealer-portal/payments`, { headers }).catch(() => ({ ok: false })),
+        fetch(`${BACKEND_URL}/api/dealer-portal/campaigns`, { headers }).catch(() => ({ ok: false })),
       ]);
 
       if (productsRes.ok) setProducts(await productsRes.json());
@@ -144,6 +146,10 @@ const DealerPortal = () => {
       if (paymentsRes.ok) {
         const paymentsData = await paymentsRes.json();
         setPayments(paymentsData);
+      }
+      if (campaignsRes.ok) {
+        const campaignsData = await campaignsRes.json();
+        setCampaigns(campaignsData);
       }
 
       const dealerInfo = JSON.parse(localStorage.getItem('dealer_info') || '{}');
