@@ -31,7 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Boxes, Search, Loader2, ArrowDownCircle, ArrowUpCircle, Upload, Download, FileSpreadsheet } from 'lucide-react';
-import axios from 'axios';
+// axios removed - using fetch
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -191,11 +191,12 @@ const Materials = () => {
   const downloadTemplate = async () => {
     try {
       const token = localStorage.getItem('kasaburger_token');
-      const response = await axios.get(`${API_URL}/api/templates/materials-excel`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
+      const response = await fetch(`${API_URL}/api/templates/materials-excel`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      if (!response.ok) throw new Error('Download failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'hammadde_sablonu.xlsx');
@@ -218,21 +219,23 @@ const Materials = () => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post(`${API_URL}/api/import/materials-excel`, formData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+      const response = await fetch(`${API_URL}/api/import/materials-excel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
       });
       
-      toast.success(response.data.message);
-      if (response.data.errors?.length > 0) {
-        response.data.errors.forEach(err => toast.warning(err));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Import failed');
+      
+      toast.success(data.message);
+      if (data.errors?.length > 0) {
+        data.errors.forEach(err => toast.warning(err));
       }
       setImportDialogOpen(false);
       loadData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Excel içe aktarma başarısız');
+      toast.error(error.message || 'Excel içe aktarma başarısız');
     } finally {
       setImporting(false);
       e.target.value = '';
