@@ -957,19 +957,96 @@ const DealerPortal = () => {
 
                   {/* Sanal POS Info */}
                   {paymentForm.payment_method === 'sanal_pos' && (
-                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                      <p className="text-sm text-blue-400 mb-2 flex items-center gap-2">
-                        <CreditCard className="h-4 w-4" />
-                        <strong>Sanal POS ile Ödeme</strong>
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Ödeme tutarını girin ve "Ödeme Bildir" butonuna tıklayın. 
-                        Ardından sanal pos ekranına yönlendirileceksiniz.
-                      </p>
-                      <div className="p-3 bg-background/50 rounded text-xs">
-                        <p><strong>Hesap Bilgileri:</strong></p>
-                        <p>Firma: Kasa Burger</p>
-                        <p>Sanal POS: Bizim Hesap Entegrasyonu</p>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg">
+                        <p className="text-sm text-blue-400 mb-2 flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          <strong>💳 Kredi Kartı ile Ödeme</strong>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Kart bilgilerinizi girin ve güvenli ödeme yapın.
+                        </p>
+                      </div>
+                      
+                      {/* Card Form */}
+                      <div className="space-y-3 p-4 bg-card/50 rounded-lg border border-border">
+                        <div className="space-y-2">
+                          <Label>Kart Üzerindeki İsim *</Label>
+                          <Input
+                            type="text"
+                            value={cardForm.cardHolderName}
+                            onChange={(e) => setCardForm({...cardForm, cardHolderName: e.target.value.toUpperCase()})}
+                            placeholder="JOHN DOE"
+                            className="bg-input/50 uppercase"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Kart Numarası *</Label>
+                          <Input
+                            type="text"
+                            value={cardForm.cardNumber}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g, '').substring(0, 16);
+                              const formatted = val.replace(/(\d{4})(?=\d)/g, '$1 ');
+                              setCardForm({...cardForm, cardNumber: formatted});
+                            }}
+                            placeholder="5528 7900 0000 0008"
+                            className="bg-input/50 font-mono"
+                            maxLength={19}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-2">
+                            <Label>Ay *</Label>
+                            <select
+                              value={cardForm.expireMonth}
+                              onChange={(e) => setCardForm({...cardForm, expireMonth: e.target.value})}
+                              className="w-full h-10 px-3 rounded-md border border-border bg-input/50 text-foreground"
+                            >
+                              <option value="">Ay</option>
+                              {Array.from({length: 12}, (_, i) => (
+                                <option key={i+1} value={String(i+1).padStart(2, '0')}>
+                                  {String(i+1).padStart(2, '0')}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Yıl *</Label>
+                            <select
+                              value={cardForm.expireYear}
+                              onChange={(e) => setCardForm({...cardForm, expireYear: e.target.value})}
+                              className="w-full h-10 px-3 rounded-md border border-border bg-input/50 text-foreground"
+                            >
+                              <option value="">Yıl</option>
+                              {Array.from({length: 10}, (_, i) => {
+                                const year = new Date().getFullYear() + i;
+                                return (
+                                  <option key={year} value={String(year)}>
+                                    {year}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>CVC *</Label>
+                            <Input
+                              type="text"
+                              value={cardForm.cvc}
+                              onChange={(e) => setCardForm({...cardForm, cvc: e.target.value.replace(/\D/g, '').substring(0, 4)})}
+                              placeholder="123"
+                              className="bg-input/50 font-mono"
+                              maxLength={4}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-muted-foreground mt-2 p-2 bg-yellow-500/10 rounded">
+                          🔒 Sandbox Test Kartı: <code className="bg-background px-1 rounded">5528 7900 0000 0008</code> | CVC: 123 | Tarih: Gelecek ay/yıl
+                        </div>
                       </div>
                     </div>
                   )}
