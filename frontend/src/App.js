@@ -33,6 +33,7 @@ import Settings from './pages/Settings';
 import Campaigns from './pages/Campaigns';
 import DealerLogin from './pages/DealerLogin';
 import DealerPortal from './pages/DealerPortal';
+import KioskPage from './pages/KioskPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
