@@ -19,7 +19,8 @@ import {
   LogOut,
   Menu,
   X,
-  ChefHat
+  ChefHat,
+  Megaphone
 } from 'lucide-react';
 
 const navItems = [
@@ -33,6 +34,7 @@ const navItems = [
   { path: '/invoices', label: 'Faturalar', icon: FileText },
   { path: '/payments', label: 'Ödemeler', icon: CreditCard },
   { path: '/accounting', label: 'Muhasebe', icon: Wallet },
+  { path: '/campaigns', label: 'Kampanyalar', icon: Megaphone },
   { path: '/reports', label: 'Raporlar', icon: BarChart3 },
   { path: '/settings', label: 'Ayarlar', icon: Settings },
 ];
