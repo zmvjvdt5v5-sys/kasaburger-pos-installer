@@ -1106,7 +1106,7 @@ const DealerPortal = () => {
                           <TableRow key={payment.id} className="border-border/50">
                             <TableCell>{formatDate(payment.payment_date)}</TableCell>
                             <TableCell className="font-mono">{payment.invoice_number}</TableCell>
-                            <TableCell>{payment.payment_method === 'cash' ? 'Nakit' : payment.payment_method === 'bank_transfer' ? 'Havale' : payment.payment_method}</TableCell>
+                            <TableCell>{payment.payment_method === 'cash' ? 'Nakit' : payment.payment_method === 'bank_transfer' ? 'Havale' : payment.payment_method === 'sanal_pos' ? '💳 Sanal POS' : payment.payment_method === 'mail_order' ? 'Mail Order' : payment.payment_method}</TableCell>
                             <TableCell className="font-mono text-emerald-500">{formatCurrency(payment.amount)}</TableCell>
                           </TableRow>
                         ))}
