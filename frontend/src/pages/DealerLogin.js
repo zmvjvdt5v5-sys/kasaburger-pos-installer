@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -8,72 +8,13 @@ import { Store, KeyRound, Loader2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Direct login function
-const directLogin = (url, data) => {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Bağlantı zaman aşımı'));
-    }, 15000);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 10000;
-    
-    xhr.onload = function() {
-      clearTimeout(timeout);
-      try {
-        const response = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(response);
-        } else {
-          reject(new Error(response.detail || 'Giriş başarısız'));
-        }
-      } catch(e) {
-        reject(new Error('Sunucu yanıtı işlenemedi'));
-      }
-    };
-    
-    xhr.onerror = function() {
-      clearTimeout(timeout);
-      reject(new Error('Bağlantı hatası'));
-    };
-    
-    xhr.ontimeout = function() {
-      clearTimeout(timeout);
-      reject(new Error('Bağlantı zaman aşımı'));
-    };
-
-    try {
-      xhr.send(JSON.stringify(data));
-    } catch(e) {
-      clearTimeout(timeout);
-      reject(new Error('İstek gönderilemedi'));
-    }
-  });
-};
-
 const DealerLogin = () => {
   const [dealerCode, setDealerCode] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Suppress errors on mount
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.message && (e.message.includes('postMessage') || e.message.includes('cloned'))) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    };
-    window.addEventListener('error', handler, true);
-    return () => window.removeEventListener('error', handler, true);
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    e.stopPropagation();
     
     if (!dealerCode || !password) {
       toast.error('Lütfen tüm alanları doldurun');
@@ -83,18 +24,30 @@ const DealerLogin = () => {
     setLoading(true);
     
     try {
-      const data = await directLogin(`${BACKEND_URL}/api/dealer-portal/login`, { 
-        dealer_code: dealerCode, 
-        password: password 
+      const response = await fetch(`${BACKEND_URL}/api/dealer-portal/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          dealer_code: dealerCode, 
+          password: password 
+        }),
       });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Giriş başarısız');
+      }
 
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
       toast.success('Giriş başarılı!');
       
       setTimeout(() => {
-        window.location.replace('/dealer');
-      }, 500);
+        window.location.href = '/dealer';
+      }, 300);
       
     } catch (error) {
       console.error('Login error:', error);
