@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../lib/api';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AuthContext = createContext(null);
 
@@ -16,31 +17,51 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('kasaburger_token');
-    const savedUser = localStorage.getItem('kasaburger_user');
-    
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      // Verify token is still valid
-      authAPI.getMe()
-        .then(res => {
-          setUser(res.data);
-          localStorage.setItem('kasaburger_user', JSON.stringify(res.data));
-        })
-        .catch(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem('kasaburger_token');
+      const savedUser = localStorage.getItem('kasaburger_user');
+      
+      if (token && savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+          
+          // Verify token is still valid
+          const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data);
+            localStorage.setItem('kasaburger_user', JSON.stringify(data));
+          } else {
+            logout();
+          }
+        } catch (error) {
+          console.error('Auth verification failed:', error);
           logout();
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
+        }
+      }
       setLoading(false);
-    }
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
-    const response = await authAPI.login({ email, password });
-    const { access_token, user: userData } = response.data;
+    const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Login failed' }));
+      throw new Error(error.detail || 'Login failed');
+    }
+
+    const data = await response.json();
+    const { access_token, user: userData } = data;
     
     localStorage.setItem('kasaburger_token', access_token);
     localStorage.setItem('kasaburger_user', JSON.stringify(userData));
@@ -50,8 +71,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    const response = await authAPI.register({ name, email, password, role: 'admin' });
-    const { access_token, user: userData } = response.data;
+    const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, role: 'admin' })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Register failed' }));
+      throw new Error(error.detail || 'Register failed');
+    }
+
+    const data = await response.json();
+    const { access_token, user: userData } = data;
     
     localStorage.setItem('kasaburger_token', access_token);
     localStorage.setItem('kasaburger_user', JSON.stringify(userData));
