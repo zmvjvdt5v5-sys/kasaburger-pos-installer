@@ -50,8 +50,8 @@ try:
     # Security settings
     RATE_LIMIT_REQUESTS = 100  # Max requests per window
     RATE_LIMIT_WINDOW = 60  # Window in seconds
-    LOGIN_ATTEMPT_LIMIT = 5  # Max failed login attempts
-    LOGIN_BLOCK_DURATION = 300  # Block duration in seconds (5 minutes)
+    LOGIN_ATTEMPT_LIMIT = 50  # Max failed login attempts
+    LOGIN_BLOCK_DURATION = 10  # Block duration in seconds (10 saniye)
     BULK_REQUEST_LIMIT = 10  # Max bulk requests (like get all products) per minute
     
     # Allowed origins (production domains)
