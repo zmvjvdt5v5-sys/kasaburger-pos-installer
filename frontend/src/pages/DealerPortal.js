@@ -296,7 +296,14 @@ const DealerPortal = () => {
         })
       });
 
-      const data = await response.json();
+      // Safely parse JSON response
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('JSON parse error:', jsonError);
+        throw new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
+      }
       
       if (!response.ok) {
         throw new Error(data.detail || 'Sipariş gönderilemedi');
@@ -318,7 +325,8 @@ const DealerPortal = () => {
       setOrderDialogOpen(false);
       loadData();
     } catch (error) {
-      toast.error(error.message);
+      console.error('Order error:', error);
+      toast.error(error.message || 'Sipariş gönderilemedi');
     } finally {
       setSubmitting(false);
     }
