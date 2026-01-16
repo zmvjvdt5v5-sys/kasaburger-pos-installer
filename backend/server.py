@@ -203,6 +203,11 @@ try:
     class UserLogin(BaseModel):
         email: EmailStr
         password: str
+        captcha_answer: Optional[int] = None  # Captcha yanıtı
+
+    class TwoFactorVerify(BaseModel):
+        email: EmailStr
+        code: str
 
     class UserResponse(BaseModel):
         id: str
@@ -210,11 +215,82 @@ try:
         name: str
         role: str
         created_at: str
+        two_factor_enabled: Optional[bool] = False
 
     class TokenResponse(BaseModel):
         access_token: str
         token_type: str = "bearer"
         user: UserResponse
+        requires_2fa: Optional[bool] = False
+
+    # 2FA codes storage (in-memory, production'da Redis kullanılmalı)
+    two_factor_codes: Dict[str, dict] = {}
+    
+    # Captcha storage
+    captcha_storage: Dict[str, dict] = {}
+    
+    # Audit log storage
+    audit_logs: List[dict] = []
+    
+    # Password policy settings
+    PASSWORD_MIN_LENGTH = 8
+    PASSWORD_REQUIRE_UPPERCASE = True
+    PASSWORD_REQUIRE_LOWERCASE = True
+    PASSWORD_REQUIRE_NUMBER = True
+    PASSWORD_REQUIRE_SPECIAL = False
+
+    def validate_password_strength(password: str) -> tuple[bool, str]:
+        """Şifre güçlülük kontrolü"""
+        if len(password) < PASSWORD_MIN_LENGTH:
+            return False, f"Şifre en az {PASSWORD_MIN_LENGTH} karakter olmalı"
+        if PASSWORD_REQUIRE_UPPERCASE and not any(c.isupper() for c in password):
+            return False, "Şifre en az bir büyük harf içermeli"
+        if PASSWORD_REQUIRE_LOWERCASE and not any(c.islower() for c in password):
+            return False, "Şifre en az bir küçük harf içermeli"
+        if PASSWORD_REQUIRE_NUMBER and not any(c.isdigit() for c in password):
+            return False, "Şifre en az bir rakam içermeli"
+        if PASSWORD_REQUIRE_SPECIAL and not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+            return False, "Şifre en az bir özel karakter içermeli"
+        return True, "OK"
+
+    def generate_2fa_code() -> str:
+        """6 haneli 2FA kodu üret"""
+        import random
+        return str(random.randint(100000, 999999))
+
+    def generate_captcha() -> dict:
+        """Basit matematik captcha üret"""
+        import random
+        num1 = random.randint(1, 10)
+        num2 = random.randint(1, 10)
+        operation = random.choice(['+', '-'])
+        if operation == '+':
+            answer = num1 + num2
+            question = f"{num1} + {num2} = ?"
+        else:
+            # Negatif sonuç olmasın
+            if num1 < num2:
+                num1, num2 = num2, num1
+            answer = num1 - num2
+            question = f"{num1} - {num2} = ?"
+        
+        captcha_id = str(uuid.uuid4())
+        return {"id": captcha_id, "question": question, "answer": answer}
+
+    def log_audit(action: str, user_id: str, user_email: str, ip: str, details: str = ""):
+        """Audit log kaydı"""
+        audit_logs.append({
+            "id": str(uuid.uuid4()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "action": action,
+            "user_id": user_id,
+            "user_email": user_email,
+            "ip_address": ip,
+            "details": details
+        })
+        # Son 1000 kaydı tut
+        if len(audit_logs) > 1000:
+            audit_logs.pop(0)
 
     class ProductCreate(BaseModel):
         name: str
