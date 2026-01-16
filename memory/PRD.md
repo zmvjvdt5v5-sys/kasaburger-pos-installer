@@ -381,7 +381,7 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 ### Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / 1234
-- **Preview URL:** https://burger-portal-1.preview.emergentagent.com
+- **Preview URL:** https://kiosk-portal-1.preview.emergentagent.com
 
 ---
 
