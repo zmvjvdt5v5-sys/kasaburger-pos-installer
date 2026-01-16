@@ -379,8 +379,23 @@ try:
 
     # ==================== AUTH ROUTES ====================
 
+    # Public registration is DISABLED for security
+    # Only admins can create new users via /api/admin/users endpoint
+    
     @api_router.post("/auth/register", response_model=TokenResponse)
     async def register(user_data: UserCreate):
+        """Public registration is disabled. Only admins can create users."""
+        raise HTTPException(
+            status_code=403, 
+            detail="Kayıt devre dışı. Yeni kullanıcı eklemek için admin ile iletişime geçin."
+        )
+
+    @api_router.post("/admin/users", response_model=TokenResponse)
+    async def admin_create_user(user_data: UserCreate, current_user: dict = Depends(get_current_user)):
+        """Only admins can create new users"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+        
         existing = await db.users.find_one({"email": user_data.email})
         if existing:
             raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı")
@@ -392,7 +407,8 @@ try:
             "password": hash_password(user_data.password),
             "name": user_data.name,
             "role": user_data.role,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["id"]
         }
         await db.users.insert_one(user_doc)
         
@@ -405,6 +421,26 @@ try:
             created_at=user_doc["created_at"]
         )
         return TokenResponse(access_token=token, user=user_response)
+
+    @api_router.get("/admin/users")
+    async def admin_list_users(current_user: dict = Depends(get_current_user)):
+        """List all users - admin only"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+        users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(100)
+        return users
+
+    @api_router.delete("/admin/users/{user_id}")
+    async def admin_delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
+        """Delete a user - admin only"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+        if user_id == current_user["id"]:
+            raise HTTPException(status_code=400, detail="Kendinizi silemezsiniz")
+        result = await db.users.delete_one({"id": user_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+        return {"message": "Kullanıcı silindi"}
 
     @api_router.post("/auth/login", response_model=TokenResponse)
     async def login(credentials: UserLogin):
