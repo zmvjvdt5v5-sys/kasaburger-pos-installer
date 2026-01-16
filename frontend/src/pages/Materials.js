@@ -190,7 +190,7 @@ const Materials = () => {
 
   const downloadTemplate = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('kasaburger_token');
       const response = await axios.get(`${API_URL}/api/templates/materials-excel`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
@@ -214,7 +214,7 @@ const Materials = () => {
 
     setImporting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('kasaburger_token');
       const formData = new FormData();
       formData.append('file', file);
       

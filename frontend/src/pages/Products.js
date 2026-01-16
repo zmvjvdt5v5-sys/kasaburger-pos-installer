@@ -165,7 +165,7 @@ const Products = () => {
 
     setImporting(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('kasaburger_token');
       const formData = new FormData();
       formData.append('file', file);
       
