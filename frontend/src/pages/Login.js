@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { ChefHat, Mail, Lock, Loader2, Shield, RefreshCw, Store } from 'lucide-react';
+import { Mail, Lock, Loader2, Shield, RefreshCw, Store } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -20,8 +19,6 @@ const Login = () => {
   const [requires2FA, setRequires2FA] = useState(false);
   const [twoFACode, setTwoFACode] = useState('');
   const [twoFAEmail, setTwoFAEmail] = useState('');
-  const { login } = useAuth();
-  const navigate = useNavigate();
 
   const loadCaptcha = async () => {
     try {
@@ -66,7 +63,6 @@ const Login = () => {
         ? `${API_URL}/api/auth/login?captcha_id=${captcha.captcha_id}`
         : `${API_URL}/api/auth/login`;
 
-      // Use fetch instead of axios to avoid postMessage cloning issues
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,12 +73,10 @@ const Login = () => {
       try {
         data = await response.json();
       } catch (jsonErr) {
-        console.error('JSON parse error:', jsonErr);
         throw new Error('Sunucu yanıtı işlenemedi');
       }
 
       if (!response.ok) {
-        // Check if captcha is required
         const captchaHeader = response.headers.get('x-captcha-required');
         if (captchaHeader === 'true' || (data.detail && data.detail.includes('Captcha'))) {
           setCaptchaRequired(true);
@@ -98,14 +92,12 @@ const Login = () => {
         setTwoFAEmail(data.email || email);
         toast.info('2FA kodu email adresinize gönderildi');
       } else {
-        // Normal login success
         localStorage.setItem('kasaburger_token', data.access_token);
         localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
         toast.success('Giriş başarılı!');
-        // Full page reload to ensure AuthContext picks up the new token
         setTimeout(() => {
-          window.location.replace('/dashboard');
-        }, 500);
+          window.location.href = '/dashboard';
+        }, 300);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -144,10 +136,9 @@ const Login = () => {
       localStorage.setItem('kasaburger_token', data.access_token);
       localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
       toast.success('Giriş başarılı!');
-      // Full page reload to ensure AuthContext picks up the new token
       setTimeout(() => {
-        window.location.replace('/dashboard');
-      }, 500);
+        window.location.href = '/dashboard';
+      }, 300);
     } catch (error) {
       toast.error(error.message || '2FA doğrulaması başarısız');
     } finally {
@@ -155,15 +146,12 @@ const Login = () => {
     }
   };
 
-  // 2FA ekranı
   if (requires2FA) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')`,
-          }}
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')` }}
         >
           <div className="absolute inset-0 bg-black/80" />
         </div>
@@ -175,9 +163,7 @@ const Login = () => {
             </div>
             <div>
               <CardTitle className="text-2xl font-heading font-bold">2FA Doğrulama</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Email adresinize gönderilen 6 haneli kodu girin
-              </CardDescription>
+              <CardDescription>Email adresinize gönderilen 6 haneli kodu girin</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -199,15 +185,7 @@ const Login = () => {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
                 Doğrula
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full"
-                onClick={() => {
-                  setRequires2FA(false);
-                  setTwoFACode('');
-                }}
-              >
+              <Button type="button" variant="outline" className="w-full" onClick={() => { setRequires2FA(false); setTwoFACode(''); }}>
                 Geri Dön
               </Button>
             </form>
@@ -221,9 +199,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')`,
-        }}
+        style={{ backgroundImage: `url('https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85')` }}
       >
         <div className="absolute inset-0 bg-black/80" />
       </div>
@@ -239,9 +215,7 @@ const Login = () => {
           </div>
           <div>
             <CardTitle className="text-3xl font-heading font-bold">KasaBurger</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Yönetim Paneli
-            </CardDescription>
+            <CardDescription>Yönetim Paneli</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -277,7 +251,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Captcha */}
             {captchaRequired && captcha && (
               <div className="space-y-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
                 <div className="flex items-center justify-between">
@@ -285,13 +258,7 @@ const Login = () => {
                     <Shield className="h-4 w-4" />
                     Güvenlik Doğrulaması
                   </Label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={loadCaptcha}
-                    className="h-6 px-2"
-                  >
+                  <Button type="button" variant="ghost" size="sm" onClick={loadCaptcha} className="h-6 px-2">
                     <RefreshCw className="h-3 w-3" />
                   </Button>
                 </div>
@@ -310,9 +277,7 @@ const Login = () => {
             )}
 
             <Button type="submit" className="w-full" disabled={loading} data-testid="login-submit">
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Giriş Yap
             </Button>
           </form>
