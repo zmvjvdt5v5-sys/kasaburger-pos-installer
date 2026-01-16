@@ -29,6 +29,19 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 
 ## What's Been Implemented (January 2025)
 
+### January 16, 2025 - Login Fix & Cleanup
+- ✅ **Login Sorunu Çözüldü:** Admin ve bayi panelleri artık düzgün çalışıyor
+- ✅ Frontend login kodları basitleştirildi (XMLHttpRequest/iframe yerine standart fetch API)
+- ✅ index.html'deki gereksiz error suppression kodları temizlendi
+- ✅ CORS header'ları doğrulandı - düzgün çalışıyor
+- ✅ Hem admin (`admin@kasaburger.net.tr`/`admin123`) hem bayi (`MEKGRUP`/`1234`) girişi test edildi ve başarılı
+
+### Self-Service Kiosk (Tamamlandı - Kullanıcı Doğrulaması Bekliyor)
+- `/kiosk` - Müşteri sipariş ekranı
+- `/kiosk-admin` - Kiosk ürün yönetimi
+- Domain tabanlı routing (kasaburger.net için)
+- İçecekler kategorisi (Pepsi grubu)
+
 ### Backend API Endpoints
 - `/api/auth/*` - Kayıt, giriş, kullanıcı bilgisi
 - `/api/products/*` - Ürün CRUD
