@@ -204,6 +204,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/kiosk-admin"
+        element={
+          <ProtectedRoute>
+            <KioskAdmin />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Default Redirect */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
