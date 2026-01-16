@@ -630,34 +630,117 @@ const Settings = () => {
 
         {/* System Tab */}
         <TabsContent value="system">
-          <Card className="bg-card border-border/50">
-            <CardHeader>
-              <CardTitle className="font-heading flex items-center gap-2">
-                <SettingsIcon className="h-5 w-5 text-primary" />
-                Sistem Bilgileri
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Versiyon</span>
-                  <span className="font-mono">1.0.3</span>
+          <div className="grid gap-6">
+            {/* Security Status Card */}
+            <Card className="bg-card border-border/50 border-green-500/30">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-green-500" />
+                  Güvenlik Durumu
+                </CardTitle>
+                <CardDescription>Sistem güvenlik önlemleri ve koruma durumu</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                    <Lock className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Rate Limiting</p>
+                    <p className="text-sm font-bold text-green-500">Aktif</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                    <ShieldAlert className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Brute Force</p>
+                    <p className="text-sm font-bold text-green-500">Korumalı</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                    <Shield className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">CORS</p>
+                    <p className="text-sm font-bold text-green-500">Kısıtlı</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-center">
+                    <ShieldCheck className="h-6 w-6 text-green-500 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">IP Engelleme</p>
+                    <p className="text-sm font-bold text-green-500">Aktif</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Veritabanı</span>
-                  <span className="font-mono">MongoDB</span>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-3 text-sm">
+                  <h4 className="font-semibold text-muted-foreground">Güvenlik Ayarları</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">İstek Limiti</span>
+                      <span className="font-mono">100/dakika</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Giriş Deneme Limiti</span>
+                      <span className="font-mono">5 deneme</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Engelleme Süresi</span>
+                      <span className="font-mono">5 dakika</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Toplu İstek Limiti</span>
+                      <span className="font-mono">10/dakika</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">API</span>
-                  <span className="font-mono">FastAPI</span>
+
+                <Separator className="my-4" />
+                
+                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                  <h4 className="font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Koruma Özellikleri
+                  </h4>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>✓ Başarısız giriş denemelerinde IP engelleme</li>
+                    <li>✓ API isteklerinde rate limiting</li>
+                    <li>✓ Toplu veri çekme sınırlaması</li>
+                    <li>✓ Güvenlik header'ları (XSS, CSRF koruması)</li>
+                    <li>✓ Sadece izin verilen domainlerden erişim</li>
+                    <li>✓ Token tabanlı kimlik doğrulama</li>
+                  </ul>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frontend</span>
-                  <span className="font-mono">React</span>
+              </CardContent>
+            </Card>
+
+            {/* System Info Card */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <SettingsIcon className="h-5 w-5 text-primary" />
+                  Sistem Bilgileri
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Versiyon</span>
+                    <span className="font-mono">1.0.3</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Veritabanı</span>
+                    <span className="font-mono">MongoDB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">API</span>
+                    <span className="font-mono">FastAPI</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Frontend</span>
+                    <span className="font-mono">React</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Güvenlik</span>
+                    <span className="font-mono text-green-500">Aktif</span>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
