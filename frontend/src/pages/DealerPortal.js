@@ -168,6 +168,22 @@ const DealerPortal = () => {
     navigate('/dealer-login');
   };
 
+  // Kampanya indirimi hesapla
+  const getDiscountedPrice = (basePrice) => {
+    // Aktif indirim kampanyası var mı?
+    const discountCampaign = campaigns.find(c => c.campaign_type === 'discount' && c.discount_value);
+    if (!discountCampaign) return null;
+    
+    if (discountCampaign.discount_type === 'percent') {
+      return basePrice * (1 - discountCampaign.discount_value / 100);
+    } else {
+      return Math.max(0, basePrice - discountCampaign.discount_value);
+    }
+  };
+
+  // Aktif indirim kampanyası
+  const activeDiscountCampaign = campaigns.find(c => c.campaign_type === 'discount' && c.discount_value);
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
