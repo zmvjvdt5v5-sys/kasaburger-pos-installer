@@ -468,6 +468,62 @@ const DealerPortal = () => {
 
           {/* SİPARİŞ VER TAB */}
           <TabsContent value="order" className="space-y-6">
+            {/* Aktif Kampanyalar Banner */}
+            {campaigns.length > 0 && (
+              <div className="space-y-4">
+                {campaigns.map((campaign) => (
+                  <div 
+                    key={campaign.id}
+                    className="relative overflow-hidden rounded-xl border-2 border-primary/50 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent p-4 animate-pulse-slow"
+                  >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+                    
+                    <div className="relative flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-primary/20 border border-primary/30">
+                        {campaign.campaign_type === 'discount' ? (
+                          <Percent className="h-8 w-8 text-primary" />
+                        ) : campaign.campaign_type === 'new_product' ? (
+                          <Tag className="h-8 w-8 text-blue-400" />
+                        ) : (
+                          <Bell className="h-8 w-8 text-amber-400" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                          <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                            {campaign.campaign_type === 'discount' ? 'KAMPANYA' : campaign.campaign_type === 'new_product' ? 'YENİ ÜRÜN' : 'DUYURU'}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold text-foreground mb-1">{campaign.title}</h3>
+                        {campaign.description && (
+                          <p className="text-sm text-muted-foreground mb-2">{campaign.description}</p>
+                        )}
+                        
+                        <div className="flex items-center gap-4">
+                          {campaign.campaign_type === 'discount' && campaign.discount_value && (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/20 text-green-400 font-bold text-lg border border-green-500/30">
+                              {campaign.discount_type === 'percent' ? `%${campaign.discount_value}` : `${campaign.discount_value} TL`} İNDİRİM
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {campaign.end_date?.slice(0, 10)} tarihine kadar
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="hidden sm:block">
+                        <Megaphone className="h-16 w-16 text-primary/30" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Products */}
               <div className="lg:col-span-2">
