@@ -604,16 +604,8 @@ const DealerPortal = () => {
                         <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       </div>
                       
-                      {/* Kategori Butonları */}
+                      {/* Kategori Butonları - Alfabetik sıralı */}
                       <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant={selectedCategory === 'all' ? 'default' : 'outline'}
-                          onClick={() => setSelectedCategory('all')}
-                          className="text-xs"
-                        >
-                          Tümü ({products.length})
-                        </Button>
                         {categories.map(([cat, count]) => (
                           <Button
                             key={cat}
