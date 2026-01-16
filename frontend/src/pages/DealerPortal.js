@@ -107,6 +107,8 @@ const DealerPortal = () => {
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [changingPassword, setChangingPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('order');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Ödeme yapma state'leri
   const [paymentForm, setPaymentForm] = useState({
@@ -119,6 +121,28 @@ const DealerPortal = () => {
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
   const token = localStorage.getItem('dealer_token');
+  
+  // Kategorileri hesapla
+  const categories = React.useMemo(() => {
+    const cats = {};
+    products.forEach(p => {
+      const cat = p.category || 'Diğer';
+      if (!cats[cat]) cats[cat] = 0;
+      cats[cat]++;
+    });
+    return Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  }, [products]);
+  
+  // Filtrelenmiş ürünler
+  const filteredProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const matchesCategory = selectedCategory === 'all' || (p.category || 'Diğer') === selectedCategory;
+      const matchesSearch = !searchQuery || 
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.code?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, selectedCategory, searchQuery]);
 
   useEffect(() => {
     if (!token) {
