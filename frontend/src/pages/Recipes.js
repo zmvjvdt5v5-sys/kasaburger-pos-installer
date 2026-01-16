@@ -372,6 +372,43 @@ const Recipes = () => {
                   </p>
                 </div>
 
+                {/* Usage - for special sauces */}
+                {selectedRecipe.usage && (
+                  <div>
+                    <h3 className="font-bold mb-2 flex items-center gap-2">
+                      <Utensils className="h-4 w-4" />
+                      Kullanım
+                    </h3>
+                    <p className="p-3 bg-yellow-500/10 rounded-lg text-sm border border-yellow-500/30">
+                      {selectedRecipe.usage}
+                    </p>
+                  </div>
+                )}
+
+                {/* Taste Profile */}
+                {selectedRecipe.taste_profile && (
+                  <div>
+                    <h3 className="font-bold mb-2 flex items-center gap-2">
+                      💎 Tat Profili
+                    </h3>
+                    <p className="p-3 bg-purple-500/10 rounded-lg text-sm border border-purple-500/30">
+                      {selectedRecipe.taste_profile}
+                    </p>
+                  </div>
+                )}
+
+                {/* Special Note - Chef's Touch */}
+                {selectedRecipe.special_note && (
+                  <div className="p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg border border-yellow-500/50">
+                    <p className="text-sm font-medium">
+                      🏷️ <span className="text-yellow-500">Menüde Gizli Not (Chef's Touch):</span>
+                    </p>
+                    <p className="text-sm mt-1 italic">
+                      {selectedRecipe.special_note}
+                    </p>
+                  </div>
+                )}
+
                 {/* Storage */}
                 <div className="p-3 bg-blue-500/10 rounded-lg">
                   <p className="text-sm flex items-center gap-2">
