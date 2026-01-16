@@ -19,7 +19,12 @@ import {
   TestTube,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Lock,
+  RefreshCw
 } from 'lucide-react';
 import axios from 'axios';
 
