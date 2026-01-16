@@ -537,10 +537,50 @@ try:
         return {"message": "Kullanıcı silindi"}
 
     @api_router.post("/auth/login", response_model=TokenResponse)
-    async def login(credentials: UserLogin):
+    async def login(credentials: UserLogin, request: Request):
+        client_ip = request.client.host if request.client else "unknown"
+        current_time = time.time()
+        
+        # Check if IP is blocked due to too many failed attempts
+        if client_ip in blocked_ips:
+            if current_time < blocked_ips[client_ip]:
+                remaining = int(blocked_ips[client_ip] - current_time)
+                raise HTTPException(
+                    status_code=429, 
+                    detail=f"Çok fazla başarısız giriş denemesi. {remaining} saniye sonra tekrar deneyin."
+                )
+            else:
+                del blocked_ips[client_ip]
+                failed_login_attempts[client_ip] = []
+        
+        # Clean old failed attempts
+        failed_login_attempts[client_ip] = [
+            t for t in failed_login_attempts[client_ip] 
+            if current_time - t < LOGIN_BLOCK_DURATION
+        ]
+        
         user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
         if not user or not verify_password(credentials.password, user["password"]):
-            raise HTTPException(status_code=401, detail="Geçersiz email veya şifre")
+            # Record failed attempt
+            failed_login_attempts[client_ip].append(current_time)
+            
+            # Block IP if too many failed attempts
+            if len(failed_login_attempts[client_ip]) >= LOGIN_ATTEMPT_LIMIT:
+                blocked_ips[client_ip] = current_time + LOGIN_BLOCK_DURATION
+                logging.warning(f"IP blocked due to failed login attempts: {client_ip}")
+                raise HTTPException(
+                    status_code=429, 
+                    detail=f"Çok fazla başarısız giriş denemesi. {LOGIN_BLOCK_DURATION // 60} dakika engellendi."
+                )
+            
+            remaining_attempts = LOGIN_ATTEMPT_LIMIT - len(failed_login_attempts[client_ip])
+            raise HTTPException(
+                status_code=401, 
+                detail=f"Geçersiz email veya şifre. Kalan deneme: {remaining_attempts}"
+            )
+        
+        # Clear failed attempts on successful login
+        failed_login_attempts[client_ip] = []
         
         token = create_token(user["id"], user["email"], user["role"])
         user_response = UserResponse(
@@ -550,6 +590,10 @@ try:
             role=user["role"],
             created_at=user["created_at"]
         )
+        
+        # Log successful login
+        logging.info(f"Successful login: {user['email']} from IP: {client_ip}")
+        
         return TokenResponse(access_token=token, user=user_response)
 
     @api_router.get("/auth/me", response_model=UserResponse)
