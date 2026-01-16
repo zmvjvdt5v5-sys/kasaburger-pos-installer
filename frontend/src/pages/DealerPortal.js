@@ -379,6 +379,71 @@ const DealerPortal = () => {
       return;
     }
 
+    // Sanal POS için kart bilgilerini kontrol et
+    if (paymentForm.payment_method === 'sanal_pos') {
+      if (!cardForm.cardHolderName || !cardForm.cardNumber || !cardForm.expireMonth || !cardForm.expireYear || !cardForm.cvc) {
+        toast.error('Lütfen tüm kart bilgilerini doldurun');
+        return;
+      }
+      
+      // Kart numarası validasyonu
+      const cleanCardNumber = cardForm.cardNumber.replace(/\s/g, '');
+      if (cleanCardNumber.length < 15 || cleanCardNumber.length > 16) {
+        toast.error('Geçersiz kart numarası');
+        return;
+      }
+
+      setProcessingCard(true);
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/dealer-portal/iyzico-payment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            amount: parseFloat(paymentForm.amount),
+            card_holder_name: cardForm.cardHolderName,
+            card_number: cleanCardNumber,
+            expire_month: cardForm.expireMonth,
+            expire_year: cardForm.expireYear,
+            cvc: cardForm.cvc,
+            installment: 1
+          })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.detail || 'Ödeme işlemi başarısız');
+        }
+
+        toast.success(`✅ ${data.message} - ${parseFloat(paymentForm.amount).toLocaleString('tr-TR')} TL`);
+        setPaymentForm({
+          amount: '',
+          payment_method: 'sanal_pos',
+          payment_date: new Date().toISOString().split('T')[0],
+          reference_no: '',
+          notes: ''
+        });
+        setCardForm({
+          cardHolderName: '',
+          cardNumber: '',
+          expireMonth: '',
+          expireYear: '',
+          cvc: ''
+        });
+        loadData();
+        setActiveTab('payments');
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setProcessingCard(false);
+      }
+      return;
+    }
+
+    // Diğer ödeme yöntemleri için bildirim gönder
     setSubmittingPayment(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/dealer-portal/submit-payment`, {
