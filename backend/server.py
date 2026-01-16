@@ -3,9 +3,22 @@
 
 from fastapi import FastAPI
 from datetime import datetime, timezone, timedelta
+import os
+from starlette.middleware.cors import CORSMiddleware
+
 
 # Create app immediately
 app = FastAPI(title="KasaBurger API", version="1.0.3")
+
+origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
+# print(":white_tick: CORS Origins:", origins)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Health check - FIRST route, no dependencies
 @app.get("/health")
@@ -23,10 +36,8 @@ try:
     from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
     from fastapi.responses import StreamingResponse, JSONResponse
     from dotenv import load_dotenv
-    from starlette.middleware.cors import CORSMiddleware
     from starlette.middleware.base import BaseHTTPMiddleware
     from motor.motor_asyncio import AsyncIOMotorClient
-    import os
     import logging
     from pathlib import Path
     from pydantic import BaseModel, Field, EmailStr
@@ -55,12 +66,12 @@ try:
     BULK_REQUEST_LIMIT = 10  # Max bulk requests (like get all products) per minute
     
     # Allowed origins (production domains)
-    ALLOWED_ORIGINS = [
-        "https://burger-portal-1.preview.emergentagent.com",
-        "https://kasaburger.net.tr",
-        "https://www.kasaburger.net.tr",
-        "http://localhost:3000",
-    ]
+    # ALLOWED_ORIGINS = [
+    #     "https://burger-portal-1.preview.emergentagent.com",
+    #     "https://kasaburger.net.tr",
+    #     "https://www.kasaburger.net.tr",
+    #     "http://localhost:3000",
+    # ]
 
     # ==================== SECURITY MIDDLEWARE ====================
     
@@ -131,13 +142,13 @@ try:
     app.add_middleware(SecurityMiddleware)
 
     # Add CORS with restricted origins
-    app.add_middleware(
-        CORSMiddleware,
-        allow_credentials=True,
-        allow_origins=ALLOWED_ORIGINS,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
-    )
+    # app.add_middleware(
+    #     CORSMiddleware,
+    #     allow_credentials=True,
+    #     allow_origins=ALLOWED_ORIGINS,
+    #     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    #     allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+    # )
 
     ROOT_DIR = Path(__file__).parent
     load_dotenv(ROOT_DIR / '.env')
