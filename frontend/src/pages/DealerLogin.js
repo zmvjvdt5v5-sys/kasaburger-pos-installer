@@ -8,6 +8,33 @@ import { Store, KeyRound, Loader2 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Simple XHR-based API call to avoid any postMessage issues
+const apiCall = (method, url, data = null) => {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({ ok: true, status: xhr.status, data: response });
+          } else {
+            resolve({ ok: false, status: xhr.status, data: response });
+          }
+        } catch (e) {
+          reject(new Error('Sunucu yanıtı işlenemedi'));
+        }
+      }
+    };
+    xhr.onerror = function() {
+      reject(new Error('Bağlantı hatası'));
+    };
+    xhr.send(data ? JSON.stringify(data) : null);
+  });
+};
+
 const DealerLogin = () => {
   const [dealerCode, setDealerCode] = useState('');
   const [password, setPassword] = useState('');
@@ -22,23 +49,13 @@ const DealerLogin = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/dealer-portal/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dealer_code: dealerCode, password })
-      });
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        throw new Error('Sunucu yanıtı işlenemedi. Lütfen tekrar deneyin.');
-      }
+      const result = await apiCall('POST', `${BACKEND_URL}/api/dealer-portal/login`, { dealer_code: dealerCode, password });
       
-      if (!response.ok) {
-        throw new Error(data.detail || 'Giriş başarısız');
+      if (!result.ok) {
+        throw new Error(result.data?.detail || 'Giriş başarısız');
       }
 
+      const data = result.data;
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
       toast.success('Giriş başarılı!');
