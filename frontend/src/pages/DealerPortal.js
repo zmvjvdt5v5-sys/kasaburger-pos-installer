@@ -875,11 +875,31 @@ const DealerPortal = () => {
                       onChange={(e) => setPaymentForm({...paymentForm, payment_method: e.target.value})}
                       className="w-full h-10 px-3 rounded-md border border-border bg-input/50 text-foreground"
                     >
-                      <option value="mail_order">Mail Order (Kredi Kartı)</option>
+                      <option value="sanal_pos">💳 Sanal POS (Kredi Kartı)</option>
+                      <option value="mail_order">Mail Order (Telefonda Kart)</option>
                       <option value="bank_transfer">Havale/EFT</option>
                       <option value="cash">Nakit</option>
                     </select>
                   </div>
+
+                  {/* Sanal POS Info */}
+                  {paymentForm.payment_method === 'sanal_pos' && (
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                      <p className="text-sm text-blue-400 mb-2 flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        <strong>Sanal POS ile Ödeme</strong>
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Ödeme tutarını girin ve "Ödeme Bildir" butonuna tıklayın. 
+                        Ardından sanal pos ekranına yönlendirileceksiniz.
+                      </p>
+                      <div className="p-3 bg-background/50 rounded text-xs">
+                        <p><strong>Hesap Bilgileri:</strong></p>
+                        <p>Firma: Kasa Burger</p>
+                        <p>Sanal POS: Bizim Hesap Entegrasyonu</p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Payment Date */}
                   <div className="space-y-2">
