@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
 import PWAInstall from '../components/PWAInstall';
-import axios from 'axios';
+// axios removed - using fetch
 import {
   Package,
   Users,
@@ -82,11 +82,14 @@ const Dashboard = () => {
 
   const loadNotifications = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/notifications`, {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${API_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setNotifications(response.data);
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
     } catch (error) {
       console.error('Notifications error:', error);
     }
