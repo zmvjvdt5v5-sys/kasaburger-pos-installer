@@ -1216,6 +1216,26 @@ try:
     async def dealer_portal_invoices(dealer: dict = Depends(get_current_dealer)):
         return await db.invoices.find({"dealer_id": dealer["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
 
+    @api_router.get("/dealer-portal/campaigns")
+    async def dealer_portal_campaigns(dealer: dict = Depends(get_current_dealer)):
+        """Bayiye özel aktif kampanyaları getir"""
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # Aktif kampanyaları getir (bitiş tarihi geçmemiş)
+        campaigns = await db.campaigns.find({
+            "end_date": {"$gte": now[:10]}
+        }, {"_id": 0}).sort("created_at", -1).to_list(50)
+        
+        # Bayiye özel kampanyaları filtrele
+        dealer_campaigns = []
+        for campaign in campaigns:
+            target_dealers = campaign.get("target_dealers", [])
+            # Eğer hedef bayi listesi boşsa tüm bayilere, değilse sadece listedeki bayilere
+            if len(target_dealers) == 0 or dealer["id"] in target_dealers:
+                dealer_campaigns.append(campaign)
+        
+        return dealer_campaigns
+
     @api_router.get("/dealer-portal/invoices/{invoice_id}/pdf")
     async def dealer_portal_invoice_pdf(invoice_id: str, dealer: dict = Depends(get_current_dealer)):
         if not reportlab_available:
