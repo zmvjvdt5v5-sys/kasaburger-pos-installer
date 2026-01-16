@@ -118,7 +118,15 @@ const DealerPortal = () => {
     reference_no: '',
     notes: ''
   });
+  const [cardForm, setCardForm] = useState({
+    cardHolderName: '',
+    cardNumber: '',
+    expireMonth: '',
+    expireYear: '',
+    cvc: ''
+  });
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [processingCard, setProcessingCard] = useState(false);
 
   const token = localStorage.getItem('dealer_token');
   
