@@ -396,7 +396,7 @@ const DealerPortal = () => {
       toast.success('Ödeme bildiriminiz alındı! Onay bekliyor.');
       setPaymentForm({
         amount: '',
-        payment_method: 'mail_order',
+        payment_method: 'sanal_pos',
         payment_date: new Date().toISOString().split('T')[0],
         reference_no: '',
         notes: ''
