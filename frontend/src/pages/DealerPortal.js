@@ -271,15 +271,20 @@ const DealerPortal = () => {
   const cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
 
   const handleSubmitOrder = async () => {
+    console.log('handleSubmitOrder called', { cart, deliveryDate, notes, cartTotal });
+    
     if (cart.length === 0) {
       toast.error('Sepet boş');
+      console.log('Cart is empty');
       return;
     }
     if (!deliveryDate) {
-      toast.error('Teslimat tarihi seçin');
+      toast.error('Lütfen teslimat tarihi seçin!', { duration: 5000 });
+      console.log('No delivery date');
       return;
     }
 
+    console.log('Submitting order...');
     setSubmitting(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/dealer-portal/orders`, {
