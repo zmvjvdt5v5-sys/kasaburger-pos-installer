@@ -1894,6 +1894,302 @@ try:
         payments = await db.payments.find({"invoice_id": invoice_id}, {"_id": 0}).sort("created_at", -1).to_list(100)
         return payments
 
+    # ==================== KAMPANYA YÖNETİMİ ====================
+    
+    class CampaignCreate(BaseModel):
+        title: str
+        description: str
+        campaign_type: str  # discount, new_product, announcement
+        discount_type: Optional[str] = None  # percent, amount
+        discount_value: Optional[float] = None
+        start_date: str
+        end_date: str
+        target_dealers: Optional[List[str]] = []  # boş = tüm bayiler
+        send_sms: bool = False
+        send_email: bool = False
+
+    @api_router.get("/campaigns")
+    async def get_campaigns(current_user: dict = Depends(get_current_user)):
+        campaigns = await db.campaigns.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return campaigns
+
+    @api_router.post("/campaigns")
+    async def create_campaign(campaign: CampaignCreate, current_user: dict = Depends(get_current_user)):
+        campaign_id = str(uuid.uuid4())
+        campaign_doc = {
+            "id": campaign_id,
+            **campaign.model_dump(),
+            "status": "active",
+            "sms_sent": False,
+            "email_sent": False,
+            "sms_count": 0,
+            "email_count": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["name"]
+        }
+        await db.campaigns.insert_one(campaign_doc)
+        
+        # Bildirim gönder
+        notification_results = {"sms": None, "email": None}
+        
+        if campaign.send_sms or campaign.send_email:
+            # Hedef bayileri al
+            if campaign.target_dealers and len(campaign.target_dealers) > 0:
+                dealers = await db.dealers.find({"id": {"$in": campaign.target_dealers}}, {"_id": 0}).to_list(100)
+            else:
+                dealers = await db.dealers.find({}, {"_id": 0}).to_list(100)
+            
+            if campaign.send_sms:
+                sms_result = await send_campaign_sms(campaign_doc, dealers)
+                notification_results["sms"] = sms_result
+                await db.campaigns.update_one({"id": campaign_id}, {"$set": {"sms_sent": True, "sms_count": sms_result.get("sent", 0)}})
+            
+            if campaign.send_email:
+                email_result = await send_campaign_email(campaign_doc, dealers)
+                notification_results["email"] = email_result
+                await db.campaigns.update_one({"id": campaign_id}, {"$set": {"email_sent": True, "email_count": email_result.get("sent", 0)}})
+        
+        return {
+            "campaign": {k: v for k, v in campaign_doc.items() if k != "_id"},
+            "notifications": notification_results
+        }
+
+    @api_router.get("/campaigns/{campaign_id}")
+    async def get_campaign(campaign_id: str, current_user: dict = Depends(get_current_user)):
+        campaign = await db.campaigns.find_one({"id": campaign_id}, {"_id": 0})
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Kampanya bulunamadı")
+        return campaign
+
+    @api_router.put("/campaigns/{campaign_id}")
+    async def update_campaign(campaign_id: str, campaign: CampaignCreate, current_user: dict = Depends(get_current_user)):
+        result = await db.campaigns.update_one({"id": campaign_id}, {"$set": campaign.model_dump()})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Kampanya bulunamadı")
+        updated = await db.campaigns.find_one({"id": campaign_id}, {"_id": 0})
+        return updated
+
+    @api_router.delete("/campaigns/{campaign_id}")
+    async def delete_campaign(campaign_id: str, current_user: dict = Depends(get_current_user)):
+        result = await db.campaigns.delete_one({"id": campaign_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Kampanya bulunamadı")
+        return {"message": "Kampanya silindi"}
+
+    @api_router.post("/campaigns/{campaign_id}/send")
+    async def send_campaign_notifications(campaign_id: str, send_sms: bool = True, send_email: bool = True, current_user: dict = Depends(get_current_user)):
+        """Kampanya bildirimlerini tekrar gönder"""
+        campaign = await db.campaigns.find_one({"id": campaign_id}, {"_id": 0})
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Kampanya bulunamadı")
+        
+        # Hedef bayileri al
+        target_dealers = campaign.get("target_dealers", [])
+        if target_dealers and len(target_dealers) > 0:
+            dealers = await db.dealers.find({"id": {"$in": target_dealers}}, {"_id": 0}).to_list(100)
+        else:
+            dealers = await db.dealers.find({}, {"_id": 0}).to_list(100)
+        
+        results = {"sms": None, "email": None}
+        
+        if send_sms:
+            results["sms"] = await send_campaign_sms(campaign, dealers)
+            await db.campaigns.update_one({"id": campaign_id}, {"$set": {"sms_sent": True, "sms_count": results["sms"].get("sent", 0)}})
+        
+        if send_email:
+            results["email"] = await send_campaign_email(campaign, dealers)
+            await db.campaigns.update_one({"id": campaign_id}, {"$set": {"email_sent": True, "email_count": results["email"].get("sent", 0)}})
+        
+        return results
+
+    # NetGSM SMS Gönderimi
+    async def send_campaign_sms(campaign: dict, dealers: list):
+        """NetGSM ile SMS gönderir"""
+        settings = await db.settings.find_one({}, {"_id": 0})
+        
+        netgsm_usercode = settings.get("netgsm_usercode") if settings else None
+        netgsm_password = settings.get("netgsm_password") if settings else None
+        netgsm_header = settings.get("netgsm_header") if settings else None
+        
+        if not all([netgsm_usercode, netgsm_password, netgsm_header]):
+            return {"status": "error", "message": "NetGSM ayarları yapılmamış. Ayarlar sayfasından yapılandırın.", "sent": 0}
+        
+        # Kampanya mesajı oluştur
+        message = create_campaign_message(campaign)
+        
+        sent_count = 0
+        errors = []
+        
+        for dealer in dealers:
+            phone = dealer.get("phone", "").replace(" ", "").replace("-", "")
+            if not phone:
+                continue
+            
+            # Türkiye formatına çevir
+            if phone.startswith("0"):
+                phone = "90" + phone[1:]
+            elif not phone.startswith("90"):
+                phone = "90" + phone
+            
+            try:
+                # NetGSM API çağrısı
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(
+                        "https://api.netgsm.com.tr/sms/send/get",
+                        params={
+                            "usercode": netgsm_usercode,
+                            "password": netgsm_password,
+                            "gsmno": phone,
+                            "message": message,
+                            "msgheader": netgsm_header,
+                            "dil": "TR"
+                        }
+                    )
+                    
+                    result = response.text.strip()
+                    if result.startswith("00") or result.startswith("01") or result.startswith("02"):
+                        sent_count += 1
+                    else:
+                        errors.append(f"{dealer.get('name', phone)}: {result}")
+                        
+            except Exception as e:
+                errors.append(f"{dealer.get('name', phone)}: {str(e)}")
+        
+        return {
+            "status": "success" if sent_count > 0 else "error",
+            "sent": sent_count,
+            "total": len(dealers),
+            "errors": errors[:5] if errors else []
+        }
+
+    # SMTP Email Gönderimi
+    async def send_campaign_email(campaign: dict, dealers: list):
+        """SMTP ile email gönderir"""
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        settings = await db.settings.find_one({}, {"_id": 0})
+        
+        smtp_host = settings.get("smtp_host") if settings else None
+        smtp_port = settings.get("smtp_port", 587) if settings else 587
+        smtp_user = settings.get("smtp_user") if settings else None
+        smtp_password = settings.get("smtp_password") if settings else None
+        smtp_from = settings.get("smtp_from") if settings else None
+        
+        if not all([smtp_host, smtp_user, smtp_password, smtp_from]):
+            return {"status": "error", "message": "SMTP ayarları yapılmamış. Ayarlar sayfasından yapılandırın.", "sent": 0}
+        
+        # Email içeriği oluştur
+        subject, html_body = create_campaign_email(campaign)
+        
+        sent_count = 0
+        errors = []
+        
+        try:
+            server = smtplib.SMTP(smtp_host, int(smtp_port))
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            
+            for dealer in dealers:
+                email = dealer.get("email", "")
+                if not email or "@" not in email:
+                    continue
+                
+                try:
+                    msg = MIMEMultipart("alternative")
+                    msg["Subject"] = subject
+                    msg["From"] = smtp_from
+                    msg["To"] = email
+                    
+                    html_part = MIMEText(html_body.replace("{dealer_name}", dealer.get("name", "Değerli Bayimiz")), "html", "utf-8")
+                    msg.attach(html_part)
+                    
+                    server.sendmail(smtp_from, email, msg.as_string())
+                    sent_count += 1
+                    
+                except Exception as e:
+                    errors.append(f"{dealer.get('name', email)}: {str(e)}")
+            
+            server.quit()
+            
+        except Exception as e:
+            return {"status": "error", "message": f"SMTP bağlantı hatası: {str(e)}", "sent": 0}
+        
+        return {
+            "status": "success" if sent_count > 0 else "error",
+            "sent": sent_count,
+            "total": len(dealers),
+            "errors": errors[:5] if errors else []
+        }
+
+    def create_campaign_message(campaign: dict) -> str:
+        """SMS için kampanya mesajı oluşturur"""
+        msg = f"KasaBurger: {campaign['title']}\n"
+        
+        if campaign.get("campaign_type") == "discount":
+            if campaign.get("discount_type") == "percent":
+                msg += f"%{campaign.get('discount_value', 0)} indirim!\n"
+            else:
+                msg += f"{campaign.get('discount_value', 0)} TL indirim!\n"
+        
+        msg += campaign.get("description", "")[:100]
+        
+        if campaign.get("end_date"):
+            msg += f"\nSon tarih: {campaign['end_date'][:10]}"
+        
+        return msg[:160]  # SMS karakter limiti
+
+    def create_campaign_email(campaign: dict) -> tuple:
+        """Email için kampanya içeriği oluşturur"""
+        subject = f"KasaBurger - {campaign['title']}"
+        
+        discount_info = ""
+        if campaign.get("campaign_type") == "discount":
+            if campaign.get("discount_type") == "percent":
+                discount_info = f'<div style="font-size: 32px; color: #f97316; font-weight: bold;">%{campaign.get("discount_value", 0)} İNDİRİM</div>'
+            else:
+                discount_info = f'<div style="font-size: 32px; color: #f97316; font-weight: bold;">{campaign.get("discount_value", 0)} TL İNDİRİM</div>'
+        
+        campaign_type_text = {
+            "discount": "İndirim Kampanyası",
+            "new_product": "Yeni Ürün Duyurusu",
+            "announcement": "Duyuru"
+        }.get(campaign.get("campaign_type", ""), "Kampanya")
+        
+        html_body = f'''
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #f97316, #ea580c); padding: 30px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 28px;">KasaBurger</h1>
+                    <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">{campaign_type_text}</p>
+                </div>
+                <div style="padding: 30px; text-align: center;">
+                    <h2 style="color: #333; margin: 0 0 20px 0;">{campaign['title']}</h2>
+                    {discount_info}
+                    <p style="color: #666; line-height: 1.6; margin: 20px 0;">{{dealer_name}},</p>
+                    <p style="color: #666; line-height: 1.6;">{campaign.get('description', '')}</p>
+                    <div style="margin: 30px 0; padding: 15px; background: #fff3e0; border-radius: 8px;">
+                        <p style="margin: 0; color: #e65100;">
+                            <strong>Kampanya Tarihleri:</strong><br>
+                            {campaign.get('start_date', '')[:10]} - {campaign.get('end_date', '')[:10]}
+                        </p>
+                    </div>
+                    <a href="https://erp.kasaburger.net.tr/dealer-login" style="display: inline-block; background: #f97316; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Sipariş Ver</a>
+                </div>
+                <div style="background: #f5f5f5; padding: 20px; text-align: center; color: #999; font-size: 12px;">
+                    <p>Bu email KasaBurger tarafından gönderilmiştir.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+        
+        return subject, html_body
+
     # ==================== API ROOT ====================
 
     @api_router.get("/")
