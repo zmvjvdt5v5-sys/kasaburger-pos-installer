@@ -319,3 +319,66 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 ### Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / Mekgrup2024
+
+
+---
+
+## Update: January 16, 2026 - Bayi Portal Bug Testi ve Doğrulama
+
+### 🔍 Araştırılan Sorunlar
+
+#### 1. "Sipariş Ver" Butonu Sorunu
+- **Bildirilen:** Bayi portalında sipariş ver butonu çalışmıyor
+- **Sonuç:** ✅ **ÇALIŞIYOR** - Manuel ve otomatik testler ile doğrulandı
+- **Kanıt:** SIP-000005 ve SIP-000006+ siparişleri başarıyla oluşturuldu
+- **Kod:** `/app/frontend/src/pages/DealerPortal.js` - `handleSubmitOrder` fonksiyonu (satır 273-325)
+
+#### 2. Ürün Kategorilendirme Sorunu
+- **Bildirilen:** Ürünler kategorilere göre gruplandırılmıyor
+- **Sonuç:** ✅ **KOD ÇALIŞIYOR** - Kategorilendirme mantığı doğru çalışıyor
+- **Not:** Tüm ürünlerin `category` alanı `undefined`, bu yüzden hepsi "Diğer" altında listeleniyor
+- **Aksiyon Gerekli:** Ürünlere kategori ataması yapılmalı (data issue, code issue değil)
+
+#### 3. Brute-force Koruması
+- **Bildirilen:** Devre dışı bırakılmış
+- **Sonuç:** ✅ **AKTİF** - Kod incelendiğinde yorum satırına alınmamış, aktif durumda
+
+### 📊 Test Sonuçları
+- **Backend:** 100% (11/11 test başarılı)
+- **Frontend:** 100% (Tüm UI akışları çalışıyor)
+- **Test Dosyası:** `/app/tests/test_dealer_portal.py`
+- **Test Raporu:** `/app/test_reports/iteration_5.json`
+
+### ✅ Doğrulanan Fonksiyonlar
+- Bayi giriş (MEKGRUP / Mekgrup2024)
+- Ürün listesi yükleme (201 ürün)
+- Kampanya banner gösterimi (%15 indirim)
+- Sepete ürün ekleme/çıkarma
+- Miktar artırma/azaltma
+- Teslimat tarihi seçimi
+- Sipariş oluşturma
+- Sipariş geçmişi görüntüleme
+- Kredi limiti aşımı uyarısı
+
+### 🔒 Güvenlik Durumu
+- Rate Limiting: ✅ Aktif (slowapi)
+- Brute Force Protection: ✅ Aktif
+- CORS: ✅ Yapılandırılmış
+- JWT Auth: ✅ Çalışıyor
+- Captcha: ✅ 2 başarısız denemeden sonra aktif
+
+### Sonraki Görevler (P1)
+- [ ] Ürünlere kategori ataması (Burger Köfteleri, Soslar, Ambalaj, vb.)
+- [ ] E-fatura GİB gerçek entegrasyonu
+- [ ] server.py refactoring (modüler yapı)
+
+### Gelecek Görevler (P2)
+- [ ] Push notifications
+- [ ] Barkod/QR kod entegrasyonu
+- [ ] Çoklu depo yönetimi
+- [ ] Sipariş durumu SMS bildirimi
+
+### Test Bilgileri
+- **Admin:** admin@kasaburger.net.tr / admin123
+- **Bayi:** MEKGRUP / Mekgrup2024
+- **Preview URL:** https://kasa-manager-1.preview.emergentagent.com
