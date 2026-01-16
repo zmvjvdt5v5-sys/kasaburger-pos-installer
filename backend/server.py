@@ -233,10 +233,10 @@ try:
     audit_logs: List[dict] = []
     
     # Password policy settings
-    PASSWORD_MIN_LENGTH = 8
-    PASSWORD_REQUIRE_UPPERCASE = True
-    PASSWORD_REQUIRE_LOWERCASE = True
-    PASSWORD_REQUIRE_NUMBER = True
+    PASSWORD_MIN_LENGTH = 6
+    PASSWORD_REQUIRE_UPPERCASE = False
+    PASSWORD_REQUIRE_LOWERCASE = False
+    PASSWORD_REQUIRE_NUMBER = False
     PASSWORD_REQUIRE_SPECIAL = False
 
     def validate_password_strength(password: str) -> tuple[bool, str]:
