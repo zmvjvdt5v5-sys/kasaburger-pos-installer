@@ -109,13 +109,7 @@ const Login = () => {
               )}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Hesabınız yok mu?{' '}
-            <Link to="/register" className="text-primary hover:underline" data-testid="register-link">
-              Kayıt Ol
-            </Link>
-          </div>
-          <div className="mt-2 text-center">
+          <div className="mt-6 text-center">
             <Link to="/dealer-login" className="text-sm text-muted-foreground hover:text-primary" data-testid="dealer-portal-link">
               Bayi girişi için tıklayın
             </Link>
