@@ -146,7 +146,12 @@ const Login = () => {
       localStorage.setItem('kasaburger_token', data.access_token);
       localStorage.setItem('kasaburger_user', JSON.stringify(data.user));
       toast.success('Giriş başarılı!');
-      window.location.href = '/dashboard';
+      // Use navigate for better SPA experience
+      try {
+        navigate('/dashboard');
+      } catch (navErr) {
+        window.location.href = '/dashboard';
+      }
     } catch (error) {
       toast.error(error.message || '2FA doğrulaması başarısız');
     } finally {
