@@ -2543,11 +2543,57 @@ try:
 
     @api_router.get("/")
     async def api_root():
-        return {"message": "KasaBurger API v1.0.3", "status": "active"}
+        return {"message": "KasaBurger API v1.0.3", "status": "active", "security": "enabled"}
 
     @api_router.get("/health")
     async def api_health():
         return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+    @api_router.get("/security/status")
+    async def security_status(current_user: dict = Depends(get_current_user)):
+        """Admin için güvenlik durumu - sadece admin görebilir"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Yetkiniz yok")
+        
+        return {
+            "status": "active",
+            "features": {
+                "rate_limiting": True,
+                "brute_force_protection": True,
+                "cors_restricted": True,
+                "security_headers": True,
+                "ip_blocking": True
+            },
+            "settings": {
+                "rate_limit_requests": RATE_LIMIT_REQUESTS,
+                "rate_limit_window_seconds": RATE_LIMIT_WINDOW,
+                "login_attempt_limit": LOGIN_ATTEMPT_LIMIT,
+                "login_block_duration_seconds": LOGIN_BLOCK_DURATION,
+                "bulk_request_limit": BULK_REQUEST_LIMIT
+            },
+            "current_stats": {
+                "blocked_ips_count": len(blocked_ips),
+                "tracked_ips_count": len(rate_limit_storage)
+            }
+        }
+
+    @api_router.post("/security/unblock-ip")
+    async def unblock_ip(ip_address: str, current_user: dict = Depends(get_current_user)):
+        """Admin için IP engelini kaldır"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Yetkiniz yok")
+        
+        if ip_address in blocked_ips:
+            del blocked_ips[ip_address]
+            return {"message": f"IP adresi engeli kaldırıldı: {ip_address}"}
+        
+        # Check dealer blocked IPs too
+        dealer_key = f"dealer_{ip_address}"
+        if dealer_key in blocked_ips:
+            del blocked_ips[dealer_key]
+            return {"message": f"Bayi IP adresi engeli kaldırıldı: {ip_address}"}
+        
+        return {"message": "Bu IP adresi engelli değil"}
 
     # Include router
     app.include_router(api_router)
