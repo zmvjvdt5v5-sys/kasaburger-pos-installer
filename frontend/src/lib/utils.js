@@ -33,6 +33,8 @@ export function formatDateTime(dateString) {
 export function getStatusColor(status) {
   const colors = {
     pending: 'badge-warning',
+    pending_approval: 'bg-orange-500 text-white',
+    confirmed: 'badge-success',
     in_progress: 'badge-info',
     completed: 'badge-success',
     cancelled: 'badge-error',
@@ -49,6 +51,8 @@ export function getStatusColor(status) {
 export function getStatusText(status) {
   const texts = {
     pending: 'Beklemede',
+    pending_approval: '⚠️ Onay Bekliyor',
+    confirmed: 'Onaylandı',
     in_progress: 'Devam Ediyor',
     completed: 'Tamamlandı',
     cancelled: 'İptal Edildi',
