@@ -382,3 +382,28 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / Mekgrup2024
 - **Preview URL:** https://kasa-manager-1.preview.emergentagent.com
+
+---
+
+## Update: January 16, 2026 - Sipariş Ver Butonu Düzeltmesi
+
+### 🐛 Çözülen Sorun
+- **Problem:** "Sipariş Ver" butonuna tıklandığında hiçbir şey olmuyordu
+- **Kök Neden:** Teslimat tarihi seçilmeden sipariş verilemez. Hata mesajı (toast) kullanıcıya görünmüyordu.
+- **Çözüm:** 
+  1. Buton metni dinamik yapıldı - tarih seçilmediğinde "⚠️ Tarih Seçin" yazıyor
+  2. Tarih seçildikten sonra "Sipariş Ver" yazıyor
+  3. Kullanıcı uyarısı daha görünür hale getirildi
+
+### Teknik Değişiklikler
+- `/app/frontend/src/pages/DealerPortal.js`:
+  - `handleSubmitOrder` fonksiyonu güncellendi
+  - Sipariş butonu dinamik metin gösteriyor
+  - `data-testid="submit-order-btn"` eklendi
+
+### Test Sonuçları
+- ✅ Tarih seçilmeden buton "⚠️ Tarih Seçin" yazıyor
+- ✅ Tarih seçildikten sonra "Sipariş Ver" yazıyor
+- ✅ Sipariş başarıyla oluşturuluyor (SIP-000012 doğrulandı)
+- ✅ Sepet sipariş sonrası temizleniyor
+- ✅ Kredi limiti uyarısı gösteriliyor
