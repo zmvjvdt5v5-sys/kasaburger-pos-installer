@@ -30,18 +30,18 @@ const DealerLogin = () => {
         body: JSON.stringify({ dealer_code: dealerCode, password }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Giriş başarısız');
+        throw new Error(data.detail || 'Giriş başarısız');
       }
 
-      const data = await response.json();
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
       toast.success('Giriş başarılı!');
       navigate('/dealer');
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || 'Giriş başarısız');
     } finally {
       setLoading(false);
     }
