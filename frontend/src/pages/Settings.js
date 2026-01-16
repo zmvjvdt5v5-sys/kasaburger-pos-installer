@@ -241,31 +241,121 @@ const Settings = () => {
 
         {/* Profile Tab */}
         <TabsContent value="profile">
-          <Card className="bg-card border-border/50">
-            <CardHeader>
-              <CardTitle className="font-heading flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                Profil Bilgileri
-              </CardTitle>
-              <CardDescription>Hesap bilgilerinizi görüntüleyin</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </span>
+          <div className="grid gap-6">
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Profil Bilgileri
+                </CardTitle>
+                <CardDescription>Hesap bilgilerinizi görüntüleyin</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-primary">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-bold text-lg">{user?.name}</h3>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground capitalize mt-1">
+                      Rol: {user?.role === 'admin' ? 'Yönetici' : 'Kullanıcı'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-heading font-bold text-lg">{user?.name}</h3>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <p className="text-xs text-muted-foreground capitalize mt-1">
-                    Rol: {user?.role === 'admin' ? 'Yönetici' : 'Kullanıcı'}
-                  </p>
+              </CardContent>
+            </Card>
+
+            {/* Password Change Card */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Key className="h-5 w-5 text-primary" />
+                  Şifre Değiştir
+                </CardTitle>
+                <CardDescription>Hesap şifrenizi güncelleyin</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Mevcut Şifre</Label>
+                  <div className="relative">
+                    <Input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                      placeholder="••••••••"
+                      className="bg-input/50 pr-10"
+                      data-testid="current-password-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Yeni Şifre</Label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? "text" : "password"}
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                        placeholder="••••••••"
+                        className="bg-input/50 pr-10"
+                        data-testid="new-password-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">En az 6 karakter</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Yeni Şifre (Tekrar)</Label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                        placeholder="••••••••"
+                        className="bg-input/50 pr-10"
+                        data-testid="confirm-password-input"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleChangePassword} 
+                    className="bg-primary" 
+                    disabled={savingPassword}
+                    data-testid="change-password-btn"
+                  >
+                    {savingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Key className="h-4 w-4 mr-2" />}
+                    Şifreyi Değiştir
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Company Tab */}
