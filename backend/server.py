@@ -3026,6 +3026,108 @@ try:
             "require_special": PASSWORD_REQUIRE_SPECIAL
         }
 
+    # ==================== KIOSK YÖNETİMİ ====================
+    
+    class KioskProduct(BaseModel):
+        id: str
+        name: str
+        description: Optional[str] = ""
+        price: float
+        category: str
+        image: Optional[str] = ""
+        premium: Optional[bool] = False
+
+    class KioskOrder(BaseModel):
+        items: List[dict]
+        total: float
+        service_type: str  # 'paket' or 'masa'
+        table_number: Optional[str] = None
+        payment_method: str  # 'cash' or 'card'
+
+    @api_router.get("/kiosk/menu")
+    async def get_kiosk_menu():
+        """Kiosk menüsünü getir - Auth gerekmez"""
+        products = await db.kiosk_products.find({}, {"_id": 0}).to_list(1000)
+        
+        categories = [
+            {"id": "et-burger", "name": "Et Burger", "icon": "🍔"},
+            {"id": "premium", "name": "Premium Gourmet", "icon": "👑"},
+            {"id": "tavuk", "name": "Tavuk Burger", "icon": "🍗"},
+            {"id": "atistirmalik", "name": "Atıştırmalıklar", "icon": "🍟"},
+            {"id": "icecek", "name": "İçecekler", "icon": "🥤"},
+            {"id": "tatli", "name": "Tatlılar", "icon": "🍫"},
+        ]
+        
+        return {"categories": categories, "products": products}
+
+    @api_router.get("/kiosk/products")
+    async def get_kiosk_products(current_user: dict = Depends(get_current_user)):
+        """Admin için kiosk ürünlerini listele"""
+        products = await db.kiosk_products.find({}, {"_id": 0}).to_list(1000)
+        return products
+
+    @api_router.post("/kiosk/products")
+    async def create_kiosk_product(product: KioskProduct, current_user: dict = Depends(get_current_user)):
+        """Admin için yeni kiosk ürünü ekle"""
+        existing = await db.kiosk_products.find_one({"id": product.id})
+        if existing:
+            raise HTTPException(status_code=400, detail="Bu ID ile ürün zaten var")
+        
+        product_data = product.dict()
+        product_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        product_data["created_by"] = current_user["email"]
+        
+        await db.kiosk_products.insert_one(product_data)
+        return {"message": "Ürün eklendi", "id": product.id}
+
+    @api_router.put("/kiosk/products/{product_id}")
+    async def update_kiosk_product(product_id: str, product: KioskProduct, current_user: dict = Depends(get_current_user)):
+        """Admin için kiosk ürünü güncelle"""
+        existing = await db.kiosk_products.find_one({"id": product_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Ürün bulunamadı")
+        
+        product_data = product.dict()
+        product_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        product_data["updated_by"] = current_user["email"]
+        
+        await db.kiosk_products.update_one({"id": product_id}, {"$set": product_data})
+        return {"message": "Ürün güncellendi"}
+
+    @api_router.delete("/kiosk/products/{product_id}")
+    async def delete_kiosk_product(product_id: str, current_user: dict = Depends(get_current_user)):
+        """Admin için kiosk ürünü sil"""
+        result = await db.kiosk_products.delete_one({"id": product_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Ürün bulunamadı")
+        return {"message": "Ürün silindi"}
+
+    @api_router.post("/kiosk/orders")
+    async def create_kiosk_order(order: KioskOrder):
+        """Kiosk siparişi oluştur - Auth gerekmez"""
+        order_number = f"KB-{datetime.now().strftime('%H%M%S')}"
+        
+        order_data = {
+            "id": str(uuid.uuid4()),
+            "order_number": order_number,
+            "items": order.items,
+            "total": order.total,
+            "service_type": order.service_type,
+            "table_number": order.table_number,
+            "payment_method": order.payment_method,
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.kiosk_orders.insert_one(order_data)
+        return {"order_number": order_number, "id": order_data["id"]}
+
+    @api_router.get("/kiosk/orders")
+    async def get_kiosk_orders(current_user: dict = Depends(get_current_user)):
+        """Admin için kiosk siparişlerini listele"""
+        orders = await db.kiosk_orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return orders
+
     # Include router
     app.include_router(api_router)
 
