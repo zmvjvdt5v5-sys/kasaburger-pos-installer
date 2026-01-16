@@ -250,3 +250,72 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - ✅ Excel template indirme
 - ✅ Gelişmiş raporlar
 - ✅ Bayi portal PDF indirme
+
+---
+
+## Update: January 16, 2026 - Kampanya Modülü ve Bildirim Ayarları
+
+### ✅ Tamamlanan Özellikler
+
+#### 1. 📢 Kampanya Modülü
+- Yeni `/campaigns` sayfası eklendi
+- Kampanya oluşturma, listeleme, silme
+- Kampanya türleri: İndirim, Yeni Ürün, Duyuru
+- İndirim türleri: Yüzde (%) veya Tutar (TL)
+- Hedef bayi seçimi (tüm bayiler veya tek tek)
+- SMS ve Email bildirim gönderme seçeneği
+- İstatistik kartları (Toplam, SMS, Email gönderildi)
+- Tekrar gönderme butonları
+
+#### 2. 🔔 Bildirim Ayarları (Settings Sayfası)
+- Yeni tab-based Settings sayfası tasarımı
+- Profil, Şirket, Bildirimler, Sistem sekmeleri
+- NetGSM SMS entegrasyonu ayarları
+  - Kullanıcı Kodu, Şifre, Başlık (Header)
+  - Test SMS gönderme
+- SMTP Email entegrasyonu ayarları
+  - Sunucu, Port, Kullanıcı Adı, Şifre
+  - Gönderen email adresi
+  - Test email gönderme
+
+#### 3. 🔒 Güvenlik İyileştirmesi
+- Admin giriş sayfasından "Kayıt Ol" linki kaldırıldı
+- Sadece "Bayi girişi için tıklayın" linki görünür
+
+### API Endpoints (Yeni)
+- GET `/api/campaigns` - Kampanya listesi
+- POST `/api/campaigns` - Kampanya oluştur
+- DELETE `/api/campaigns/{id}` - Kampanya sil
+- POST `/api/campaigns/{id}/send` - Bildirim tekrar gönder
+- GET `/api/settings/notifications` - Bildirim ayarlarını getir
+- PUT `/api/settings/notifications` - Bildirim ayarlarını güncelle
+- POST `/api/test-sms` - Test SMS gönder
+- POST `/api/test-email` - Test email gönder
+
+### Frontend Değişiklikleri
+- `App.js` - Campaigns route eklendi
+- `Layout.js` - Kampanyalar menü öğesi eklendi
+- `Settings.js` - Tab-based tasarıma geçildi, Bildirimler sekmesi eklendi
+- `Campaigns.js` - Tam fonksiyonel kampanya sayfası
+- `Login.js` - "Kayıt Ol" linki kaldırıldı
+
+### Test Durumu
+- ✅ Login sayfası (Kayıt Ol linki yok)
+- ✅ Kampanyalar sayfası
+- ✅ Kampanya oluşturma dialogu
+- ✅ Bildirim ayarları sekmesi
+- ✅ API endpoint'leri
+
+### Sonraki Görevler (P1)
+- [ ] E-fatura GİB gerçek entegrasyonu
+- [ ] NetGSM ve SMTP entegrasyonlarını API key'lerle test et
+
+### Gelecek Görevler (P2)
+- [ ] Push notifications
+- [ ] Barkod/QR kod entegrasyonu
+- [ ] Çoklu depo yönetimi
+- [ ] server.py refactoring (modüler yapı)
+
+### Test Bilgileri
+- **Admin:** admin@kasaburger.net.tr / admin123
+- **Bayi:** MEKGRUP / Mekgrup2024
