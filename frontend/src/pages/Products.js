@@ -141,7 +141,7 @@ const Products = () => {
 
   const downloadTemplate = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('kasaburger_token');
       const response = await axios.get(`${API_URL}/api/templates/products-excel`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
