@@ -166,6 +166,43 @@ const Settings = () => {
     }
   };
 
+  const handleChangePassword = async () => {
+    // Validasyon
+    if (!passwordForm.currentPassword) {
+      toast.error('Mevcut şifrenizi girin');
+      return;
+    }
+    if (!passwordForm.newPassword) {
+      toast.error('Yeni şifrenizi girin');
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('Yeni şifre en az 6 karakter olmalı');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('Yeni şifreler eşleşmiyor');
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      await axios.put(`${API_URL}/api/auth/change-password`, 
+        { 
+          current_password: passwordForm.currentPassword, 
+          new_password: passwordForm.newPassword 
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Şifreniz başarıyla değiştirildi');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Şifre değiştirilemedi');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
