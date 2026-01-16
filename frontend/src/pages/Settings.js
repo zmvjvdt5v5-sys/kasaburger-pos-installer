@@ -16,7 +16,10 @@ import {
   MessageSquare, 
   Mail,
   Save,
-  TestTube
+  TestTube,
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -27,8 +30,12 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingNotifications, setSavingNotifications] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [testingSms, setTestingSms] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [companySettings, setCompanySettings] = useState({
     name: 'KasaBurger',
@@ -48,6 +55,12 @@ const Settings = () => {
     smtp_user: '',
     smtp_password: '',
     smtp_from: '',
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
 
   const [testPhone, setTestPhone] = useState('');
