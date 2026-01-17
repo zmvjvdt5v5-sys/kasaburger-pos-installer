@@ -25,6 +25,8 @@ const KioskPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('et-burger');
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [showServiceType, setShowServiceType] = useState(false);
+  const [serviceType, setServiceType] = useState(null);
   const [showTableInput, setShowTableInput] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
   const [showPayment, setShowPayment] = useState(false);
