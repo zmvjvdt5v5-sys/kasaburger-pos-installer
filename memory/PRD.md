@@ -541,3 +541,59 @@ CLOUDINARY_API_SECRET=***
 - Cloudinary free tier: 25GB storage, 25GB bandwidth/month
 - Görseller otomatik optimize ediliyor (boyut ve kalite)
 - Production deployment sonrası cache temizleme önerilir
+
+---
+
+## Update: January 18, 2026 - Şube Sistemi & Docker Dağıtımı
+
+### 🆕 Yeni Özellikler
+
+#### 1. Docker Paketi
+- `Dockerfile.backend` - Backend container
+- `Dockerfile.frontend` - Frontend container  
+- `docker-compose.yml` - Tam stack deployment
+- `nginx.conf` - Nginx reverse proxy config
+- `.env.example` - Örnek yapılandırma dosyası
+
+#### 2. Şube Yönetim Sistemi
+**Backend API'ler:**
+- `GET /api/branch/info` - Şube bilgileri
+- `GET /api/branch/stats` - Şube istatistikleri
+- `GET /api/branch/reports/daily` - Günlük rapor
+- `GET /api/branch/reports/weekly` - Haftalık rapor
+
+**Merkezi Yönetim API'ler:**
+- `GET /api/central/branches` - Tüm şubeler listesi
+- `POST /api/central/branches` - Yeni şube kayıt
+- `POST /api/central/sync` - Şube veri senkronizasyonu
+- `GET /api/central/dashboard` - Merkezi dashboard
+
+#### 3. Frontend Sayfaları
+- `/branches` - Şube Yönetimi (Merkezi panel)
+- `/branch-reports` - Şube Raporları (Günlük/Haftalık)
+
+#### 4. Kurulum Araçları
+- `install.sh` - Otomatik şube kurulum scripti
+- `/docs/SUBE_KURULUM_REHBERI.md` - Detaylı kurulum rehberi
+
+### Şube Mimarisi
+```
+Merkez Sunucu (erp.kasaburger.net.tr)
+    ├── Şube 1 (sube1.kasaburger.net.tr)
+    ├── Şube 2 (sube2.kasaburger.net.tr)
+    ├── Şube 3 (sube3.kasaburger.net.tr)
+    └── ... (20+ şube)
+```
+
+### Environment Variables (Şube başına)
+- `BRANCH_ID` - Şube kimliği
+- `BRANCH_NAME` - Şube adı
+- `DB_NAME` - Şube veritabanı
+- `CENTRAL_SERVER_URL` - Merkez sunucu (opsiyonel)
+
+### Maliyet Tahmini (20 Şube)
+- Sunucu: ~4.000 TL/ay
+- Domain: ~17 TL/ay
+- SSL: Ücretsiz
+- **Toplam: ~4.000 TL/ay**
+
