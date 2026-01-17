@@ -249,7 +249,6 @@ const KioskPage = () => {
               >
                 <Package className="h-12 w-12" />
                 <span className="text-xl font-bold">Paket Servis</span>
-                <span className="text-sm opacity-75">Paketleyip teslim edelim</span>
               </Button>
               <Button 
                 className="w-full py-10 text-lg bg-green-600 hover:bg-green-700 flex flex-col gap-2" 
@@ -257,7 +256,6 @@ const KioskPage = () => {
               >
                 <UtensilsCrossed className="h-12 w-12" />
                 <span className="text-xl font-bold">Masaya Servis</span>
-                <span className="text-sm opacity-75">Masanıza getirelim</span>
               </Button>
               <Button variant="outline" className="w-full mt-2" onClick={() => { setShowServiceType(false); setShowCart(true); }}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Geri
