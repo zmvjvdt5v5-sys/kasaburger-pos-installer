@@ -9,6 +9,37 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Database:** MongoDB
 - **Auth:** JWT (24 saat token)
 
+## Update: January 17, 2026 - Kiosk Admin "0 Ürün" Sorunu Düzeltmesi
+
+### 🔧 Yapılan Değişiklikler
+
+#### 1. KioskAdmin.js - Gelişmiş Hata Yönetimi
+- API yanıtı boş geldiğinde artık DEFAULT_PRODUCTS kullanılıyor
+- 401/403 auth hataları için kullanıcıya toast bildirimi eklendi
+- Console'a detaylı debug logları eklendi
+- Token ve API yanıtı durumları izleniyor
+
+#### 2. Backend - Ürün Seeding Endpoint'i
+- `POST /api/kiosk/products/seed` endpoint'i eklendi
+- Production'da boş veritabanına varsayılan 25 ürün ekleyebilir
+- Zaten ürün varsa tekrar eklemez
+
+#### 3. Frontend - "Varsayılan Ürünleri Yükle" Butonu
+- Kiosk Admin sayfasına yeni buton eklendi
+- Tek tıkla production veritabanına ürün eklenebilir
+
+### 📋 Production'da Sorun Yaşanırsa Adımlar
+1. **Hard Refresh (Ctrl+Shift+R)** yapın
+2. Tarayıcı cache'ini temizleyin
+3. Admin paneline giriş yapın
+4. `/kiosk-admin` sayfasına gidin
+5. "Varsayılan Ürünleri Yükle" butonuna tıklayın
+
+### Test Bilgileri
+- **Admin:** admin@kasaburger.net.tr / admin123
+- **Bayi:** MEKGRUP / 1234
+- **Preview:** Tamamen çalışıyor (25 ürün görünüyor)
+
 ## User Personas
 1. **İmalathanesi Sahibi/Yönetici** - Tüm modüllere erişim, raporları görüntüleme
 2. **Bayi** (Gelecekte) - Sipariş verme, kendi faturalarını görme
