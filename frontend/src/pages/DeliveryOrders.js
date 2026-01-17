@@ -7,7 +7,7 @@ import { Switch } from '../components/ui/switch';
 import { 
   Package, RefreshCw, Check, X, Clock, Truck,
   Settings, ChevronRight, Bell, TrendingUp, AlertCircle,
-  Play, Pause, Phone, MapPin, FileText, Timer
+  Play, Pause, Phone, MapPin, FileText, Timer, Printer
 } from 'lucide-react';
 import { toast } from 'sonner';
 
