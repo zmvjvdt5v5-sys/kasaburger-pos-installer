@@ -524,31 +524,32 @@ const KioskPage = () => {
         </nav>
 
         {/* Products Grid */}
-        <main className="flex-1 p-4 overflow-y-auto bg-zinc-950">
-          <h2 className="text-xl font-bold text-orange-500 mb-4">{menuData.categories.find(c => c.id === selectedCategory)?.name || 'Ürünler'}</h2>
-          <div className="grid grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3">
+        <main className="flex-1 p-6 overflow-y-auto bg-zinc-950">
+          <h2 className="text-2xl font-bold text-orange-500 mb-6">{menuData.categories.find(c => c.id === selectedCategory)?.name || 'Ürünler'}</h2>
+          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
                 onClick={() => openProductWithNote(product)}
-                className="group bg-zinc-900 rounded-xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-95"
+                className="group bg-zinc-900 rounded-2xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-95 shadow-lg"
               >
-                <div className="relative aspect-square overflow-hidden">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   {product.is_premium && (
-                    <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1">
+                    <span className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-amber-400 text-black text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                       👑 Premium
                     </span>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                 </div>
-                <div className="p-2">
-                  <h3 className="font-bold text-xs text-white leading-tight mb-1 truncate">{product.name}</h3>
+                <div className="p-4">
+                  <h3 className="font-bold text-base text-white leading-tight mb-2">{product.name}</h3>
                   {product.description && (
-                    <p className="text-zinc-400 text-[10px] leading-tight line-clamp-2 mb-1">{product.description}</p>
+                    <p className="text-zinc-400 text-sm leading-relaxed mb-3 line-clamp-3">{product.description}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <p className="text-orange-500 font-bold text-base">₺{product.price.toLocaleString('tr-TR')}</p>
-                    <span className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">+</span>
+                    <p className="text-orange-500 font-black text-xl">₺{product.price.toLocaleString('tr-TR')}</p>
+                    <span className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:bg-orange-400 transition-colors">+</span>
                   </div>
                 </div>
               </button>
