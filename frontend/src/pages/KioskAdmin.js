@@ -374,12 +374,35 @@ const KioskAdmin = () => {
                     />
                   </div>
                   <div className="col-span-2">
-                    <Label>Görsel URL</Label>
-                    <Input
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      placeholder="https://..."
-                    />
+                    <Label>Görsel</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={formData.image}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                        placeholder="https://... veya dosya yükleyin"
+                        className="flex-1"
+                      />
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">URL yapıştırın veya bilgisayardan resim yükleyin (max 5MB)</p>
                     {formData.image && (
                       <div className="mt-2 relative h-32 rounded-lg overflow-hidden bg-muted">
                         <img 
