@@ -133,23 +133,31 @@ const KioskAdmin = () => {
     loadProducts();
   }, []);
 
-  const seedProducts = async () => {
+  const seedProducts = async (forceReset = false) => {
+    if (forceReset) {
+      if (!window.confirm('⚠️ DİKKAT: Tüm ürünler silinip varsayılanlar yüklenecek. Yaptığınız değişiklikler kaybolacak. Devam etmek istiyor musunuz?')) {
+        return;
+      }
+    }
     setSeeding(true);
     try {
       const token = localStorage.getItem('kasaburger_token');
-      const response = await fetch(`${BACKEND_URL}/api/kiosk/products/seed`, {
+      const url = forceReset 
+        ? `${BACKEND_URL}/api/kiosk/products/reset`
+        : `${BACKEND_URL}/api/kiosk/products/seed`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
-      if (data.seeded) {
-        toast.success(`${data.count} varsayılan ürün yüklendi!`);
+      if (data.seeded || data.reset) {
+        toast.success(`${data.count} ürün yüklendi!`);
         loadProducts();
       } else {
-        toast.info(data.message || 'Ürünler zaten mevcut');
+        toast.info(data.message || 'İşlem yapılmadı');
       }
     } catch (error) {
-      toast.error('Ürünler yüklenemedi');
+      toast.error('İşlem başarısız');
     } finally {
       setSeeding(false);
     }
