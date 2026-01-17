@@ -68,6 +68,9 @@ const KioskPage = () => {
   const [orderNumber, setOrderNumber] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showProductNote, setShowProductNote] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productNote, setProductNote] = useState('');
 
   // Detect mobile
   useEffect(() => {
