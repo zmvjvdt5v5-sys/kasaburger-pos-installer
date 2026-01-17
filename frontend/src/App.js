@@ -224,6 +224,26 @@ function AppRoutes() {
         }
       />
 
+      {/* Şube Yönetimi */}
+      <Route
+        path="/branches"
+        element={
+          <ProtectedRoute>
+            <BranchManagement />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Şube Raporları */}
+      <Route
+        path="/branch-reports"
+        element={
+          <ProtectedRoute>
+            <BranchReports />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Default Redirect - Check domain for kiosk */}
       <Route path="/" element={<HomeRedirect />} />
       
