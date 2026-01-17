@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { toast } from 'sonner';
-import { ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote, ArrowLeft, CheckCircle, Package, UtensilsCrossed, Smartphone } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, CreditCard, ArrowLeft, CheckCircle, Package, UtensilsCrossed, Smartphone, MessageSquare } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
