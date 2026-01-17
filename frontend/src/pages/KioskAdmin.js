@@ -54,6 +54,7 @@ const KioskAdmin = () => {
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -70,6 +71,28 @@ const KioskAdmin = () => {
   useEffect(() => {
     loadProducts();
   }, []);
+
+  const seedProducts = async () => {
+    setSeeding(true);
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/products/seed`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.seeded) {
+        toast.success(`${data.count} ürün başarıyla yüklendi!`);
+        loadProducts();
+      } else {
+        toast.info(data.message);
+      }
+    } catch (error) {
+      toast.error('Ürünler yüklenemedi');
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const loadProducts = async () => {
     try {
