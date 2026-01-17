@@ -213,6 +213,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/kiosk-orders"
+        element={
+          <ProtectedRoute>
+            <KioskOrders />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Default Redirect - Check domain for kiosk */}
       <Route path="/" element={<HomeRedirect />} />
