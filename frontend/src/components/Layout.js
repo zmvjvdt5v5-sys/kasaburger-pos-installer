@@ -22,7 +22,9 @@ import {
   ChefHat,
   Megaphone,
   Monitor,
-  Bell
+  Bell,
+  Building2,
+  TrendingUp
 } from 'lucide-react';
 
 const navItems = [
@@ -39,6 +41,8 @@ const navItems = [
   { path: '/campaigns', label: 'Kampanyalar', icon: Megaphone },
   { path: '/kiosk-admin', label: 'Kiosk Ürünleri', icon: Monitor },
   { path: '/kiosk-orders', label: 'Kiosk Siparişleri', icon: Bell },
+  { path: '/branches', label: 'Şube Yönetimi', icon: Building2, adminOnly: true },
+  { path: '/branch-reports', label: 'Şube Raporları', icon: TrendingUp },
   { path: '/reports', label: 'Raporlar', icon: BarChart3 },
   { path: '/settings', label: 'Ayarlar', icon: Settings },
 ];
