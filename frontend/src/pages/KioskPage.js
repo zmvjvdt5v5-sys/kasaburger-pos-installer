@@ -475,7 +475,7 @@ const KioskPage = () => {
               <p className="text-2xl font-black text-orange-400">{formatPrice(cartTotal)}</p>
             </div>
           </div>
-          <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-10 py-6 text-lg rounded-xl">
+          <Button onClick={() => setShowCart(true)} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-12 py-6 text-lg rounded-xl shadow-lg shadow-orange-500/20 font-bold">
             Siparişi Tamamla
           </Button>
         </div>
