@@ -114,7 +114,9 @@ const KioskAdmin = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setFormData(prev => ({ ...prev, image: data.url }));
+        // Tam URL oluştur
+        const imageUrl = data.url.startsWith('/') ? `${BACKEND_URL}${data.url}` : data.url;
+        setFormData(prev => ({ ...prev, image: imageUrl }));
         toast.success('Resim yüklendi!');
       } else {
         toast.error('Resim yüklenemedi');
