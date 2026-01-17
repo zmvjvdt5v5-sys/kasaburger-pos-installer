@@ -3341,9 +3341,9 @@ try:
         with open(filepath, "wb") as f:
             f.write(contents)
         
-        # URL oluştur (BACKEND_URL kullanarak)
-        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')
-        image_url = f"{backend_url}/api/uploads/{filename}"
+        # URL oluştur
+        # Not: Production'da bu URL doğru çalışması için domain ayarı gerekebilir
+        image_url = f"/api/uploads/{filename}"
         
         return {"url": image_url, "filename": filename}
     
