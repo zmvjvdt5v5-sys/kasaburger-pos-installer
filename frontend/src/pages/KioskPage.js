@@ -409,7 +409,7 @@ const KioskPage = () => {
           <span className="text-2xl font-bold text-orange-500">KASA BURGER</span>
         </div>
         {cartCount > 0 && (
-          <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-5 text-lg gap-3">
+          <Button onClick={() => setShowCart(true)} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-8 py-5 text-lg gap-3 rounded-xl shadow-lg shadow-orange-500/20">
             <ShoppingCart className="h-6 w-6" />
             <span>{cartCount} Ürün</span>
             <span className="font-bold">{formatPrice(cartTotal)}</span>
@@ -420,39 +420,42 @@ const KioskPage = () => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Categories */}
-        <nav className="w-28 bg-zinc-900 flex flex-col border-r border-zinc-800">
+        <nav className="w-32 bg-gradient-to-b from-zinc-900 to-zinc-950 flex flex-col border-r border-zinc-800">
           {menuData.categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex flex-col items-center justify-center py-5 px-2 transition-all ${
-                selectedCategory === cat.id ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:bg-zinc-800'
+              className={`flex flex-col items-center justify-center py-6 px-2 transition-all border-l-4 ${
+                selectedCategory === cat.id 
+                  ? 'bg-orange-500/10 text-orange-400 border-l-orange-500' 
+                  : 'text-zinc-500 hover:bg-zinc-800/50 border-l-transparent hover:text-zinc-300'
               }`}
             >
-              <span className="text-3xl mb-1">{cat.icon}</span>
-              <span className="text-xs font-medium text-center leading-tight">{cat.name}</span>
+              <span className="text-2xl mb-2">{cat.icon}</span>
+              <span className="text-xs font-semibold text-center tracking-wide">{cat.name}</span>
             </button>
           ))}
         </nav>
 
         {/* Products Grid */}
-        <main className="flex-1 p-4 overflow-y-auto bg-zinc-950">
-          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        <main className="flex-1 p-6 overflow-y-auto bg-gradient-to-br from-zinc-950 via-zinc-950 to-black">
+          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="bg-zinc-900 rounded-xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-95"
+                className="group bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500/50 active:scale-95 border border-zinc-800/50 shadow-xl hover:shadow-orange-500/10"
               >
-                <div className="relative aspect-square">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   {product.is_premium && (
-                    <span className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">👑</span>
+                    <span className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-amber-400 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">PREMIUM</span>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 </div>
-                <div className="p-3">
-                  <h3 className="font-semibold text-sm text-white truncate">{product.name}</h3>
-                  <p className="text-orange-500 font-bold text-lg mt-1">{formatPrice(product.price)}</p>
+                <div className="p-4">
+                  <h3 className="font-bold text-sm text-white tracking-wide mb-1">{product.name}</h3>
+                  <p className="text-orange-400 font-black text-xl">{formatPrice(product.price)}</p>
                 </div>
               </button>
             ))}
@@ -462,12 +465,14 @@ const KioskPage = () => {
 
       {/* Bottom Bar */}
       {cartCount > 0 && !showCart && (
-        <div className="bg-zinc-900 border-t border-zinc-800 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <ShoppingCart className="h-8 w-8 text-orange-500" />
+        <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 border-t border-zinc-800 px-8 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
+              <ShoppingCart className="h-7 w-7 text-orange-400" />
+            </div>
             <div>
-              <p className="text-sm text-zinc-400">{cartCount} ürün</p>
-              <p className="text-xl font-bold text-orange-500">{formatPrice(cartTotal)}</p>
+              <p className="text-sm text-zinc-400 font-medium">{cartCount} ürün</p>
+              <p className="text-2xl font-black text-orange-400">{formatPrice(cartTotal)}</p>
             </div>
           </div>
           <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-10 py-6 text-lg rounded-xl">
