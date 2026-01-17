@@ -19,8 +19,8 @@ const KioskOrders = () => {
 
   // Notification sound - Daha uzun ve sesli
   useEffect(() => {
-    // Daha uzun ve net bir bildirim sesi (ding-dong tarzı)
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRl9vT19teleQU2qeXSn2gZB0OlzsSLYBQGQJrMqnYjFwdImsereiAJDEmTyZ1yHAgNS5PDlGwcCA1LlcOSaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBwxLl8ORaxwHDEuXw5FrHAcMS5fDkWscBww=');
+    // Daha net ve uzun bir bildirim sesi
+    audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     audioRef.current.volume = 1.0; // Maksimum ses
   }, []);
 
@@ -34,7 +34,7 @@ const KioskOrders = () => {
           audioRef.current.volume = 1.0;
           audioRef.current.play().catch(() => {});
           playCount++;
-          setTimeout(playSound, 400); // 400ms aralıkla tekrar
+          setTimeout(playSound, 600); // 600ms aralıkla tekrar
         }
       };
       playSound();
