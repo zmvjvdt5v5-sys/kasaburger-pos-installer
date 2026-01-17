@@ -202,6 +202,10 @@ const Recipes = () => {
             Kasa Burger 10 kg Sos Üretim Reçeteleri
           </p>
         </div>
+        <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Yeni Reçete Ekle
+        </Button>
       </div>
 
       <Tabs defaultValue="sauces" className="space-y-4">
