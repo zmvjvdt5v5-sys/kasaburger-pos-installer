@@ -403,10 +403,15 @@ const KioskPage = () => {
                 <span>{serviceType === 'paket' ? 'Paket Servis' : `Masa: ${tableNumber}`}</span>
               </div>
               <div className="mt-3 pt-3 border-t border-dashed text-left space-y-1 text-sm">
-                {cart.map(item => (
-                  <div key={item.id} className="flex justify-between">
-                    <span>{item.quantity}x {item.name}</span>
-                    <span>{formatPrice(item.price * item.quantity)}</span>
+                {cart.map((item, index) => (
+                  <div key={`${item.id}-${index}`}>
+                    <div className="flex justify-between">
+                      <span>{item.quantity}x {item.name}</span>
+                      <span>{formatPrice(item.price * item.quantity)}</span>
+                    </div>
+                    {item.note && (
+                      <p className="text-xs text-orange-600 ml-4">📝 {item.note}</p>
+                    )}
                   </div>
                 ))}
               </div>
