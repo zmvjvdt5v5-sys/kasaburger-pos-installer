@@ -3418,6 +3418,274 @@ try:
             logging.error(f"Cloudinary upload error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Resim yükleme hatası: {str(e)}")
 
+    # ==================== ŞUBE YÖNETİMİ API ====================
+
+    @api_router.get("/branch/info")
+    async def get_branch_info():
+        """Mevcut şube bilgilerini getir"""
+        return {
+            "branch_id": BRANCH_ID,
+            "branch_name": BRANCH_NAME,
+            "db_name": db_name,
+            "version": "1.0.4"
+        }
+
+    @api_router.get("/branch/stats")
+    async def get_branch_stats(current_user: dict = Depends(get_current_user)):
+        """Şube istatistiklerini getir"""
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Bugünkü siparişler
+        today_orders = await db.kiosk_orders.count_documents({
+            "created_at": {"$gte": today.isoformat()}
+        })
+        
+        # Bugünkü gelir
+        today_revenue_pipeline = [
+            {"$match": {"created_at": {"$gte": today.isoformat()}, "status": {"$ne": "cancelled"}}},
+            {"$group": {"_id": None, "total": {"$sum": "$total"}}}
+        ]
+        today_revenue_result = await db.kiosk_orders.aggregate(today_revenue_pipeline).to_list(1)
+        today_revenue = today_revenue_result[0]["total"] if today_revenue_result else 0
+        
+        # Toplam siparişler
+        total_orders = await db.kiosk_orders.count_documents({})
+        
+        # Toplam gelir
+        total_revenue_pipeline = [
+            {"$match": {"status": {"$ne": "cancelled"}}},
+            {"$group": {"_id": None, "total": {"$sum": "$total"}}}
+        ]
+        total_revenue_result = await db.kiosk_orders.aggregate(total_revenue_pipeline).to_list(1)
+        total_revenue = total_revenue_result[0]["total"] if total_revenue_result else 0
+        
+        # Aktif ürün sayısı
+        active_products = await db.kiosk_products.count_documents({"is_active": True})
+        
+        return {
+            "branch_id": BRANCH_ID,
+            "branch_name": BRANCH_NAME,
+            "today": {
+                "orders": today_orders,
+                "revenue": today_revenue
+            },
+            "total": {
+                "orders": total_orders,
+                "revenue": total_revenue
+            },
+            "active_products": active_products,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+
+    @api_router.get("/branch/reports/daily")
+    async def get_daily_report(
+        date: str = None,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Günlük rapor getir"""
+        if date:
+            report_date = datetime.fromisoformat(date).replace(tzinfo=timezone.utc)
+        else:
+            report_date = datetime.now(timezone.utc)
+        
+        start_of_day = report_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = start_of_day + timedelta(days=1)
+        
+        # Siparişleri getir
+        orders = await db.kiosk_orders.find({
+            "created_at": {
+                "$gte": start_of_day.isoformat(),
+                "$lt": end_of_day.isoformat()
+            }
+        }, {"_id": 0}).to_list(1000)
+        
+        # Saatlik dağılım
+        hourly_stats = {}
+        for order in orders:
+            try:
+                order_time = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
+                hour = order_time.hour
+                if hour not in hourly_stats:
+                    hourly_stats[hour] = {"orders": 0, "revenue": 0}
+                hourly_stats[hour]["orders"] += 1
+                hourly_stats[hour]["revenue"] += order.get("total", 0)
+            except:
+                pass
+        
+        # Ürün bazlı satışlar
+        product_sales = {}
+        for order in orders:
+            for item in order.get("items", []):
+                product_name = item.get("name", "Bilinmeyen")
+                if product_name not in product_sales:
+                    product_sales[product_name] = {"quantity": 0, "revenue": 0}
+                product_sales[product_name]["quantity"] += item.get("quantity", 1)
+                product_sales[product_name]["revenue"] += item.get("price", 0) * item.get("quantity", 1)
+        
+        # En çok satanlar
+        top_products = sorted(product_sales.items(), key=lambda x: x[1]["quantity"], reverse=True)[:10]
+        
+        return {
+            "branch_id": BRANCH_ID,
+            "branch_name": BRANCH_NAME,
+            "date": start_of_day.strftime("%Y-%m-%d"),
+            "summary": {
+                "total_orders": len(orders),
+                "total_revenue": sum(o.get("total", 0) for o in orders),
+                "cancelled_orders": len([o for o in orders if o.get("status") == "cancelled"]),
+                "avg_order_value": sum(o.get("total", 0) for o in orders) / len(orders) if orders else 0
+            },
+            "hourly_breakdown": [{"hour": h, **stats} for h, stats in sorted(hourly_stats.items())],
+            "top_products": [{"name": name, **stats} for name, stats in top_products],
+            "service_type_breakdown": {
+                "paket": len([o for o in orders if o.get("service_type") == "paket"]),
+                "masa": len([o for o in orders if o.get("service_type") == "masa"])
+            }
+        }
+
+    @api_router.get("/branch/reports/weekly")
+    async def get_weekly_report(current_user: dict = Depends(get_current_user)):
+        """Haftalık rapor getir"""
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        week_ago = today - timedelta(days=7)
+        
+        daily_stats = []
+        for i in range(7):
+            day_start = week_ago + timedelta(days=i)
+            day_end = day_start + timedelta(days=1)
+            
+            orders = await db.kiosk_orders.find({
+                "created_at": {
+                    "$gte": day_start.isoformat(),
+                    "$lt": day_end.isoformat()
+                },
+                "status": {"$ne": "cancelled"}
+            }, {"_id": 0, "total": 1}).to_list(1000)
+            
+            daily_stats.append({
+                "date": day_start.strftime("%Y-%m-%d"),
+                "day_name": ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"][day_start.weekday()],
+                "orders": len(orders),
+                "revenue": sum(o.get("total", 0) for o in orders)
+            })
+        
+        return {
+            "branch_id": BRANCH_ID,
+            "branch_name": BRANCH_NAME,
+            "period": f"{week_ago.strftime('%Y-%m-%d')} - {today.strftime('%Y-%m-%d')}",
+            "daily_stats": daily_stats,
+            "totals": {
+                "orders": sum(d["orders"] for d in daily_stats),
+                "revenue": sum(d["revenue"] for d in daily_stats)
+            }
+        }
+
+    # ==================== MERKEZİ YÖNETİM API ====================
+    
+    # Şube listesi (merkez için)
+    @api_router.get("/central/branches")
+    async def get_all_branches(current_user: dict = Depends(get_current_user)):
+        """Tüm şubeleri listele (Merkez yönetimi için)"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+        
+        branches = await db.branches.find({}, {"_id": 0}).to_list(100)
+        return branches
+    
+    @api_router.post("/central/branches")
+    async def register_branch(
+        branch_data: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Yeni şube kaydet"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+        
+        branch = {
+            "id": branch_data.get("id", str(uuid.uuid4())),
+            "name": branch_data["name"],
+            "address": branch_data.get("address", ""),
+            "phone": branch_data.get("phone", ""),
+            "api_url": branch_data.get("api_url", ""),
+            "api_key": branch_data.get("api_key", str(uuid.uuid4())),
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_sync": None
+        }
+        
+        await db.branches.insert_one(branch)
+        branch.pop("_id", None)
+        return branch
+    
+    @api_router.post("/central/sync")
+    async def sync_branch_data(
+        sync_data: dict,
+        api_key: str = Header(None, alias="X-API-Key")
+    ):
+        """Şubeden merkeze veri senkronizasyonu"""
+        # API key doğrulama
+        branch = await db.branches.find_one({"api_key": api_key})
+        if not branch:
+            raise HTTPException(status_code=401, detail="Geçersiz API anahtarı")
+        
+        # Şube verilerini kaydet
+        sync_record = {
+            "branch_id": branch["id"],
+            "branch_name": branch["name"],
+            "data": sync_data,
+            "synced_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.branch_syncs.insert_one(sync_record)
+        
+        # Şubenin son sync zamanını güncelle
+        await db.branches.update_one(
+            {"id": branch["id"]},
+            {"$set": {"last_sync": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {"status": "success", "message": "Veri senkronize edildi"}
+    
+    @api_router.get("/central/dashboard")
+    async def get_central_dashboard(current_user: dict = Depends(get_current_user)):
+        """Merkezi dashboard verileri"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+        
+        # Tüm şubeleri getir
+        branches = await db.branches.find({"is_active": True}, {"_id": 0}).to_list(100)
+        
+        # Son senkronizasyon verilerini getir
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        branch_stats = []
+        for branch in branches:
+            # Son sync verisini al
+            last_sync = await db.branch_syncs.find_one(
+                {"branch_id": branch["id"]},
+                sort=[("synced_at", -1)]
+            )
+            
+            stats = {
+                "branch_id": branch["id"],
+                "branch_name": branch["name"],
+                "is_online": branch.get("last_sync") and (
+                    datetime.now(timezone.utc) - datetime.fromisoformat(branch["last_sync"].replace("Z", "+00:00"))
+                ).total_seconds() < 3600,  # Son 1 saat içinde sync olduysa online
+                "last_sync": branch.get("last_sync"),
+                "today_orders": last_sync["data"].get("today_orders", 0) if last_sync else 0,
+                "today_revenue": last_sync["data"].get("today_revenue", 0) if last_sync else 0
+            }
+            branch_stats.append(stats)
+        
+        return {
+            "total_branches": len(branches),
+            "online_branches": len([b for b in branch_stats if b["is_online"]]),
+            "total_today_orders": sum(b["today_orders"] for b in branch_stats),
+            "total_today_revenue": sum(b["today_revenue"] for b in branch_stats),
+            "branches": branch_stats
+        }
+
     # Include router
     app.include_router(api_router)
 
