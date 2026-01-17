@@ -3124,7 +3124,9 @@ try:
             "service_type": order.service_type,
             "table_number": order.table_number,
             "payment_method": order.payment_method,
-            "status": "pending",
+            "payment_status": order.payment_method if order.payment_method in ["online", "card_online"] else "pending",
+            "status": "new",
+            "source": "mobile_qr",
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
