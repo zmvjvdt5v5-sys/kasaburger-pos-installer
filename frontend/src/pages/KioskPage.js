@@ -516,7 +516,7 @@ const KioskPage = () => {
             {filteredProducts.map(product => (
               <button
                 key={product.id}
-                onClick={() => addToCart(product)}
+                onClick={() => openProductWithNote(product)}
                 className="group bg-zinc-900 rounded-xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-95"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
