@@ -595,31 +595,38 @@ const KioskPage = () => {
 
       {/* Desktop Dialogs - Same as mobile but larger */}
       <Dialog open={showCart} onOpenChange={setShowCart}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md max-h-[85vh] flex flex-col">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-orange-500" /> Sepetim
+              <ShoppingCart className="h-6 w-6 text-orange-500" /> Sepetim
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto py-2 space-y-2">
+          <div className="flex-1 overflow-y-auto py-3 space-y-3">
             {cart.map((item, index) => (
-              <div key={`${item.id}-${index}`} className="flex items-center gap-3 bg-zinc-800 p-3 rounded-lg">
-                <img src={item.image} alt={item.name} className="w-14 h-14 object-cover rounded" />
+              <div key={`${item.id}-${index}`} className="flex gap-4 bg-zinc-800/80 p-4 rounded-xl border border-zinc-700/50">
+                <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{item.name}</h4>
-                  {item.note && (
-                    <p className="text-xs text-yellow-400 truncate">📝 {item.note}</p>
+                  <h4 className="font-bold text-base text-white mb-1">{item.name}</h4>
+                  {item.description && (
+                    <p className="text-zinc-400 text-sm leading-snug mb-2 line-clamp-2">{item.description}</p>
                   )}
-                  <p className="text-orange-500 font-bold">{formatPrice(item.price * item.quantity)}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateQuantity(index, -1)}>
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-6 text-center font-bold">{item.quantity}</span>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateQuantity(index, 1)}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  {item.note && (
+                    <p className="text-yellow-400 text-sm mb-2 flex items-center gap-1">
+                      <MessageSquare className="h-3.5 w-3.5" /> {item.note}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-orange-500 font-black text-lg">{formatPrice(item.price * item.quantity)}</p>
+                    <div className="flex items-center gap-1 bg-zinc-700 rounded-lg">
+                      <Button size="icon" variant="ghost" className="h-9 w-9 hover:bg-zinc-600" onClick={() => updateQuantity(index, -1)}>
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center font-bold text-lg">{item.quantity}</span>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 hover:bg-zinc-600" onClick={() => updateQuantity(index, 1)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
