@@ -41,6 +41,16 @@ const KioskPage = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Auto close receipt after 15 seconds
+  useEffect(() => {
+    if (showReceipt) {
+      const timer = setTimeout(() => {
+        completeOrder();
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [showReceipt]);
+
   // Load menu from backend
   useEffect(() => {
     const loadMenu = async () => {
