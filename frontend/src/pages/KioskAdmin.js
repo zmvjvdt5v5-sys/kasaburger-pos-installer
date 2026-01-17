@@ -143,10 +143,10 @@ const KioskAdmin = () => {
       });
       const data = await response.json();
       if (data.seeded) {
-        toast.success(`${data.count} ürün başarıyla yüklendi!`);
+        toast.success(`${data.count} varsayılan ürün yüklendi!`);
         loadProducts();
       } else {
-        toast.info(data.message);
+        toast.info(data.message || 'Ürünler zaten mevcut');
       }
     } catch (error) {
       toast.error('Ürünler yüklenemedi');
