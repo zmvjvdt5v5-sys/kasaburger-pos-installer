@@ -347,7 +347,7 @@ const KioskPage = () => {
 
         {/* Product Note Dialog - Ürün Not Ekleme */}
         <Dialog open={showProductNote} onOpenChange={setShowProductNote}>
-          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[90vw] rounded-2xl">
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[90vw] md:max-w-md rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-xl text-center flex items-center justify-center gap-2">
                 <MessageSquare className="h-5 w-5 text-orange-500" />
@@ -356,11 +356,14 @@ const KioskPage = () => {
             </DialogHeader>
             <div className="space-y-4 py-4">
               {selectedProduct && (
-                <div className="flex items-center gap-3 bg-zinc-800 p-3 rounded-xl">
-                  <img src={selectedProduct.image} alt={selectedProduct.name} className="w-20 h-20 object-cover rounded-lg" />
-                  <div>
-                    <p className="font-bold text-lg">{selectedProduct.name}</p>
-                    <p className="text-orange-500 font-bold text-xl">{formatPrice(selectedProduct.price)}</p>
+                <div className="flex gap-4 bg-zinc-800 p-4 rounded-xl">
+                  <img src={selectedProduct.image} alt={selectedProduct.name} className="w-28 h-28 object-cover rounded-lg flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-lg mb-1">{selectedProduct.name}</p>
+                    {selectedProduct.description && (
+                      <p className="text-zinc-400 text-sm leading-snug mb-2">{selectedProduct.description}</p>
+                    )}
+                    <p className="text-orange-500 font-black text-xl">{formatPrice(selectedProduct.price)}</p>
                   </div>
                 </div>
               )}
