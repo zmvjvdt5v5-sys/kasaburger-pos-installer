@@ -74,19 +74,38 @@ const KioskAdmin = () => {
   const loadProducts = async () => {
     try {
       const token = localStorage.getItem('kasaburger_token');
+      console.log('[KioskAdmin] Loading products, token exists:', !!token);
+      
       const response = await fetch(`${BACKEND_URL}/api/kiosk/products`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('[KioskAdmin] Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('[KioskAdmin] Products loaded:', data?.length || 0);
         if (data && data.length > 0) {
           setProducts(data);
+        } else {
+          // API boş döndü, fallback kullan
+          console.log('[KioskAdmin] API returned empty, using defaults');
+          setProducts(DEFAULT_PRODUCTS);
         }
-        // Eğer boşsa DEFAULT_PRODUCTS kullanılacak (zaten state'te)
+      } else if (response.status === 401 || response.status === 403) {
+        // Auth hatası - token geçersiz olabilir
+        console.error('[KioskAdmin] Auth error, status:', response.status);
+        toast.error('Oturum süresi dolmuş, lütfen tekrar giriş yapın');
+        // Fallback ürünleri göster
+        setProducts(DEFAULT_PRODUCTS);
+      } else {
+        console.error('[KioskAdmin] API error, status:', response.status);
+        setProducts(DEFAULT_PRODUCTS);
       }
     } catch (error) {
-      console.error('Load error:', error);
-      // Hata durumunda varsayılan ürünler kalacak
+      console.error('[KioskAdmin] Load error:', error);
+      // Hata durumunda varsayılan ürünler kullan
+      setProducts(DEFAULT_PRODUCTS);
     } finally {
       setLoading(false);
     }
