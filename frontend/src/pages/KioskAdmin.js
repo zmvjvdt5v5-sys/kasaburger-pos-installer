@@ -83,7 +83,7 @@ const KioskAdmin = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const fileInputRef = useRef(null);
 
-  // Dosya yükleme fonksiyonu
+  // Cloudinary'ye dosya yükleme fonksiyonu
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -114,14 +114,15 @@ const KioskAdmin = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Tam URL oluştur
-        const imageUrl = data.url.startsWith('/') ? `${BACKEND_URL}${data.url}` : data.url;
-        setFormData(prev => ({ ...prev, image: imageUrl }));
-        toast.success('Resim yüklendi!');
+        // Cloudinary URL'ini direkt kullan (artık CDN URL'i dönüyor)
+        setFormData(prev => ({ ...prev, image: data.url }));
+        toast.success('Resim Cloudinary\'ye yüklendi!');
       } else {
-        toast.error('Resim yüklenemedi');
+        const errorData = await response.json();
+        toast.error(errorData.detail || 'Resim yüklenemedi');
       }
     } catch (error) {
+      console.error('Upload error:', error);
       toast.error('Yükleme hatası');
     } finally {
       setUploading(false);
