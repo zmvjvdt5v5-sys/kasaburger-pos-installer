@@ -36,6 +36,8 @@ import DealerPortal from './pages/DealerPortal';
 import KioskPage from './pages/KioskPage';
 import KioskAdmin from './pages/KioskAdmin';
 import KioskOrders from './pages/KioskOrders';
+import BranchManagement from './pages/BranchManagement';
+import BranchReports from './pages/BranchReports';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
