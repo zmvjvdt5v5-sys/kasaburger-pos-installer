@@ -66,13 +66,95 @@ export default function DeliveryOrders() {
   const [selectedPlatform, setSelectedPlatform] = useState(null);
   const [platformSettings, setPlatformSettings] = useState({});
   const [filter, setFilter] = useState('all');
+  const [showPrinterSettings, setShowPrinterSettings] = useState(false);
+  const [printerSettings, setPrinterSettings] = useState({
+    enabled: false,
+    type: 'escpos',
+    ip: '192.168.1.100',
+    port: 9100,
+    printer_name: 'default'
+  });
 
   useEffect(() => {
     loadData();
+    loadPrinterSettings();
     // Her 30 saniyede bir güncelle
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const loadPrinterSettings = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/printer/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (Object.keys(data).length > 0) {
+          setPrinterSettings(data);
+        }
+      }
+    } catch (error) {
+      console.error('Yazıcı ayarları yüklenemedi:', error);
+    }
+  };
+
+  const savePrinterSettings = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/printer/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(printerSettings)
+      });
+      if (response.ok) {
+        toast.success('Yazıcı ayarları kaydedildi');
+        setShowPrinterSettings(false);
+      }
+    } catch (error) {
+      toast.error('Yazıcı ayarları kaydedilemedi');
+    }
+  };
+
+  const testPrinter = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/printer/test`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('Yazıcı testi başarısız');
+    }
+  };
+
+  const printOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/printer/print-order/${orderId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const result = await response.json();
+      if (result.status === 'success') {
+        toast.success('Sipariş yazdırıldı');
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('Yazdırma başarısız');
+    }
+  };
 
   const loadData = async () => {
     try {
