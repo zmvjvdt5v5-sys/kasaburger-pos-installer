@@ -543,6 +543,166 @@ const Recipes = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Add New Recipe Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-heading flex items-center gap-2">
+              <Plus className="h-6 w-6 text-primary" />
+              Yeni Reçete Ekle
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Temel Bilgiler */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label>Reçete Adı *</Label>
+                <Input 
+                  placeholder="Örn: Viking Sos"
+                  value={newRecipe.name}
+                  onChange={(e) => setNewRecipe(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>Açıklama</Label>
+                <Textarea 
+                  placeholder="Reçete açıklaması..."
+                  value={newRecipe.description}
+                  onChange={(e) => setNewRecipe(prev => ({ ...prev, description: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Kategori</Label>
+                <Select value={newRecipe.category} onValueChange={(v) => setNewRecipe(prev => ({ ...prev, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Soslar">Soslar</SelectItem>
+                    <SelectItem value="Standartlar">Standartlar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Acı Seviyesi</Label>
+                <Select value={String(newRecipe.spice_level)} onValueChange={(v) => setNewRecipe(prev => ({ ...prev, spice_level: parseInt(v) }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Acısız</SelectItem>
+                    <SelectItem value="1">🌶️ Hafif Acı</SelectItem>
+                    <SelectItem value="2">🌶️🌶️ Acı</SelectItem>
+                    <SelectItem value="3">🌶️🌶️🌶️ Çok Acı</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Batch Boyutu</Label>
+                <Input 
+                  placeholder="10 kg"
+                  value={newRecipe.batch_size}
+                  onChange={(e) => setNewRecipe(prev => ({ ...prev, batch_size: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Raf Ömrü</Label>
+                <Input 
+                  placeholder="7 gün"
+                  value={newRecipe.shelf_life}
+                  onChange={(e) => setNewRecipe(prev => ({ ...prev, shelf_life: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>Saklama Koşulu</Label>
+                <Input 
+                  placeholder="+4°C buzdolabında"
+                  value={newRecipe.storage}
+                  onChange={(e) => setNewRecipe(prev => ({ ...prev, storage: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {/* Malzemeler */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-base font-bold">Malzemeler</Label>
+                <Button size="sm" variant="outline" onClick={addIngredient}>
+                  <Plus className="h-4 w-4 mr-1" /> Malzeme Ekle
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {newRecipe.ingredients.map((ing, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input 
+                      placeholder="Malzeme adı"
+                      className="flex-1"
+                      value={ing.name}
+                      onChange={(e) => updateIngredient(idx, 'name', e.target.value)}
+                    />
+                    <Input 
+                      placeholder="Miktar"
+                      className="w-24"
+                      value={ing.amount}
+                      onChange={(e) => updateIngredient(idx, 'amount', e.target.value)}
+                    />
+                    <Select value={ing.unit} onValueChange={(v) => updateIngredient(idx, 'unit', v)}>
+                      <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="g">g</SelectItem>
+                        <SelectItem value="lt">lt</SelectItem>
+                        <SelectItem value="ml">ml</SelectItem>
+                        <SelectItem value="adet">adet</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button size="icon" variant="ghost" onClick={() => removeIngredient(idx)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Adımlar */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-base font-bold">Hazırlık Adımları</Label>
+                <Button size="sm" variant="outline" onClick={addStep}>
+                  <Plus className="h-4 w-4 mr-1" /> Adım Ekle
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {newRecipe.steps.map((step, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <span className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-bold">{idx + 1}</span>
+                    <Input 
+                      placeholder={`${idx + 1}. adım...`}
+                      className="flex-1"
+                      value={step}
+                      onChange={(e) => updateStep(idx, e.target.value)}
+                    />
+                    <Button size="icon" variant="ghost" onClick={() => removeStep(idx)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Kaydet Butonu */}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>İptal</Button>
+              <Button onClick={saveNewRecipe} disabled={saving}>
+                {saving ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Reçeteyi Kaydet
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
