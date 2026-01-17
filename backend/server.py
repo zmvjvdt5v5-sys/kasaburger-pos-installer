@@ -3686,6 +3686,276 @@ try:
             "branches": branch_stats
         }
 
+    # ==================== PAKET SERVİS ENTEGRASYONLARI ====================
+    
+    from delivery_integrations import (
+        DeliveryPlatform, OrderStatus, DeliveryOrder,
+        DeliveryIntegrationManager, YemeksepetiClient, 
+        TrendyolYemekClient, GetirYemekClient, MigrosYemekClient
+    )
+    
+    delivery_manager = DeliveryIntegrationManager(db)
+    
+    @api_router.get("/delivery/platforms")
+    async def get_delivery_platforms(current_user: dict = Depends(get_current_user)):
+        """Desteklenen paket servis platformları"""
+        platforms = []
+        for platform in DeliveryPlatform:
+            settings = await delivery_manager.get_platform_settings(platform)
+            platforms.append({
+                "id": platform.value,
+                "name": {
+                    "yemeksepeti": "Yemeksepeti",
+                    "trendyol": "Trendyol Yemek",
+                    "getir": "Getir Yemek",
+                    "migros": "Migros Yemek"
+                }.get(platform.value, platform.value),
+                "logo": f"/images/delivery/{platform.value}.png",
+                "is_configured": bool(settings.get("api_key") or settings.get("chain_code")),
+                "is_active": settings.get("is_active", False)
+            })
+        return platforms
+    
+    @api_router.get("/delivery/settings/{platform}")
+    async def get_delivery_settings(
+        platform: str,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Platform ayarlarını getir"""
+        try:
+            plat = DeliveryPlatform(platform)
+            settings = await delivery_manager.get_platform_settings(plat)
+            # Hassas bilgileri maskele
+            if settings.get("api_key"):
+                settings["api_key"] = settings["api_key"][:8] + "****"
+            if settings.get("secret_key"):
+                settings["secret_key"] = "****"
+            return settings
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Geçersiz platform")
+    
+    @api_router.post("/delivery/settings/{platform}")
+    async def save_delivery_settings(
+        platform: str,
+        settings: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Platform ayarlarını kaydet ve client'ı başlat"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin yetkisi gerekli")
+        
+        try:
+            plat = DeliveryPlatform(platform)
+            
+            # Ayarları kaydet
+            await delivery_manager.save_platform_settings(plat, settings)
+            
+            # Client'ı başlat
+            if settings.get("is_active"):
+                await delivery_manager.initialize_client(plat, settings)
+            
+            return {"status": "success", "message": f"{platform} ayarları kaydedildi"}
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Geçersiz platform")
+    
+    @api_router.post("/delivery/test/{platform}")
+    async def test_delivery_connection(
+        platform: str,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Platform bağlantısını test et"""
+        try:
+            plat = DeliveryPlatform(platform)
+            settings = await delivery_manager.get_platform_settings(plat)
+            
+            if not settings:
+                return {"status": "error", "message": "Ayarlar bulunamadı"}
+            
+            # Client'ı başlat ve test et
+            await delivery_manager.initialize_client(plat, settings)
+            orders = await delivery_manager.fetch_orders(plat)
+            
+            return {
+                "status": "success",
+                "message": f"Bağlantı başarılı! {len(orders)} bekleyen sipariş bulundu."
+            }
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    
+    @api_router.get("/delivery/orders")
+    async def get_delivery_orders(
+        platform: str = None,
+        status: str = None,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Paket servis siparişlerini getir"""
+        query = {}
+        if platform:
+            query["platform"] = platform
+        if status:
+            query["status"] = status
+        
+        orders = await db.delivery_orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return orders
+    
+    @api_router.post("/delivery/orders/fetch")
+    async def fetch_delivery_orders(
+        platform: str = None,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Platformlardan yeni siparişleri çek ve kaydet"""
+        fetched_count = 0
+        
+        if platform:
+            try:
+                plat = DeliveryPlatform(platform)
+                settings = await delivery_manager.get_platform_settings(plat)
+                if settings.get("is_active"):
+                    await delivery_manager.initialize_client(plat, settings)
+                    orders = await delivery_manager.fetch_orders(plat)
+                    for order in orders:
+                        await delivery_manager.save_order_to_db(order)
+                        fetched_count += 1
+            except:
+                pass
+        else:
+            # Tüm aktif platformlardan çek
+            for plat in DeliveryPlatform:
+                settings = await delivery_manager.get_platform_settings(plat)
+                if settings.get("is_active"):
+                    try:
+                        await delivery_manager.initialize_client(plat, settings)
+                        orders = await delivery_manager.fetch_orders(plat)
+                        for order in orders:
+                            await delivery_manager.save_order_to_db(order)
+                            fetched_count += 1
+                    except Exception as e:
+                        logging.error(f"Error fetching from {plat.value}: {e}")
+        
+        return {"status": "success", "fetched": fetched_count}
+    
+    @api_router.post("/delivery/orders/{order_id}/accept")
+    async def accept_delivery_order(
+        order_id: str,
+        data: dict = Body(default={}),
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Paket servis siparişini onayla"""
+        order = await db.delivery_orders.find_one({"_internal_id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        platform = DeliveryPlatform(order["platform"])
+        platform_order_id = order["platform_order_id"]
+        prep_time = data.get("preparation_time", 30)
+        
+        # Platformda onayla
+        settings = await delivery_manager.get_platform_settings(platform)
+        if settings.get("is_active"):
+            await delivery_manager.initialize_client(platform, settings)
+            success = await delivery_manager.accept_order(platform, platform_order_id, prep_time)
+            
+            if success:
+                await db.delivery_orders.update_one(
+                    {"_internal_id": order_id},
+                    {"$set": {"status": OrderStatus.ACCEPTED.value, "accepted_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                return {"status": "success", "message": "Sipariş onaylandı"}
+        
+        # Manuel mod - sadece DB'de güncelle
+        await db.delivery_orders.update_one(
+            {"_internal_id": order_id},
+            {"$set": {"status": OrderStatus.ACCEPTED.value}}
+        )
+        return {"status": "success", "message": "Sipariş onaylandı (manuel mod)"}
+    
+    @api_router.post("/delivery/orders/{order_id}/reject")
+    async def reject_delivery_order(
+        order_id: str,
+        data: dict = Body(default={}),
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Paket servis siparişini reddet"""
+        order = await db.delivery_orders.find_one({"_internal_id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        platform = DeliveryPlatform(order["platform"])
+        platform_order_id = order["platform_order_id"]
+        reason = data.get("reason", "Restoran meşgul")
+        
+        settings = await delivery_manager.get_platform_settings(platform)
+        if settings.get("is_active"):
+            await delivery_manager.initialize_client(platform, settings)
+            await delivery_manager.reject_order(platform, platform_order_id, reason)
+        
+        await db.delivery_orders.update_one(
+            {"_internal_id": order_id},
+            {"$set": {"status": OrderStatus.CANCELLED.value, "cancelled_reason": reason}}
+        )
+        return {"status": "success", "message": "Sipariş reddedildi"}
+    
+    @api_router.post("/delivery/orders/{order_id}/ready")
+    async def mark_delivery_order_ready(
+        order_id: str,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Sipariş hazır olarak işaretle"""
+        order = await db.delivery_orders.find_one({"_internal_id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        platform = DeliveryPlatform(order["platform"])
+        platform_order_id = order["platform_order_id"]
+        
+        settings = await delivery_manager.get_platform_settings(platform)
+        if settings.get("is_active"):
+            await delivery_manager.initialize_client(platform, settings)
+            await delivery_manager.mark_ready(platform, platform_order_id)
+        
+        await db.delivery_orders.update_one(
+            {"_internal_id": order_id},
+            {"$set": {"status": OrderStatus.READY.value, "ready_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return {"status": "success", "message": "Sipariş hazır olarak işaretlendi"}
+    
+    @api_router.get("/delivery/stats")
+    async def get_delivery_stats(current_user: dict = Depends(get_current_user)):
+        """Paket servis istatistikleri"""
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        stats = {
+            "today": {
+                "total_orders": 0,
+                "total_revenue": 0,
+                "by_platform": {}
+            },
+            "pending_orders": 0
+        }
+        
+        # Bugünkü siparişler
+        today_orders = await db.delivery_orders.find({
+            "created_at": {"$gte": today.isoformat()}
+        }).to_list(1000)
+        
+        stats["today"]["total_orders"] = len(today_orders)
+        stats["today"]["total_revenue"] = sum(o.get("total", 0) for o in today_orders)
+        
+        # Platform bazlı
+        for platform in DeliveryPlatform:
+            platform_orders = [o for o in today_orders if o.get("platform") == platform.value]
+            stats["today"]["by_platform"][platform.value] = {
+                "orders": len(platform_orders),
+                "revenue": sum(o.get("total", 0) for o in platform_orders)
+            }
+        
+        # Bekleyen siparişler
+        stats["pending_orders"] = await db.delivery_orders.count_documents({
+            "status": {"$in": [OrderStatus.NEW.value, OrderStatus.ACCEPTED.value]}
+        })
+        
+        return stats
+
     # Include router
     app.include_router(api_router)
 
