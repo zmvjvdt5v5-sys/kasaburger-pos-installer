@@ -125,6 +125,7 @@ const KioskOrders = () => {
               <span>${item.quantity}x ${item.product_name}</span>
               <span>₺${(item.total || item.unit_price * item.quantity).toFixed(0)}</span>
             </div>
+            ${item.note ? `<div style="font-size: 10px; color: #666; margin-left: 15px; margin-bottom: 5px;">📝 ${item.note}</div>` : ''}
           `).join('')}
         </div>
         <div class="total">TOPLAM: ₺${order.total.toFixed(0)}</div>
