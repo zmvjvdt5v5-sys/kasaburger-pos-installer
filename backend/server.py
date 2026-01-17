@@ -3114,17 +3114,24 @@ try:
     @api_router.post("/kiosk/orders")
     async def create_kiosk_order(order: KioskOrder):
         """Kiosk siparişi oluştur - Auth gerekmez"""
-        # Günlük sıfırlanan sipariş numarası (0001, 0002...)
         today = datetime.now().strftime('%Y-%m-%d')
-        
-        # Bugünkü sipariş sayısını al
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        today_count = await db.kiosk_orders.count_documents({
-            "created_at": {"$gte": today_start.isoformat()}
-        })
         
-        # Yeni sipariş numarası: 0001, 0002...
-        order_number = str(today_count + 1).zfill(4)
+        # Paket ve Masa siparişleri için ayrı numaralama
+        if order.service_type == 'paket':
+            # Bugünkü paket sipariş sayısını al
+            paket_count = await db.kiosk_orders.count_documents({
+                "order_date": today,
+                "service_type": "paket"
+            })
+            order_number = f"PKT{str(paket_count + 1).zfill(4)}"
+        else:
+            # Bugünkü masa sipariş sayısını al
+            masa_count = await db.kiosk_orders.count_documents({
+                "order_date": today,
+                "service_type": "masa"
+            })
+            order_number = str(masa_count + 1).zfill(4)
         
         order_data = {
             "id": str(uuid.uuid4()),
