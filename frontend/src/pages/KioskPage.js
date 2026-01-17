@@ -242,6 +242,9 @@ const KioskPage = () => {
                 </div>
                 <div className="p-4">
                   <h3 className="font-bold text-sm text-white tracking-wide">{product.name}</h3>
+                  {product.description && (
+                    <p className="text-zinc-400 text-xs mt-1 line-clamp-2">{product.description}</p>
+                  )}
                   <p className="text-orange-400 font-black text-lg mt-1">{formatPrice(product.price)}</p>
                 </div>
               </button>
