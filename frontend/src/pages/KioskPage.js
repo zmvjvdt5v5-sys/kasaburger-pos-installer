@@ -543,6 +543,9 @@ const KioskPage = () => {
                 </div>
                 <div className="p-2">
                   <h3 className="font-bold text-xs text-white leading-tight mb-1 truncate">{product.name}</h3>
+                  {product.description && (
+                    <p className="text-zinc-400 text-[10px] leading-tight line-clamp-2 mb-1">{product.description}</p>
+                  )}
                   <div className="flex items-center justify-between">
                     <p className="text-orange-500 font-bold text-base">₺{product.price.toLocaleString('tr-TR')}</p>
                     <span className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">+</span>
