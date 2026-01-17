@@ -597,3 +597,51 @@ Merkez Sunucu (erp.kasaburger.net.tr)
 - SSL: Ücretsiz
 - **Toplam: ~4.000 TL/ay**
 
+
+---
+
+## Update: January 18, 2026 - Paket Servis Entegrasyonları
+
+### 🆕 Yeni Özellikler
+
+#### Desteklenen Platformlar
+1. **Yemeksepeti** - Chain Code, Remote ID, Vendor ID ile entegrasyon
+2. **Trendyol Yemek** - API Key, Secret Key, Restoran ID ile entegrasyon
+3. **Getir Yemek** - API Key, Secret Key, Restoran ID ile entegrasyon
+4. **Migros Yemek** - API Key, Store ID ile entegrasyon
+
+#### Backend Modülleri
+- `/app/backend/delivery_integrations.py` - Tüm platform client'ları
+- Ortak `DeliveryOrder` modeli - tüm platformlar için standart format
+- `DeliveryIntegrationManager` - merkezi yönetim sınıfı
+
+#### API Endpoints
+- `GET /api/delivery/platforms` - Platform listesi
+- `GET /api/delivery/settings/{platform}` - Platform ayarları
+- `POST /api/delivery/settings/{platform}` - Ayarları kaydet
+- `POST /api/delivery/test/{platform}` - Bağlantı testi
+- `GET /api/delivery/orders` - Sipariş listesi
+- `POST /api/delivery/orders/fetch` - Yeni siparişleri çek
+- `POST /api/delivery/orders/{id}/accept` - Onayla
+- `POST /api/delivery/orders/{id}/reject` - Reddet
+- `POST /api/delivery/orders/{id}/ready` - Hazır işaretle
+- `GET /api/delivery/stats` - İstatistikler
+
+#### Frontend
+- `/delivery-orders` - Paket Servis Siparişleri sayfası
+- Platform ayarları dialogu
+- Sipariş onaylama/reddetme/hazır işaretleme
+- Platform bazlı filtreleme
+- Otomatik yenileme (30 saniye)
+
+### Kullanım
+1. Her platformun ayarlarına girin
+2. API anahtarlarını girin (platform panellerinden alınır)
+3. "Bağlantı Test" ile doğrulayın
+4. "Entegrasyon Aktif" switch'ini açın
+5. "Siparişleri Çek" ile siparişleri alın
+
+### Notlar
+- API anahtarları her platformun restoran panelinden alınır
+- Siparişler 30 saniyede bir otomatik güncellenir
+- Tüm platformlardan gelen siparişler standart formata dönüştürülür
