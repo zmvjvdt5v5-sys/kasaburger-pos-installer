@@ -87,7 +87,7 @@ try:
     
     # Allowed origins (production domains)
     # ALLOWED_ORIGINS = [
-    #     "https://kiosk-manager-9.preview.emergentagent.com",
+    #     "https://burger-pos-1.preview.emergentagent.com",
     #     "https://kasaburger.net.tr",
     #     "https://www.kasaburger.net.tr",
     #     "http://localhost:3000",
