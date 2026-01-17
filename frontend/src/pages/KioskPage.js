@@ -480,7 +480,7 @@ const KioskPage = () => {
               <Button variant="outline" className="flex-1 py-5" onClick={() => { setCart([]); setShowCart(false); }}>
                 <Trash2 className="h-4 w-4 mr-2" /> Temizle
               </Button>
-              <Button className="flex-1 py-5 bg-orange-500 hover:bg-orange-600" onClick={() => { setShowCart(false); setShowTableInput(true); }}>
+              <Button className="flex-1 py-5 bg-orange-500 hover:bg-orange-600" onClick={() => { setShowCart(false); setShowServiceType(true); }}>
                 Devam Et
               </Button>
             </div>
