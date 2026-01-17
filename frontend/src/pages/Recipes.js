@@ -102,6 +102,85 @@ const Recipes = () => {
     setDialogOpen(true);
   };
 
+  // Yeni reçete kaydetme
+  const saveNewRecipe = async () => {
+    if (!newRecipe.name) {
+      toast.error('Reçete adı gerekli');
+      return;
+    }
+    setSaving(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/recipes`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          ...newRecipe,
+          ingredients: newRecipe.ingredients.filter(i => i.name),
+          steps: newRecipe.steps.filter(s => s),
+          tips: newRecipe.tips.filter(t => t)
+        })
+      });
+      if (response.ok) {
+        toast.success('Reçete eklendi');
+        setAddDialogOpen(false);
+        setNewRecipe(emptyRecipe);
+        fetchRecipes();
+      } else {
+        toast.error('Reçete eklenemedi');
+      }
+    } catch (error) {
+      toast.error('Hata oluştu');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Malzeme ekleme/silme
+  const addIngredient = () => {
+    setNewRecipe(prev => ({
+      ...prev,
+      ingredients: [...prev.ingredients, { name: '', amount: '', unit: 'kg' }]
+    }));
+  };
+
+  const removeIngredient = (index) => {
+    setNewRecipe(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateIngredient = (index, field, value) => {
+    setNewRecipe(prev => ({
+      ...prev,
+      ingredients: prev.ingredients.map((ing, i) => 
+        i === index ? { ...ing, [field]: value } : ing
+      )
+    }));
+  };
+
+  // Adım ekleme/silme
+  const addStep = () => {
+    setNewRecipe(prev => ({ ...prev, steps: [...prev.steps, ''] }));
+  };
+
+  const removeStep = (index) => {
+    setNewRecipe(prev => ({
+      ...prev,
+      steps: prev.steps.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateStep = (index, value) => {
+    setNewRecipe(prev => ({
+      ...prev,
+      steps: prev.steps.map((s, i) => i === index ? value : s)
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
