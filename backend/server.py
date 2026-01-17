@@ -3375,12 +3375,10 @@ try:
     from fastapi import UploadFile, File
     
     # Uploads klasörünü oluştur
-    UPLOAD_DIR = "/app/backend/uploads"
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    
+    # Cloudinary'ye resim yükleme endpoint'i
     @api_router.post("/upload/image")
     async def upload_image(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
-        """Resim dosyası yükle"""
+        """Resim dosyasını Cloudinary'ye yükle"""
         # Dosya tipi kontrolü
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail="Sadece resim dosyaları yüklenebilir")
@@ -3390,30 +3388,27 @@ try:
         if len(contents) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="Dosya boyutu 5MB'dan büyük olamaz")
         
-        # Benzersiz dosya adı oluştur
-        import time
-        ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-        filename = f"kiosk_{int(time.time())}_{uuid.uuid4().hex[:8]}.{ext}"
-        filepath = os.path.join(UPLOAD_DIR, filename)
-        
-        # Dosyayı kaydet
-        with open(filepath, "wb") as f:
-            f.write(contents)
-        
-        # URL oluştur
-        # Not: Production'da bu URL doğru çalışması için domain ayarı gerekebilir
-        image_url = f"/api/uploads/{filename}"
-        
-        return {"url": image_url, "filename": filename}
-    
-    @api_router.get("/uploads/{filename}")
-    async def get_uploaded_file(filename: str):
-        """Yüklenen dosyayı getir"""
-        from fastapi.responses import FileResponse
-        filepath = os.path.join(UPLOAD_DIR, filename)
-        if not os.path.exists(filepath):
-            raise HTTPException(status_code=404, detail="Dosya bulunamadı")
-        return FileResponse(filepath)
+        try:
+            # Cloudinary'ye yükle
+            result = cloudinary.uploader.upload(
+                contents,
+                folder="kasaburger/products",
+                resource_type="image",
+                transformation=[
+                    {"width": 800, "height": 600, "crop": "limit", "quality": "auto:good"}
+                ]
+            )
+            
+            # Cloudinary secure URL'ini döndür
+            image_url = result.get("secure_url")
+            public_id = result.get("public_id")
+            
+            logging.info(f"Cloudinary upload successful: {public_id}")
+            return {"url": image_url, "public_id": public_id}
+            
+        except Exception as e:
+            logging.error(f"Cloudinary upload error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Resim yükleme hatası: {str(e)}")
 
     # Include router
     app.include_router(api_router)
