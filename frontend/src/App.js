@@ -38,6 +38,7 @@ import KioskAdmin from './pages/KioskAdmin';
 import KioskOrders from './pages/KioskOrders';
 import BranchManagement from './pages/BranchManagement';
 import BranchReports from './pages/BranchReports';
+import DeliveryOrders from './pages/DeliveryOrders';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
