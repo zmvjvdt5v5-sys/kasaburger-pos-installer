@@ -403,13 +403,13 @@ const KioskPage = () => {
   return (
     <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-zinc-900 px-6 py-3 flex items-center justify-between border-b border-zinc-800">
-        <div className="flex items-center gap-3">
-          <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-12 w-12" />
-          <span className="text-2xl font-bold text-orange-500">KASA BURGER</span>
+      <header className="bg-zinc-900 px-8 py-4 flex items-center justify-between border-b border-zinc-800">
+        <div className="flex items-center gap-4">
+          <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-16 w-16 object-contain" />
+          <span className="text-3xl font-bold text-orange-500 tracking-wide">KASA BURGER</span>
         </div>
         {cartCount > 0 && (
-          <Button onClick={() => setShowCart(true)} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-8 py-5 text-lg gap-3 rounded-xl shadow-lg shadow-orange-500/20">
+          <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-4 text-lg gap-3 rounded-xl">
             <ShoppingCart className="h-6 w-6" />
             <span>{cartCount} Ürün</span>
             <span className="font-bold">{formatPrice(cartTotal)}</span>
