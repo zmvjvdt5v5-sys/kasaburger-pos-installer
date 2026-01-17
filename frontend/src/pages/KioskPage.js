@@ -306,16 +306,19 @@ const KioskPage = () => {
             ) : (
               <div className="space-y-3 py-4">
                 <div className="text-center py-4 bg-zinc-800 rounded-xl">
-                  <p className="text-sm text-zinc-400">Masa: {tableNumber || 'Belirtilmedi'}</p>
-                  <p className="text-3xl font-bold text-orange-500 mt-1">{formatPrice(cartTotal)}</p>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    {serviceType === 'paket' ? <Package className="h-5 w-5 text-blue-400" /> : <UtensilsCrossed className="h-5 w-5 text-green-400" />}
+                    <span className="text-sm text-zinc-300">{serviceType === 'paket' ? 'Paket Servis' : `Masa: ${tableNumber}`}</span>
+                  </div>
+                  <p className="text-3xl font-bold text-orange-500">{formatPrice(cartTotal)}</p>
                 </div>
                 <Button className="w-full py-6 text-base bg-green-600 hover:bg-green-700" onClick={() => processPayment('cash')}>
                   <Banknote className="h-5 w-5 mr-3" /> Nakit Ödeme
                 </Button>
                 <Button className="w-full py-6 text-base bg-blue-600 hover:bg-blue-700" onClick={() => processPayment('card')}>
-                  <CreditCard className="h-5 w-5 mr-3" /> Kredi Kartı (Masada)
+                  <CreditCard className="h-5 w-5 mr-3" /> Kredi Kartı
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => { setShowPayment(false); setShowTableInput(true); }}>
+                <Button variant="outline" className="w-full" onClick={() => { setShowPayment(false); serviceType === 'paket' ? setShowServiceType(true) : setShowTableInput(true); }}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Geri
                 </Button>
               </div>
@@ -336,7 +339,10 @@ const KioskPage = () => {
             <div className="bg-white text-black p-4 rounded-xl text-center">
               <p className="text-xs text-zinc-500">Sipariş No</p>
               <p className="text-4xl font-bold text-orange-500 my-2">{orderNumber}</p>
-              <p className="text-sm text-zinc-600">Masa: {tableNumber || 'Belirtilmedi'}</p>
+              <div className="flex items-center justify-center gap-2 text-sm text-zinc-600">
+                {serviceType === 'paket' ? <Package className="h-4 w-4" /> : <UtensilsCrossed className="h-4 w-4" />}
+                <span>{serviceType === 'paket' ? 'Paket Servis' : `Masa: ${tableNumber}`}</span>
+              </div>
               <div className="mt-3 pt-3 border-t border-dashed text-left space-y-1 text-sm">
                 {cart.map(item => (
                   <div key={item.id} className="flex justify-between">
