@@ -432,7 +432,7 @@ const KioskPage = () => {
               }`}
             >
               <span className="text-2xl mb-1">{cat.icon}</span>
-              <span className="text-[10px] font-medium text-center leading-tight">{cat.name}</span>
+              <span className="text-xs font-semibold text-center leading-tight">{cat.name}</span>
             </button>
           ))}
         </nav>
