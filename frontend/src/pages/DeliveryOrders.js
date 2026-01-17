@@ -337,6 +337,10 @@ export default function DeliveryOrders() {
           <p className="text-zinc-400 mt-1">Yemeksepeti, Trendyol, Getir, Migros</p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
+            <Printer className="h-4 w-4 mr-2" />
+            Yazıcı
+          </Button>
           <Button variant="outline" onClick={loadData} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Yenile
