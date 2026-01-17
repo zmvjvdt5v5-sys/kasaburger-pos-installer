@@ -3956,6 +3956,370 @@ try:
         
         return stats
 
+    # ==================== WEBHOOK ENDPOINTS ====================
+    # Platformlardan anlık sipariş bildirimi almak için
+    
+    @api_router.post("/webhook/yemeksepeti")
+    async def yemeksepeti_webhook(request: Request):
+        """Yemeksepeti webhook - yeni sipariş bildirimi"""
+        try:
+            body = await request.json()
+            logging.info(f"Yemeksepeti webhook received: {body.get('event', 'unknown')}")
+            
+            event_type = body.get("event", "")
+            
+            if event_type == "order.created":
+                # Yeni sipariş geldi
+                order_data = body.get("data", {})
+                
+                # Ayarları al ve client başlat
+                settings = await delivery_manager.get_platform_settings(DeliveryPlatform.YEMEKSEPETI)
+                if settings.get("is_active"):
+                    await delivery_manager.initialize_client(DeliveryPlatform.YEMEKSEPETI, settings)
+                    client = delivery_manager.clients.get(DeliveryPlatform.YEMEKSEPETI)
+                    if client:
+                        order = client.parse_order(order_data)
+                        await delivery_manager.save_order_to_db(order)
+                        
+                        # Otomatik yazdırma kontrolü
+                        if settings.get("auto_print"):
+                            await print_delivery_order(order)
+                        
+                        logging.info(f"Yemeksepeti order saved: {order.platform_order_id}")
+            
+            return {"status": "ok"}
+        except Exception as e:
+            logging.error(f"Yemeksepeti webhook error: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    @api_router.post("/webhook/trendyol")
+    async def trendyol_webhook(request: Request):
+        """Trendyol Yemek webhook"""
+        try:
+            body = await request.json()
+            logging.info(f"Trendyol webhook received: {body.get('eventType', 'unknown')}")
+            
+            event_type = body.get("eventType", "")
+            
+            if event_type == "ORDER_CREATED":
+                order_data = body.get("order", {})
+                
+                settings = await delivery_manager.get_platform_settings(DeliveryPlatform.TRENDYOL)
+                if settings.get("is_active"):
+                    await delivery_manager.initialize_client(DeliveryPlatform.TRENDYOL, settings)
+                    client = delivery_manager.clients.get(DeliveryPlatform.TRENDYOL)
+                    if client:
+                        order = client.parse_order(order_data)
+                        await delivery_manager.save_order_to_db(order)
+                        
+                        if settings.get("auto_print"):
+                            await print_delivery_order(order)
+            
+            return {"status": "ok"}
+        except Exception as e:
+            logging.error(f"Trendyol webhook error: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    @api_router.post("/webhook/getir")
+    async def getir_webhook(request: Request):
+        """Getir Yemek webhook"""
+        try:
+            body = await request.json()
+            logging.info(f"Getir webhook received: {body.get('type', 'unknown')}")
+            
+            event_type = body.get("type", "")
+            
+            if event_type == "order:new":
+                order_data = body.get("payload", {})
+                
+                settings = await delivery_manager.get_platform_settings(DeliveryPlatform.GETIR)
+                if settings.get("is_active"):
+                    await delivery_manager.initialize_client(DeliveryPlatform.GETIR, settings)
+                    client = delivery_manager.clients.get(DeliveryPlatform.GETIR)
+                    if client:
+                        order = client.parse_order(order_data)
+                        await delivery_manager.save_order_to_db(order)
+                        
+                        if settings.get("auto_print"):
+                            await print_delivery_order(order)
+            
+            return {"status": "ok"}
+        except Exception as e:
+            logging.error(f"Getir webhook error: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    @api_router.post("/webhook/migros")
+    async def migros_webhook(request: Request):
+        """Migros Yemek webhook"""
+        try:
+            body = await request.json()
+            logging.info(f"Migros webhook received: {body.get('event', 'unknown')}")
+            
+            event_type = body.get("event", "")
+            
+            if event_type == "NEW_ORDER":
+                order_data = body.get("order", {})
+                
+                settings = await delivery_manager.get_platform_settings(DeliveryPlatform.MIGROS)
+                if settings.get("is_active"):
+                    await delivery_manager.initialize_client(DeliveryPlatform.MIGROS, settings)
+                    client = delivery_manager.clients.get(DeliveryPlatform.MIGROS)
+                    if client:
+                        order = client.parse_order(order_data)
+                        await delivery_manager.save_order_to_db(order)
+                        
+                        if settings.get("auto_print"):
+                            await print_delivery_order(order)
+            
+            return {"status": "ok"}
+        except Exception as e:
+            logging.error(f"Migros webhook error: {e}")
+            return {"status": "error", "message": str(e)}
+
+    # ==================== YAZICI ENTEGRASYONU ====================
+    
+    async def print_delivery_order(order):
+        """Paket servis siparişini yazdır"""
+        try:
+            # Yazıcı ayarlarını al
+            printer_settings = await db.settings.find_one({"key": "printer_settings"})
+            if not printer_settings or not printer_settings.get("enabled"):
+                return False
+            
+            # Fiş içeriğini oluştur
+            receipt_content = generate_delivery_receipt(order)
+            
+            # Yazıcı tipine göre yazdır
+            printer_type = printer_settings.get("type", "escpos")
+            
+            if printer_type == "escpos":
+                # ESC/POS uyumlu termal yazıcı
+                await print_escpos(receipt_content, printer_settings)
+            elif printer_type == "network":
+                # Ağ yazıcısı
+                await print_network(receipt_content, printer_settings)
+            elif printer_type == "cups":
+                # Linux CUPS yazıcı
+                await print_cups(receipt_content, printer_settings)
+            
+            return True
+        except Exception as e:
+            logging.error(f"Print error: {e}")
+            return False
+    
+    def generate_delivery_receipt(order) -> str:
+        """Paket servis fişi oluştur"""
+        platform_names = {
+            "yemeksepeti": "YEMEKSEPETİ",
+            "trendyol": "TRENDYOL YEMEK",
+            "getir": "GETİR YEMEK",
+            "migros": "MİGROS YEMEK"
+        }
+        
+        lines = []
+        lines.append("=" * 42)
+        lines.append(f"      {platform_names.get(order.platform.value, order.platform.value)}")
+        lines.append("=" * 42)
+        lines.append(f"Sipariş No: #{order.platform_order_id[-8:]}")
+        lines.append(f"Tarih: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        lines.append("-" * 42)
+        lines.append(f"Müşteri: {order.customer_name}")
+        lines.append(f"Tel: {order.customer_phone}")
+        lines.append(f"Adres: {order.customer_address[:40]}")
+        if len(order.customer_address) > 40:
+            lines.append(f"       {order.customer_address[40:80]}")
+        lines.append("-" * 42)
+        lines.append("ÜRÜNLER:")
+        lines.append("")
+        
+        for item in order.items:
+            qty = item.get("quantity", 1)
+            name = item.get("name", "")[:25]
+            price = item.get("price", 0) * qty
+            lines.append(f"{qty}x {name:<25} {price:>8.2f} TL")
+            if item.get("note"):
+                lines.append(f"   Not: {item['note'][:35]}")
+        
+        lines.append("-" * 42)
+        if order.delivery_fee > 0:
+            lines.append(f"{'Teslimat Ücreti:':<30} {order.delivery_fee:>8.2f} TL")
+        lines.append(f"{'TOPLAM:':<30} {order.total:>8.2f} TL")
+        lines.append("-" * 42)
+        
+        if order.note:
+            lines.append(f"SİPARİŞ NOTU: {order.note}")
+            lines.append("-" * 42)
+        
+        lines.append(f"Ödeme: {order.payment_method}")
+        lines.append("=" * 42)
+        lines.append("         KasaBurger")
+        lines.append("    Afiyet olsun! 🍔")
+        lines.append("")
+        
+        return "\n".join(lines)
+    
+    async def print_escpos(content: str, settings: dict):
+        """ESC/POS termal yazıcıya yazdır"""
+        try:
+            import socket
+            
+            printer_ip = settings.get("ip", "192.168.1.100")
+            printer_port = settings.get("port", 9100)
+            
+            # ESC/POS komutları
+            ESC = b'\x1b'
+            INIT = ESC + b'@'  # Initialize
+            CUT = ESC + b'm'   # Cut paper
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect((printer_ip, printer_port))
+            
+            # Yazdır
+            sock.send(INIT)
+            sock.send(content.encode('cp857'))  # Türkçe karakter seti
+            sock.send(b'\n\n\n')
+            sock.send(CUT)
+            
+            sock.close()
+            logging.info(f"ESC/POS print successful to {printer_ip}")
+        except Exception as e:
+            logging.error(f"ESC/POS print error: {e}")
+            raise
+    
+    async def print_network(content: str, settings: dict):
+        """Ağ yazıcısına raw TCP ile yazdır"""
+        try:
+            import socket
+            
+            printer_ip = settings.get("ip", "192.168.1.100")
+            printer_port = settings.get("port", 9100)
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect((printer_ip, printer_port))
+            sock.send(content.encode('utf-8'))
+            sock.send(b'\n\n\n\x1d\x56\x00')  # Feed and cut
+            sock.close()
+            
+            logging.info(f"Network print successful to {printer_ip}")
+        except Exception as e:
+            logging.error(f"Network print error: {e}")
+            raise
+    
+    async def print_cups(content: str, settings: dict):
+        """Linux CUPS üzerinden yazdır"""
+        try:
+            import subprocess
+            import tempfile
+            
+            printer_name = settings.get("printer_name", "default")
+            
+            # Geçici dosyaya yaz
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+                f.write(content)
+                temp_file = f.name
+            
+            # CUPS ile yazdır
+            subprocess.run(['lp', '-d', printer_name, temp_file], check=True)
+            
+            logging.info(f"CUPS print successful to {printer_name}")
+        except Exception as e:
+            logging.error(f"CUPS print error: {e}")
+            raise
+    
+    @api_router.get("/printer/settings")
+    async def get_printer_settings(current_user: dict = Depends(get_current_user)):
+        """Yazıcı ayarlarını getir"""
+        settings = await db.settings.find_one({"key": "printer_settings"})
+        if settings:
+            settings.pop("_id", None)
+            settings.pop("key", None)
+        return settings or {}
+    
+    @api_router.post("/printer/settings")
+    async def save_printer_settings(
+        settings: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Yazıcı ayarlarını kaydet"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin yetkisi gerekli")
+        
+        settings["key"] = "printer_settings"
+        settings["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.settings.update_one(
+            {"key": "printer_settings"},
+            {"$set": settings},
+            upsert=True
+        )
+        return {"status": "success", "message": "Yazıcı ayarları kaydedildi"}
+    
+    @api_router.post("/printer/test")
+    async def test_printer(current_user: dict = Depends(get_current_user)):
+        """Yazıcı testi"""
+        try:
+            settings = await db.settings.find_one({"key": "printer_settings"})
+            if not settings:
+                return {"status": "error", "message": "Yazıcı ayarları bulunamadı"}
+            
+            test_content = """
+========================================
+           YAZICI TESTİ
+========================================
+KasaBurger ERP Sistemi
+Tarih: """ + datetime.now().strftime('%d.%m.%Y %H:%M') + """
+----------------------------------------
+Bu bir test yazdırmasıdır.
+Yazıcınız düzgün çalışıyor! ✓
+========================================
+"""
+            
+            printer_type = settings.get("type", "escpos")
+            
+            if printer_type == "escpos":
+                await print_escpos(test_content, settings)
+            elif printer_type == "network":
+                await print_network(test_content, settings)
+            elif printer_type == "cups":
+                await print_cups(test_content, settings)
+            
+            return {"status": "success", "message": "Test yazdırması gönderildi"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    
+    @api_router.post("/printer/print-order/{order_id}")
+    async def print_order_manual(
+        order_id: str,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Siparişi manuel yazdır"""
+        order = await db.delivery_orders.find_one({"_internal_id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        # DeliveryOrder nesnesine dönüştür
+        delivery_order = DeliveryOrder(
+            platform=DeliveryPlatform(order["platform"]),
+            platform_order_id=order["platform_order_id"],
+            customer_name=order["customer_name"],
+            customer_phone=order["customer_phone"],
+            customer_address=order["customer_address"],
+            items=order["items"],
+            total=order["total"],
+            delivery_fee=order.get("delivery_fee", 0),
+            payment_method=order.get("payment_method", ""),
+            note=order.get("note", "")
+        )
+        
+        success = await print_delivery_order(delivery_order)
+        
+        if success:
+            return {"status": "success", "message": "Sipariş yazdırıldı"}
+        else:
+            return {"status": "error", "message": "Yazdırma başarısız"}
+
     # Include router
     app.include_router(api_router)
 
