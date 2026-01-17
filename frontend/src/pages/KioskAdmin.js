@@ -51,6 +51,12 @@ const DEFAULT_PRODUCTS = [
   {id: "cheese-fries", name: "Prison Cheese Lover Fries", category: "atistirmalik", price: 150, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&q=80", is_active: true, description: "Cheddar soslu patates"},
   {id: "truffle-fries", name: "Prison Truffle Fries", category: "atistirmalik", price: 175, image: "https://images.unsplash.com/photo-1630384060421-cb20aff8a689?w=600&q=80", is_active: true, description: "Trüf soslu patates"},
   {id: "cajun-fries", name: "Prison Hot Lockdown Fries", category: "atistirmalik", price: 160, image: "https://images.unsplash.com/photo-1598679253544-2c97992403ea?w=600&q=80", is_active: true, description: "Cajun baharatlı patates"},
+  // İÇECEKLER
+  {id: "ayran", name: "Ayran", category: "icecek", price: 35, image: "https://images.unsplash.com/photo-1596151163116-98a5033814c2?w=600&q=80", is_active: true},
+  {id: "su", name: "Su", category: "icecek", price: 20, image: "https://images.unsplash.com/photo-1564419320461-6870880221ad?w=600&q=80", is_active: true},
+  {id: "limonata", name: "Limonata", category: "icecek", price: 55, image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=600&q=80", is_active: true},
+  {id: "pepsi", name: "Pepsi", category: "icecek", price: 45, image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=600&q=80", is_active: true},
+  {id: "milkshake", name: "Milkshake", category: "icecek", price: 85, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&q=80", is_active: true},
   // TATLILAR
   {id: "choco-bomb", name: "Kasa Choco Bomb", category: "tatli", price: 200, image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&q=80", is_active: true},
   {id: "churros", name: "Churros", category: "tatli", price: 180, image: "https://images.pexels.com/photos/2035706/pexels-photo-2035706.jpeg?auto=compress&cs=tinysrgb&w=600", is_active: true},
