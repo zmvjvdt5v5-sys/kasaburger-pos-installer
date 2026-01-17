@@ -68,6 +68,7 @@ const KioskAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -80,6 +81,51 @@ const KioskAdmin = () => {
     premium: false
   });
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const fileInputRef = useRef(null);
+
+  // Dosya yükleme fonksiyonu
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Dosya boyutu kontrolü (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dosya boyutu 5MB\'dan küçük olmalı');
+      return;
+    }
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      toast.error('Sadece resim dosyaları yüklenebilir');
+      return;
+    }
+
+    setUploading(true);
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/upload/image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formDataUpload
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({ ...prev, image: data.url }));
+        toast.success('Resim yüklendi!');
+      } else {
+        toast.error('Resim yüklenemedi');
+      }
+    } catch (error) {
+      toast.error('Yükleme hatası');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     loadProducts();
