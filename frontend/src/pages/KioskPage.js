@@ -229,8 +229,38 @@ const KioskPage = () => {
                 <span>Toplam</span>
                 <span className="text-orange-500">{formatPrice(cartTotal)}</span>
               </div>
-              <Button className="w-full py-5 bg-orange-500 hover:bg-orange-600 text-base" onClick={() => { setShowCart(false); setShowTableInput(true); }}>
+              <Button className="w-full py-5 bg-orange-500 hover:bg-orange-600 text-base" onClick={() => { setShowCart(false); setShowServiceType(true); }}>
                 Siparişi Tamamla
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Service Type Dialog - Paket/Masa Seçimi */}
+        <Dialog open={showServiceType} onOpenChange={setShowServiceType}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[90vw] rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl text-center">Siparişiniz Nasıl Olsun?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-4">
+              <Button 
+                className="w-full py-10 text-lg bg-blue-600 hover:bg-blue-700 flex flex-col gap-2" 
+                onClick={() => { setServiceType('paket'); setShowServiceType(false); setShowPayment(true); }}
+              >
+                <Package className="h-12 w-12" />
+                <span className="text-xl font-bold">Paket Servis</span>
+                <span className="text-sm opacity-75">Paketleyip teslim edelim</span>
+              </Button>
+              <Button 
+                className="w-full py-10 text-lg bg-green-600 hover:bg-green-700 flex flex-col gap-2" 
+                onClick={() => { setServiceType('masa'); setShowServiceType(false); setShowTableInput(true); }}
+              >
+                <UtensilsCrossed className="h-12 w-12" />
+                <span className="text-xl font-bold">Masaya Servis</span>
+                <span className="text-sm opacity-75">Masanıza getirelim</span>
+              </Button>
+              <Button variant="outline" className="w-full mt-2" onClick={() => { setShowServiceType(false); setShowCart(true); }}>
+                <ArrowLeft className="h-4 w-4 mr-2" /> Geri
               </Button>
             </div>
           </DialogContent>
@@ -255,7 +285,7 @@ const KioskPage = () => {
               <Button className="w-full py-5 bg-orange-500 hover:bg-orange-600 text-base" onClick={() => { setShowTableInput(false); setShowPayment(true); }}>
                 Devam Et
               </Button>
-              <Button variant="outline" className="w-full" onClick={() => { setShowTableInput(false); setShowCart(true); }}>
+              <Button variant="outline" className="w-full" onClick={() => { setShowTableInput(false); setShowServiceType(true); }}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Geri
               </Button>
             </div>
