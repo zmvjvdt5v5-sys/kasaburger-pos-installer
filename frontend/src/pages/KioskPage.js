@@ -500,26 +500,26 @@ const KioskPage = () => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Categories */}
-        <nav className="w-28 bg-zinc-900 flex flex-col border-r border-zinc-800">
+        <nav className="w-24 bg-zinc-900 flex flex-col border-r border-zinc-800 py-2">
           {menuData.categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex flex-col items-center justify-center py-3 px-2 transition-all ${
+              className={`flex flex-col items-center justify-center py-2.5 px-1 mx-1 my-0.5 rounded-lg transition-all ${
                 selectedCategory === cat.id 
                   ? 'bg-orange-500 text-white' 
                   : 'text-zinc-400 hover:bg-zinc-800'
               }`}
             >
-              <span className="text-xl mb-1">{cat.icon}</span>
-              <span className="text-[10px] font-semibold text-center leading-tight whitespace-nowrap">{cat.name}</span>
+              <span className="text-lg mb-0.5">{cat.icon}</span>
+              <span className="text-[9px] font-medium text-center leading-tight">{cat.name}</span>
             </button>
           ))}
         </nav>
 
         {/* Products Grid */}
-        <main className="flex-1 p-3 overflow-y-auto bg-zinc-950">
-          <div className="grid grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3">
+        <main className="flex-1 p-2 overflow-y-auto bg-zinc-950">
+          <div className="grid grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-2">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
@@ -529,12 +529,12 @@ const KioskPage = () => {
                 <div className="relative aspect-square overflow-hidden">
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                   {product.is_premium && (
-                    <span className="absolute top-1 right-1 bg-yellow-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded">★</span>
+                    <span className="absolute top-1 right-1 bg-yellow-500 text-black text-[7px] font-bold px-1 py-0.5 rounded">★</span>
                   )}
                 </div>
-                <div className="p-2">
-                  <h3 className="font-medium text-[10px] text-white leading-tight mb-0.5 truncate">{product.name}</h3>
-                  <p className="text-orange-500 font-bold text-sm">{formatPrice(product.price)}</p>
+                <div className="p-1.5">
+                  <h3 className="font-medium text-[9px] text-white leading-tight mb-0.5 truncate">{product.name}</h3>
+                  <p className="text-orange-500 font-bold text-xs">{formatPrice(product.price)}</p>
                 </div>
               </button>
             ))}
