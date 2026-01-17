@@ -223,7 +223,7 @@ const KioskPage = () => {
             {filteredProducts.map(product => (
               <button
                 key={product.id}
-                onClick={() => addToCart(product)}
+                onClick={() => openProductWithNote(product)}
                 className="bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden text-left active:scale-95 transition-all border border-zinc-800/50 shadow-xl"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
