@@ -645,3 +645,47 @@ Merkez Sunucu (erp.kasaburger.net.tr)
 - API anahtarları her platformun restoran panelinden alınır
 - Siparişler 30 saniyede bir otomatik güncellenir
 - Tüm platformlardan gelen siparişler standart formata dönüştürülür
+
+---
+
+## Update: January 18, 2026 - Canlı Sipariş Paneli (DeliveryPanel)
+
+### 🆕 Yeni Özellikler
+
+#### Canlı Sipariş Yönetim Paneli (`/delivery-panel`)
+- **Tam ekran, karanlık tema** sipariş yönetim arayüzü
+- **Gerçek zamanlı sipariş takibi** (15 saniyede bir güncelleme)
+- **Ses bildirimi** - Yeni sipariş geldiğinde ses çalar
+- **Masaüstü bildirimleri** - Browser push notification desteği
+- **Platform bazlı filtreleme** - Yemeksepeti, Trendyol, Getir, Migros
+
+#### Sipariş Kartı Detayları
+- Platform logosu ve renk kodu
+- Sipariş durumu badge'i (Yeni, Onaylandı, Hazırlanıyor, Hazır, Yolda, Teslim, İptal)
+- Müşteri adı ve telefon
+- Teslimat adresi
+- Ürün listesi ve notları
+- Toplam tutar
+- Ödeme yöntemi
+
+#### Aksiyonlar
+- **Onayla** - Hazırlık süresi seçimi (15-60 dk)
+- **Reddet** - İptal nedeni
+- **Hazır** - Sipariş hazır işaretle
+- **Yazdır** - Sipariş fişi yazdır
+
+#### Ayarlar
+- Ses açma/kapama
+- Masaüstü bildirim ayarları
+- Yazıcı IP/Port yapılandırması
+- Webhook URL bilgileri
+
+### Navigasyon
+- Sidebar'da "Paket Servis" altında "Canlı Siparişler" linki
+- Route: `/delivery-panel`
+
+### Dosyalar
+- `/app/frontend/src/pages/DeliveryPanel.js` - Ana bileşen
+- `/app/frontend/src/App.js` - Route eklendi
+- `/app/frontend/src/components/Layout.js` - Sidebar linki eklendi
+
