@@ -528,9 +528,10 @@ const KioskPage = () => {
               <span>{formatPrice(cartTotal)}</span>
             </div>
           </div>
-          <Button className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-lg mt-2" onClick={completeOrder}>
-            Tamam
+          <Button className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-lg mt-2 animate-pulse" onClick={completeOrder}>
+            ✓ TAMAM - Yeni Sipariş
           </Button>
+          <p className="text-center text-xs text-zinc-500">Ekran 15 saniye sonra otomatik kapanacak</p>
         </DialogContent>
       </Dialog>
     </div>
