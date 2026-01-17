@@ -671,11 +671,8 @@ const KioskPage = () => {
                 </div>
                 <p className="text-4xl font-bold text-orange-500">{formatPrice(cartTotal)}</p>
               </div>
-              <Button className="w-full py-8 text-lg bg-green-600 hover:bg-green-700" onClick={() => processPayment('cash')}>
-                <Banknote className="h-6 w-6 mr-3" /> Nakit
-              </Button>
               <Button className="w-full py-8 text-lg bg-blue-600 hover:bg-blue-700" onClick={() => processPayment('card')}>
-                <CreditCard className="h-6 w-6 mr-3" /> Kredi Kartı
+                <CreditCard className="h-6 w-6 mr-3" /> Kredi Kartı ile Öde
               </Button>
               <Button variant="outline" className="w-full" onClick={() => { setShowPayment(false); serviceType === 'paket' ? setShowServiceType(true) : setShowTableInput(true); }}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Geri
