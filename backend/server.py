@@ -3077,11 +3077,10 @@ try:
 
     @api_router.post("/kiosk/products/seed")
     async def seed_kiosk_products(current_user: dict = Depends(get_current_user)):
-        """Varsayılan kiosk ürünlerini veritabanına ekle (boşsa)"""
+        """Varsayılan kiosk ürünlerini veritabanına ekle - SADECE BOŞ İSE"""
         existing_count = await db.kiosk_products.count_documents({})
         if existing_count > 0:
-            # Mevcut ürünleri sil ve yeniden ekle
-            await db.kiosk_products.delete_many({})
+            return {"message": f"Veritabanında zaten {existing_count} ürün var. Değişiklik yapılmadı.", "seeded": False, "count": existing_count}
         
         default_products = [
             # ET BURGER
