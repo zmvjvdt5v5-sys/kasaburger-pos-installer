@@ -3310,6 +3310,52 @@ try:
             raise HTTPException(status_code=404, detail="Reçete bulunamadı")
         return {"message": "Reçete silindi"}
 
+    # ===================== IMAGE UPLOAD ENDPOINT =====================
+    import os
+    import shutil
+    from fastapi import UploadFile, File
+    
+    # Uploads klasörünü oluştur
+    UPLOAD_DIR = "/app/backend/uploads"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    @api_router.post("/upload/image")
+    async def upload_image(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+        """Resim dosyası yükle"""
+        # Dosya tipi kontrolü
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="Sadece resim dosyaları yüklenebilir")
+        
+        # Dosya boyutu kontrolü (5MB)
+        contents = await file.read()
+        if len(contents) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Dosya boyutu 5MB'dan büyük olamaz")
+        
+        # Benzersiz dosya adı oluştur
+        import time
+        ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+        filename = f"kiosk_{int(time.time())}_{uuid.uuid4().hex[:8]}.{ext}"
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        
+        # Dosyayı kaydet
+        with open(filepath, "wb") as f:
+            f.write(contents)
+        
+        # URL oluştur (BACKEND_URL kullanarak)
+        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001')
+        image_url = f"{backend_url}/api/uploads/{filename}"
+        
+        return {"url": image_url, "filename": filename}
+    
+    @api_router.get("/uploads/{filename}")
+    async def get_uploaded_file(filename: str):
+        """Yüklenen dosyayı getir"""
+        from fastapi.responses import FileResponse
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Dosya bulunamadı")
+        return FileResponse(filepath)
+
     # Include router
     app.include_router(api_router)
 
