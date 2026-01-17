@@ -323,7 +323,7 @@ const KioskAdmin = () => {
             Ürünleri Sıfırla
           </Button>
           <Button variant="outline" asChild>
-            <a href="https://kiosk.kasaburger.net.tr/kiosk" target="_blank" rel="noopener noreferrer">
+            <a href="https://erp.kasaburger.net.tr/kiosk" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
               Kiosk'u Görüntüle
             </a>
