@@ -175,6 +175,12 @@ try:
         secure=True
     )
 
+    # Şube (Branch) Configuration
+    BRANCH_ID = os.environ.get('BRANCH_ID', 'main')
+    BRANCH_NAME = os.environ.get('BRANCH_NAME', 'Merkez')
+    CENTRAL_SERVER_URL = os.environ.get('CENTRAL_SERVER_URL', '')
+    CENTRAL_API_KEY = os.environ.get('CENTRAL_API_KEY', '')
+
     # MongoDB connection with proper settings for production
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     db_name = os.environ.get('DB_NAME', 'kasaburger_db')
