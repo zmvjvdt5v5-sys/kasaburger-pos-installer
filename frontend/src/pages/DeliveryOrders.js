@@ -732,6 +732,98 @@ export default function DeliveryOrders() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Yazıcı Ayarları Dialog */}
+      <Dialog open={showPrinterSettings} onOpenChange={setShowPrinterSettings}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Printer className="h-5 w-5 text-orange-500" />
+              Yazıcı Ayarları
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Aktif/Pasif */}
+            <div className="flex items-center justify-between bg-zinc-800 p-4 rounded-lg">
+              <span>Otomatik Yazdırma</span>
+              <Switch
+                checked={printerSettings.enabled || false}
+                onCheckedChange={(checked) => setPrinterSettings({...printerSettings, enabled: checked})}
+              />
+            </div>
+            
+            {/* Yazıcı Tipi */}
+            <div>
+              <label className="text-sm text-zinc-400 mb-2 block">Yazıcı Tipi</label>
+              <select
+                value={printerSettings.type || 'escpos'}
+                onChange={(e) => setPrinterSettings({...printerSettings, type: e.target.value})}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2"
+              >
+                <option value="escpos">ESC/POS Termal Yazıcı (Ağ)</option>
+                <option value="network">Ağ Yazıcısı (Raw TCP)</option>
+                <option value="cups">Linux CUPS Yazıcı</option>
+              </select>
+            </div>
+            
+            {/* Ağ Yazıcı Ayarları */}
+            {(printerSettings.type === 'escpos' || printerSettings.type === 'network') && (
+              <>
+                <div>
+                  <label className="text-sm text-zinc-400 mb-1 block">Yazıcı IP Adresi</label>
+                  <Input
+                    value={printerSettings.ip || ''}
+                    onChange={(e) => setPrinterSettings({...printerSettings, ip: e.target.value})}
+                    className="bg-zinc-800 border-zinc-700"
+                    placeholder="192.168.1.100"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-zinc-400 mb-1 block">Port</label>
+                  <Input
+                    type="number"
+                    value={printerSettings.port || 9100}
+                    onChange={(e) => setPrinterSettings({...printerSettings, port: parseInt(e.target.value)})}
+                    className="bg-zinc-800 border-zinc-700"
+                    placeholder="9100"
+                  />
+                </div>
+              </>
+            )}
+            
+            {/* CUPS Yazıcı */}
+            {printerSettings.type === 'cups' && (
+              <div>
+                <label className="text-sm text-zinc-400 mb-1 block">Yazıcı Adı</label>
+                <Input
+                  value={printerSettings.printer_name || ''}
+                  onChange={(e) => setPrinterSettings({...printerSettings, printer_name: e.target.value})}
+                  className="bg-zinc-800 border-zinc-700"
+                  placeholder="Yazıcı adı (lpstat -p ile listele)"
+                />
+              </div>
+            )}
+            
+            <div className="bg-zinc-800/50 rounded-lg p-3 text-sm text-zinc-400">
+              <p className="font-medium text-zinc-300 mb-1">💡 Webhook URL'leri:</p>
+              <p className="text-xs break-all">Yemeksepeti: /api/webhook/yemeksepeti</p>
+              <p className="text-xs break-all">Trendyol: /api/webhook/trendyol</p>
+              <p className="text-xs break-all">Getir: /api/webhook/getir</p>
+              <p className="text-xs break-all">Migros: /api/webhook/migros</p>
+            </div>
+            
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={testPrinter}>
+                <Play className="h-4 w-4 mr-1" /> Test Yazdır
+              </Button>
+              <Button className="flex-1 bg-orange-500 hover:bg-orange-600" onClick={savePrinterSettings}>
+                Kaydet
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
