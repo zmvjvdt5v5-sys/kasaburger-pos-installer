@@ -41,7 +41,7 @@ def root():
 
 # Now load the rest of the application
 try:
-    from fastapi import APIRouter, HTTPException, Depends, status, Request
+    from fastapi import APIRouter, HTTPException, Depends, status, Request, Body
     from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
     from fastapi.responses import StreamingResponse, JSONResponse
     from dotenv import load_dotenv
