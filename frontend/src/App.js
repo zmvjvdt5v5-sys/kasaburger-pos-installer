@@ -245,6 +245,16 @@ function AppRoutes() {
         }
       />
 
+      {/* Paket Servis Siparişleri */}
+      <Route
+        path="/delivery-orders"
+        element={
+          <ProtectedRoute>
+            <DeliveryOrders />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Default Redirect - Check domain for kiosk */}
       <Route path="/" element={<HomeRedirect />} />
       
