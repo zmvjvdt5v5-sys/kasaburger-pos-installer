@@ -154,7 +154,14 @@ const KioskPage = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: cart.map(item => ({ product_id: item.id, product_name: item.name, quantity: item.quantity, unit_price: item.price, total: item.price * item.quantity })),
+          items: cart.map(item => ({ 
+            product_id: item.id, 
+            product_name: item.name, 
+            quantity: item.quantity, 
+            unit_price: item.price, 
+            total: item.price * item.quantity,
+            note: item.note || ''
+          })),
           total: cartTotal,
           service_type: serviceType,
           table_number: serviceType === 'masa' ? tableNumber : null,
