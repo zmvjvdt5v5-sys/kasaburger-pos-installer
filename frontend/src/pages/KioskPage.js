@@ -499,42 +499,51 @@ const KioskPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Categories */}
-        <nav className="w-24 bg-zinc-900 flex flex-col border-r border-zinc-800 py-2">
+        {/* Categories Sidebar */}
+        <nav className="w-40 bg-zinc-900 flex flex-col border-r border-zinc-800">
+          <div className="px-4 py-3 border-b border-zinc-800">
+            <span className="text-sm font-bold text-white">Kategoriler</span>
+          </div>
           {menuData.categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex flex-col items-center justify-center py-2.5 px-1 mx-1 my-0.5 rounded-lg transition-all ${
+              className={`flex items-center gap-3 py-3 px-4 transition-all text-left ${
                 selectedCategory === cat.id 
                   ? 'bg-orange-500 text-white' 
-                  : 'text-zinc-400 hover:bg-zinc-800'
+                  : 'text-zinc-300 hover:bg-zinc-800'
               }`}
             >
-              <span className="text-lg mb-0.5">{cat.icon}</span>
-              <span className="text-[9px] font-medium text-center leading-tight">{cat.name}</span>
+              <span className="text-lg">{cat.icon}</span>
+              <span className="text-sm font-medium">{cat.name}</span>
             </button>
           ))}
         </nav>
 
         {/* Products Grid */}
-        <main className="flex-1 p-2 overflow-y-auto bg-zinc-950">
-          <div className="grid grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9 gap-2">
+        <main className="flex-1 p-4 overflow-y-auto bg-zinc-950">
+          <h2 className="text-xl font-bold text-orange-500 mb-4">{menuData.categories.find(c => c.id === selectedCategory)?.name || 'Ürünler'}</h2>
+          <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
                 onClick={() => openProductWithNote(product)}
-                className="group bg-zinc-900 rounded-lg overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-95"
+                className="group bg-zinc-900 rounded-xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-95"
               >
                 <div className="relative aspect-square overflow-hidden">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                   {product.is_premium && (
-                    <span className="absolute top-1 right-1 bg-yellow-500 text-black text-[7px] font-bold px-1 py-0.5 rounded">★</span>
+                    <span className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1">
+                      👑 Premium
+                    </span>
                   )}
                 </div>
-                <div className="p-1.5">
-                  <h3 className="font-medium text-[9px] text-white leading-tight mb-0.5 truncate">{product.name}</h3>
-                  <p className="text-orange-500 font-bold text-xs">{formatPrice(product.price)}</p>
+                <div className="p-3">
+                  <h3 className="font-bold text-sm text-white leading-tight mb-2">{product.name}</h3>
+                  <div className="flex items-center justify-between">
+                    <p className="text-orange-500 font-bold text-lg">₺{product.price.toLocaleString('tr-TR')}</p>
+                    <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">+</span>
+                  </div>
                 </div>
               </button>
             ))}
