@@ -260,8 +260,13 @@ const KioskOrders = () => {
                 </div>
                 <div className="space-y-1 text-sm">
                   {order.items.map((item, i) => (
-                    <div key={i} className="flex justify-between">
-                      <span>{item.quantity}x {item.product_name}</span>
+                    <div key={i}>
+                      <div className="flex justify-between">
+                        <span>{item.quantity}x {item.product_name}</span>
+                      </div>
+                      {item.note && (
+                        <p className="text-xs text-yellow-500 ml-4">📝 {item.note}</p>
+                      )}
                     </div>
                   ))}
                 </div>
