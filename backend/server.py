@@ -3139,6 +3139,73 @@ try:
         orders = await db.kiosk_orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
         return orders
 
+    @api_router.get("/kiosk/orders/new")
+    async def get_new_kiosk_orders(current_user: dict = Depends(get_current_user)):
+        """Yeni siparişleri getir (bildirim için)"""
+        orders = await db.kiosk_orders.find({"status": "new"}, {"_id": 0}).sort("created_at", -1).to_list(50)
+        return orders
+
+    @api_router.put("/kiosk/orders/{order_id}/status")
+    async def update_kiosk_order_status(order_id: str, status: str, current_user: dict = Depends(get_current_user)):
+        """Sipariş durumunu güncelle"""
+        valid_statuses = ["new", "preparing", "ready", "completed", "cancelled"]
+        if status not in valid_statuses:
+            raise HTTPException(status_code=400, detail=f"Geçersiz durum. Geçerli: {valid_statuses}")
+        
+        result = await db.kiosk_orders.update_one(
+            {"id": order_id},
+            {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        return {"message": "Durum güncellendi"}
+
+    @api_router.get("/kiosk/orders/{order_id}/print")
+    async def get_order_print_data(order_id: str, current_user: dict = Depends(get_current_user)):
+        """Yazıcı için sipariş verisi"""
+        order = await db.kiosk_orders.find_one({"id": order_id}, {"_id": 0})
+        if not order:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        # ESC/POS format için hazırla
+        print_data = {
+            "order_number": order.get("order_number"),
+            "service_type": order.get("service_type"),
+            "table_number": order.get("table_number"),
+            "items": order.get("items", []),
+            "total": order.get("total"),
+            "created_at": order.get("created_at"),
+            "payment_method": order.get("payment_method")
+        }
+        return print_data
+
+    @api_router.get("/kiosk/qr-code")
+    async def generate_qr_code():
+        """QR kod oluştur"""
+        import qrcode
+        import base64
+        from io import BytesIO
+        
+        # Kiosk URL'i
+        kiosk_url = "https://kiosk.kasaburger.net.tr"
+        
+        # QR kod oluştur
+        qr = qrcode.QRCode(version=1, box_size=10, border=2)
+        qr.add_data(kiosk_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Base64'e çevir
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+        
+        return {
+            "qr_code": f"data:image/png;base64,{img_str}",
+            "url": kiosk_url
+        }
+
     # Include router
     app.include_router(api_router)
 
