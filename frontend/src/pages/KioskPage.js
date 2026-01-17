@@ -107,10 +107,8 @@ const KioskPage = () => {
   };
 
   const completeOrder = () => {
-    setCart([]);
-    setShowReceipt(false);
-    setOrderNumber(null);
-    setTableNumber('');
+    // Sayfayı yenile - yeni müşteri için temiz başlangıç
+    window.location.reload();
   };
 
   // Mobile Layout
