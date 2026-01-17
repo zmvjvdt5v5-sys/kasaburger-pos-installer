@@ -1,3 +1,4 @@
+// KioskAdmin v2.1 - Updated: 2026-01-17
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
