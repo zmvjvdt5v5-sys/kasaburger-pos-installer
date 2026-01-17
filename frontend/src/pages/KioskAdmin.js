@@ -1,5 +1,5 @@
-// KioskAdmin v2.1 - Updated: 2026-01-17
-import React, { useState, useEffect } from 'react';
+// KioskAdmin v2.2 - Updated: 2026-01-17
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Image, Save, Loader2, Monitor, ExternalLink, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image, Save, Loader2, Monitor, ExternalLink, RefreshCw, Upload } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
