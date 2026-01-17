@@ -498,3 +498,46 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - ✅ Sipariş başarıyla oluşturuluyor (SIP-000012 doğrulandı)
 - ✅ Sepet sipariş sonrası temizleniyor
 - ✅ Kredi limiti uyarısı gösteriliyor
+
+---
+
+## Update: January 18, 2026 - Cloudinary CDN Entegrasyonu
+
+### 🎯 Çözülen Sorun
+- **Problem:** Kiosk Admin'den yüklenen ürün görselleri production ortamında görünmüyordu
+- **Kök Neden:** Görseller local filesystem'e (`/app/backend/uploads/`) kaydediliyordu. Bu dizin sadece preview ortamında erişilebilir, production'da farklı container kullanıldığı için görseller kayboluyordu.
+- **Çözüm:** Cloudinary CDN entegrasyonu yapıldı. Artık tüm görseller global CDN üzerinde barındırılıyor.
+
+### Teknik Değişiklikler
+
+#### Backend (`/app/backend/server.py`)
+- `cloudinary` kütüphanesi import edildi
+- Cloudinary config, `load_dotenv()` sonrasına taşındı (doğru yükleme sırası)
+- `/api/upload/image` endpoint'i güncellendi:
+  - Artık Cloudinary'ye yüklüyor
+  - Otomatik resim optimizasyonu (800x600, auto quality)
+  - `kasaburger/products/` klasörüne yükleme
+  - Secure URL döndürüyor
+
+#### Environment Variables (`/app/backend/.env`)
+```
+CLOUDINARY_CLOUD_NAME=dgxiovaqv
+CLOUDINARY_API_KEY=687782237383842
+CLOUDINARY_API_SECRET=***
+```
+
+#### Frontend (`/app/frontend/src/pages/KioskAdmin.js`)
+- `handleFileUpload` fonksiyonu güncellendi
+- Local URL prefix ekleme kaldırıldı (Cloudinary full URL döndürüyor)
+- Hata mesajları iyileştirildi
+
+### Test Sonuçları
+- ✅ Backend API testi başarılı (`curl` ile resim yükleme)
+- ✅ Cloudinary URL formatı: `https://res.cloudinary.com/dgxiovaqv/image/upload/...`
+- ✅ Kiosk Admin formu görsel yükleme butonu çalışıyor
+- ✅ `/kiosk` sayfasında görseller düzgün görüntüleniyor
+
+### Notlar
+- Cloudinary free tier: 25GB storage, 25GB bandwidth/month
+- Görseller otomatik optimize ediliyor (boyut ve kalite)
+- Production deployment sonrası cache temizleme önerilir
