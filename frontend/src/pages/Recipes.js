@@ -45,7 +45,26 @@ const Recipes = () => {
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const token = localStorage.getItem('kasaburger_token');
+
+  const emptyRecipe = {
+    name: '',
+    description: '',
+    category: 'Soslar',
+    batch_size: '10 kg',
+    shelf_life: '7 gün',
+    storage: '+4°C buzdolabında',
+    spice_level: 0,
+    is_premium: false,
+    ingredients: [{ name: '', amount: '', unit: 'kg' }],
+    steps: [''],
+    tips: [''],
+    allergens: []
+  };
+
+  const [newRecipe, setNewRecipe] = useState(emptyRecipe);
 
   useEffect(() => {
     fetchRecipes();
