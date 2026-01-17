@@ -3075,6 +3075,44 @@ try:
         products = await db.kiosk_products.find({}, {"_id": 0}).to_list(1000)
         return products
 
+    @api_router.post("/kiosk/products/seed")
+    async def seed_kiosk_products(current_user: dict = Depends(get_current_user)):
+        """Varsayılan kiosk ürünlerini veritabanına ekle (boşsa)"""
+        existing_count = await db.kiosk_products.count_documents({})
+        if existing_count > 0:
+            return {"message": f"Veritabanında zaten {existing_count} ürün var", "seeded": False}
+        
+        default_products = [
+            {"id": "kasa-classic", "name": "Kasa Classic", "category": "et-burger", "price": 460, "image": "https://images.unsplash.com/photo-1599082267955-266a170c214e?w=600&q=80", "is_active": True},
+            {"id": "golden-burger", "name": "Golden Burger", "category": "et-burger", "price": 1190, "image": "https://images.unsplash.com/photo-1603508102983-99b101395d1a?w=600&q=80", "is_active": True, "is_premium": True},
+            {"id": "cheese-lover", "name": "Cheese Lover", "category": "et-burger", "price": 560, "image": "https://images.unsplash.com/photo-1585238341710-4d3ff484184d?w=600&q=80", "is_active": True},
+            {"id": "no7-acili", "name": "No:7 Acılı", "category": "et-burger", "price": 540, "image": "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=600&q=80", "is_active": True},
+            {"id": "hirsiz-polis", "name": "Hırsız & Polis", "category": "et-burger", "price": 490, "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80", "is_active": True},
+            {"id": "viking-burger", "name": "Viking Burger", "category": "premium", "price": 430, "image": "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=600&q=80", "is_active": True, "is_premium": True},
+            {"id": "milano-burger", "name": "Milano Burger", "category": "premium", "price": 440, "image": "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=600&q=80", "is_active": True, "is_premium": True},
+            {"id": "kasa-double-xl", "name": "Kasa Double XL", "category": "premium", "price": 640, "image": "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=600&q=80", "is_active": True, "is_premium": True},
+            {"id": "smoky-bbq", "name": "Smoky BBQ", "category": "premium", "price": 560, "image": "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=600&q=80", "is_active": True, "is_premium": True},
+            {"id": "crispy-chicken", "name": "Crispy Chicken", "category": "tavuk", "price": 360, "image": "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=80", "is_active": True},
+            {"id": "double-crispy", "name": "Double Crispy", "category": "tavuk", "price": 410, "image": "https://images.unsplash.com/photo-1562967914-608f82629710?w=600&q=80", "is_active": True},
+            {"id": "animal-chicken", "name": "Animal Chicken", "category": "tavuk", "price": 430, "image": "https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=600&q=80", "is_active": True},
+            {"id": "milano-chicken", "name": "Milano Chicken", "category": "tavuk", "price": 440, "image": "https://images.unsplash.com/photo-1585325701165-351af916e581?w=600&q=80", "is_active": True},
+            {"id": "mac-cheese", "name": "Mac & Cheese", "category": "atistirmalik", "price": 170, "image": "https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?w=600&q=80", "is_active": True},
+            {"id": "mozarella-sticks", "name": "Mozarella Sticks", "category": "atistirmalik", "price": 210, "image": "https://images.unsplash.com/photo-1548340748-6d2b7d7da280?w=600&q=80", "is_active": True},
+            {"id": "sogan-halkasi", "name": "Soğan Halkası", "category": "atistirmalik", "price": 180, "image": "https://images.unsplash.com/photo-1639024471283-03518883512d?w=600&q=80", "is_active": True},
+            {"id": "cheese-fries", "name": "Cheese Fries", "category": "atistirmalik", "price": 150, "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&q=80", "is_active": True},
+            {"id": "ayran", "name": "Ayran", "category": "icecek", "price": 35, "image": "https://images.unsplash.com/photo-1596151163116-98a5033814c2?w=600&q=80", "is_active": True},
+            {"id": "su", "name": "Su", "category": "icecek", "price": 20, "image": "https://images.unsplash.com/photo-1564419320461-6870880221ad?w=600&q=80", "is_active": True},
+            {"id": "limonata", "name": "Limonata", "category": "icecek", "price": 55, "image": "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=600&q=80", "is_active": True},
+            {"id": "pepsi", "name": "Pepsi", "category": "icecek", "price": 45, "image": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=600&q=80", "is_active": True},
+            {"id": "milkshake", "name": "Milkshake", "category": "icecek", "price": 85, "image": "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&q=80", "is_active": True},
+            {"id": "choco-bomb", "name": "Choco Bomb", "category": "tatli", "price": 200, "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&q=80", "is_active": True},
+            {"id": "churros", "name": "Churros", "category": "tatli", "price": 180, "image": "https://images.pexels.com/photos/2035706/pexels-photo-2035706.jpeg?auto=compress&cs=tinysrgb&w=600", "is_active": True},
+            {"id": "oreo-dream", "name": "Oreo Dream", "category": "tatli", "price": 220, "image": "https://images.unsplash.com/photo-1612078960206-1709f1f0c969?w=600&q=80", "is_active": True},
+        ]
+        
+        await db.kiosk_products.insert_many(default_products)
+        return {"message": f"{len(default_products)} ürün eklendi", "seeded": True, "count": len(default_products)}
+
     @api_router.post("/kiosk/products")
     async def create_kiosk_product(product: KioskProduct, current_user: dict = Depends(get_current_user)):
         """Admin için yeni kiosk ürünü ekle"""
