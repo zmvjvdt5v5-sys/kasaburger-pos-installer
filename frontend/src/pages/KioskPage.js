@@ -137,9 +137,9 @@ const KioskPage = () => {
     }
   };
 
-  const updateQuantity = (productId, delta) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === productId) {
+  const updateQuantity = (itemIndex, delta) => {
+    setCart(prev => prev.map((item, idx) => {
+      if (idx === itemIndex) {
         const newQty = item.quantity + delta;
         return newQty <= 0 ? null : { ...item, quantity: newQty };
       }
