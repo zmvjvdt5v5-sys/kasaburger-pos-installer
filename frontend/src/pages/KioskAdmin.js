@@ -79,10 +79,14 @@ const KioskAdmin = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setProducts(data);
+        if (data && data.length > 0) {
+          setProducts(data);
+        }
+        // Eğer boşsa DEFAULT_PRODUCTS kullanılacak (zaten state'te)
       }
     } catch (error) {
       console.error('Load error:', error);
+      // Hata durumunda varsayılan ürünler kalacak
     } finally {
       setLoading(false);
     }
