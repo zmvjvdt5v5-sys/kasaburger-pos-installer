@@ -523,7 +523,7 @@ const KioskPage = () => {
         {/* Products Grid */}
         <main className="flex-1 p-4 overflow-y-auto bg-zinc-950">
           <h2 className="text-xl font-bold text-orange-500 mb-4">{menuData.categories.find(c => c.id === selectedCategory)?.name || 'Ürünler'}</h2>
-          <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
@@ -538,11 +538,11 @@ const KioskPage = () => {
                     </span>
                   )}
                 </div>
-                <div className="p-3">
-                  <h3 className="font-bold text-sm text-white leading-tight mb-2">{product.name}</h3>
+                <div className="p-2">
+                  <h3 className="font-bold text-xs text-white leading-tight mb-1 truncate">{product.name}</h3>
                   <div className="flex items-center justify-between">
-                    <p className="text-orange-500 font-bold text-lg">₺{product.price.toLocaleString('tr-TR')}</p>
-                    <span className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-lg">+</span>
+                    <p className="text-orange-500 font-bold text-base">₺{product.price.toLocaleString('tr-TR')}</p>
+                    <span className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">+</span>
                   </div>
                 </div>
               </button>
