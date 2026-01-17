@@ -176,39 +176,40 @@ const KioskPage = () => {
         </header>
 
         {/* Mobile Categories - Horizontal Scroll */}
-        <nav className="bg-zinc-900 px-2 py-2 overflow-x-auto flex gap-2 sticky top-14 z-40">
+        <nav className="bg-zinc-900/95 backdrop-blur-sm px-3 py-3 overflow-x-auto flex gap-2 sticky top-14 z-40 border-b border-zinc-800">
           {menuData.categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
-                selectedCategory === cat.id ? 'bg-orange-500 text-white' : 'bg-zinc-800 text-zinc-400'
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap transition-all ${
+                selectedCategory === cat.id ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700'
               }`}
             >
-              <span className="text-lg">{cat.icon}</span>
-              <span className="text-sm font-medium">{cat.name}</span>
+              <span className="text-base">{cat.icon}</span>
+              <span className="text-sm font-semibold tracking-wide">{cat.name}</span>
             </button>
           ))}
         </nav>
 
         {/* Mobile Products Grid */}
-        <main className="flex-1 p-3 pb-24">
-          <div className="grid grid-cols-2 gap-3">
+        <main className="flex-1 p-4 pb-28 bg-gradient-to-b from-zinc-950 to-black">
+          <div className="grid grid-cols-2 gap-4">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="bg-zinc-900 rounded-xl overflow-hidden text-left active:scale-95 transition-transform"
+                className="bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden text-left active:scale-95 transition-all border border-zinc-800/50 shadow-xl"
               >
-                <div className="relative aspect-square">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                   {product.is_premium && (
-                    <span className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded">👑</span>
+                    <span className="absolute top-2 right-2 bg-gradient-to-r from-yellow-500 to-amber-400 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg">PREMIUM</span>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 </div>
-                <div className="p-3">
-                  <h3 className="font-semibold text-sm text-white truncate">{product.name}</h3>
-                  <p className="text-orange-500 font-bold text-base mt-1">{formatPrice(product.price)}</p>
+                <div className="p-4">
+                  <h3 className="font-bold text-sm text-white tracking-wide">{product.name}</h3>
+                  <p className="text-orange-400 font-black text-lg mt-1">{formatPrice(product.price)}</p>
                 </div>
               </button>
             ))}
