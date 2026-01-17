@@ -39,6 +39,7 @@ import KioskOrders from './pages/KioskOrders';
 import BranchManagement from './pages/BranchManagement';
 import BranchReports from './pages/BranchReports';
 import DeliveryOrders from './pages/DeliveryOrders';
+import DeliveryPanel from './pages/DeliveryPanel';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -251,6 +252,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DeliveryOrders />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Canlı Sipariş Paneli */}
+      <Route
+        path="/delivery-panel"
+        element={
+          <ProtectedRoute>
+            <DeliveryPanel />
           </ProtectedRoute>
         }
       />
