@@ -249,6 +249,10 @@ const KioskAdmin = () => {
           <p className="text-muted-foreground">Self-servis kiosk ürünlerini ve görsellerini yönetin</p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={seedProducts} disabled={seeding}>
+            {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+            Varsayılan Ürünleri Yükle
+          </Button>
           <Button variant="outline" asChild>
             <a href="https://erp.kasaburger.net.tr/kiosk" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
