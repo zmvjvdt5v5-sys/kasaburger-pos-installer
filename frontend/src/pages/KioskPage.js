@@ -328,6 +328,48 @@ const KioskPage = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Product Note Dialog - Ürün Not Ekleme */}
+        <Dialog open={showProductNote} onOpenChange={setShowProductNote}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[90vw] rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl text-center flex items-center justify-center gap-2">
+                <MessageSquare className="h-5 w-5 text-orange-500" />
+                {selectedProduct?.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {selectedProduct && (
+                <div className="flex items-center gap-3 bg-zinc-800 p-3 rounded-xl">
+                  <img src={selectedProduct.image} alt={selectedProduct.name} className="w-20 h-20 object-cover rounded-lg" />
+                  <div>
+                    <p className="font-bold text-lg">{selectedProduct.name}</p>
+                    <p className="text-orange-500 font-bold text-xl">{formatPrice(selectedProduct.price)}</p>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="text-sm text-zinc-400 mb-2 block">Ekstra istek veya çıkarılacak malzeme:</label>
+                <textarea
+                  value={productNote}
+                  onChange={(e) => setProductNote(e.target.value)}
+                  placeholder="Örn: Soğansız, Ekstra sos, Az acılı..."
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-base resize-none"
+                  rows={3}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 py-4" onClick={() => { addToCart(selectedProduct, ''); setShowProductNote(false); }}>
+                  Notsuz Ekle
+                </Button>
+                <Button className="flex-1 py-4 bg-orange-500 hover:bg-orange-600" onClick={confirmProductAdd}>
+                  Sepete Ekle
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Table Number Dialog */}
         <Dialog open={showTableInput} onOpenChange={setShowTableInput}>
           <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[90vw] rounded-2xl">
