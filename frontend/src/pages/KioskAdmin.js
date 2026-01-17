@@ -318,9 +318,9 @@ const KioskAdmin = () => {
           <p className="text-muted-foreground">Self-servis kiosk ürünlerini ve görsellerini yönetin</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={seedProducts} disabled={seeding}>
+          <Button variant="destructive" onClick={() => seedProducts(true)} disabled={seeding} size="sm">
             {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Varsayılan Ürünleri Yükle
+            Ürünleri Sıfırla
           </Button>
           <Button variant="outline" asChild>
             <a href="https://kiosk.kasaburger.net.tr/kiosk" target="_blank" rel="noopener noreferrer">
