@@ -3275,6 +3275,41 @@ try:
             "url": kiosk_url
         }
 
+    # ===================== RECIPES ENDPOINTS =====================
+    @api_router.get("/recipes")
+    async def get_recipes(current_user: dict = Depends(get_current_user)):
+        """Tüm reçeteleri listele"""
+        recipes = await db.recipes.find({}, {"_id": 0}).to_list(1000)
+        return recipes
+
+    @api_router.post("/recipes")
+    async def create_recipe(recipe: dict = Body(...), current_user: dict = Depends(get_current_user)):
+        """Yeni reçete ekle"""
+        recipe["id"] = str(uuid.uuid4())[:8]
+        recipe["created_at"] = datetime.now(timezone.utc).isoformat()
+        recipe["created_by"] = current_user["email"]
+        await db.recipes.insert_one(recipe)
+        return {"message": "Reçete eklendi", "id": recipe["id"]}
+
+    @api_router.put("/recipes/{recipe_id}")
+    async def update_recipe(recipe_id: str, recipe: dict = Body(...), current_user: dict = Depends(get_current_user)):
+        """Reçete güncelle"""
+        result = await db.recipes.update_one(
+            {"id": recipe_id},
+            {"$set": recipe}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Reçete bulunamadı")
+        return {"message": "Reçete güncellendi"}
+
+    @api_router.delete("/recipes/{recipe_id}")
+    async def delete_recipe(recipe_id: str, current_user: dict = Depends(get_current_user)):
+        """Reçete sil"""
+        result = await db.recipes.delete_one({"id": recipe_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Reçete bulunamadı")
+        return {"message": "Reçete silindi"}
+
     # Include router
     app.include_router(api_router)
 
