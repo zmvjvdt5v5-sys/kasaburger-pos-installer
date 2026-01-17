@@ -347,24 +347,31 @@ const KioskPage = () => {
 
         {/* Product Note Dialog - Ürün Not Ekleme */}
         <Dialog open={showProductNote} onOpenChange={setShowProductNote}>
-          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[90vw] md:max-w-md rounded-2xl">
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[95vw] md:max-w-lg rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-xl text-center flex items-center justify-center gap-2">
                 <MessageSquare className="h-5 w-5 text-orange-500" />
-                {selectedProduct?.name}
+                Ürün Ekle
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-2">
               {selectedProduct && (
-                <div className="flex gap-4 bg-zinc-800 p-4 rounded-xl">
-                  <img src={selectedProduct.image} alt={selectedProduct.name} className="w-28 h-28 object-cover rounded-lg flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-bold text-lg mb-1">{selectedProduct.name}</p>
-                    {selectedProduct.description && (
-                      <p className="text-zinc-400 text-sm leading-snug mb-2">{selectedProduct.description}</p>
-                    )}
-                    <p className="text-orange-500 font-black text-xl">{formatPrice(selectedProduct.price)}</p>
+                <div className="bg-zinc-800/80 p-4 rounded-xl border border-zinc-700/50">
+                  <div className="flex gap-4">
+                    <img src={selectedProduct.image} alt={selectedProduct.name} className="w-32 h-32 object-cover rounded-xl flex-shrink-0 shadow-lg" />
+                    <div className="flex-1 flex flex-col justify-center">
+                      <h3 className="font-bold text-xl text-white mb-2">{selectedProduct.name}</h3>
+                      <p className="text-orange-500 font-black text-2xl">{formatPrice(selectedProduct.price)}</p>
+                    </div>
                   </div>
+                  {selectedProduct.description && (
+                    <div className="mt-4 pt-3 border-t border-zinc-700">
+                      <p className="text-zinc-300 text-sm leading-relaxed">
+                        <span className="text-orange-400 font-medium">İçindekiler: </span>
+                        {selectedProduct.description}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
               <div>
@@ -378,11 +385,11 @@ const KioskPage = () => {
                   autoFocus
                 />
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 py-4" onClick={() => { addToCart(selectedProduct, ''); setShowProductNote(false); }}>
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1 py-5 text-base" onClick={() => { addToCart(selectedProduct, ''); setShowProductNote(false); }}>
                   Notsuz Ekle
                 </Button>
-                <Button className="flex-1 py-4 bg-orange-500 hover:bg-orange-600" onClick={confirmProductAdd}>
+                <Button className="flex-1 py-5 text-base bg-orange-500 hover:bg-orange-600" onClick={confirmProductAdd}>
                   Sepete Ekle
                 </Button>
               </div>
