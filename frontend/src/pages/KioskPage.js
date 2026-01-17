@@ -103,15 +103,15 @@ const KioskPage = () => {
         body: JSON.stringify({
           items: cart.map(item => ({ product_id: item.id, product_name: item.name, quantity: item.quantity, unit_price: item.price, total: item.price * item.quantity })),
           total: cartTotal,
-          service_type: 'masa',
-          table_number: tableNumber || 'Belirtilmedi',
+          service_type: serviceType,
+          table_number: serviceType === 'masa' ? tableNumber : null,
           payment_method: method
         })
       });
       const data = response.ok ? await response.json() : null;
-      setOrderNumber(data?.order_number || `KB-${Date.now().toString().slice(-6)}`);
+      setOrderNumber(data?.order_number || `${Date.now().toString().slice(-4)}`);
     } catch (e) {
-      setOrderNumber(`KB-${Date.now().toString().slice(-6)}`);
+      setOrderNumber(`${Date.now().toString().slice(-4)}`);
     }
     setProcessing(false);
     setShowPayment(false);
