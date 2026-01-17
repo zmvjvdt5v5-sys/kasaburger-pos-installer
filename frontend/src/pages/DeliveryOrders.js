@@ -602,6 +602,15 @@ export default function DeliveryOrders() {
                     <Package className="h-4 w-4 mr-2" /> Hazır Olarak İşaretle
                   </Button>
                 )}
+                
+                {/* Yazdır Butonu - Her durumda görünür */}
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-2" 
+                  onClick={() => printOrder(selectedOrder._internal_id)}
+                >
+                  <Printer className="h-4 w-4 mr-2" /> Siparişi Yazdır
+                </Button>
               </div>
             </>
           )}
