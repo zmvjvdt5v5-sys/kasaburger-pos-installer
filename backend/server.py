@@ -3205,7 +3205,7 @@ try:
         from io import BytesIO
         
         # Kiosk URL'i
-        kiosk_url = "https://kiosk.kasaburger.net.tr"
+        kiosk_url = "https://erp.kasaburger.net.tr/kiosk"
         
         # QR kod oluştur
         qr = qrcode.QRCode(version=1, box_size=10, border=2)
