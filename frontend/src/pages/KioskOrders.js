@@ -303,7 +303,12 @@ const KioskOrders = () => {
                 </div>
                 <div className="space-y-1 text-sm">
                   {order.items.map((item, i) => (
-                    <div key={i}>{item.quantity}x {item.product_name}</div>
+                    <div key={i}>
+                      <div>{item.quantity}x {item.product_name}</div>
+                      {item.note && (
+                        <p className="text-xs text-yellow-500 ml-4">📝 {item.note}</p>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <Button size="sm" className="w-full bg-green-500 hover:bg-green-600" onClick={() => updateOrderStatus(order.id, 'ready')}>
