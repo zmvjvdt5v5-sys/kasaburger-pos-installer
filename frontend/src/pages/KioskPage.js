@@ -265,19 +265,22 @@ const KioskPage = () => {
             </DialogHeader>
             
             <div className="flex-1 overflow-y-auto py-2 space-y-2 max-h-[50vh]">
-              {cart.map(item => (
-                <div key={item.id} className="flex items-center gap-3 bg-zinc-800 p-3 rounded-lg">
+              {cart.map((item, index) => (
+                <div key={`${item.id}-${index}`} className="flex items-center gap-3 bg-zinc-800 p-3 rounded-lg">
                   <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                    {item.note && (
+                      <p className="text-xs text-yellow-400 truncate">📝 {item.note}</p>
+                    )}
                     <p className="text-orange-500 font-bold">{formatPrice(item.price * item.quantity)}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateQuantity(item.id, -1)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateQuantity(index, -1)}>
                       <Minus className="h-4 w-4" />
                     </Button>
                     <span className="w-6 text-center font-bold">{item.quantity}</span>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateQuantity(item.id, 1)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => updateQuantity(index, 1)}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
