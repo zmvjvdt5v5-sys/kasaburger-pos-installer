@@ -28,6 +28,13 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - Kiosk Admin sayfasına yeni buton eklendi
 - Tek tıkla production veritabanına ürün eklenebilir
 
+#### 4. KioskPage.js - Ürün Not Sistemi ve Ödeme Güncellemeleri
+- **Nakit ödeme seçeneği kaldırıldı** - Sadece kredi kartı ile ödeme
+- **Ürün not ekleme özelliği** - Her ürün için "Soğansız", "Ekstra sos" gibi notlar eklenebiliyor
+- **Sepette not gösterimi** - 📝 emoji ile sarı renkte not görünüyor
+- **Sipariş fişinde not gösterimi** - Fiş çıktısında her ürünün altında not yazdırılıyor
+- Hem desktop hem mobil kiosk için tam destek
+
 ### 📋 Production'da Sorun Yaşanırsa Adımlar
 1. **Hard Refresh (Ctrl+Shift+R)** yapın
 2. Tarayıcı cache'ini temizleyin
