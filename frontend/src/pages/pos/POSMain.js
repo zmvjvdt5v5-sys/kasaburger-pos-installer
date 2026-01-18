@@ -106,7 +106,7 @@ export default function POSMain() {
 
       if (productsRes.ok) {
         const productsData = await productsRes.json();
-        setProducts(productsData.filter(p => p.is_active !== false));
+        setProducts(productsData.filter(p => p.available !== false));
         const cats = [...new Set(productsData.map(p => p.category).filter(Boolean))];
         setCategories(cats);
       }
