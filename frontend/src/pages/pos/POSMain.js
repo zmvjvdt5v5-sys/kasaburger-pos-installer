@@ -814,6 +814,34 @@ export default function POSMain() {
             {wsConnected ? 'Canlı' : 'Bağlantı Yok'}
           </div>
           
+          {/* Sound Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={soundEnabled ? 'text-green-400' : 'text-zinc-500'}
+          >
+            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+          </Button>
+          
+          {/* Delivery Panel Toggle */}
+          {activeView === 'tables' && (
+            <Button
+              variant={showDeliveryPanel ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowDeliveryPanel(!showDeliveryPanel)}
+              className={showDeliveryPanel ? 'bg-pink-600 hover:bg-pink-700' : ''}
+            >
+              <Bike className="h-4 w-4 mr-1" />
+              Teslimat
+              {deliveryOrders.filter(o => o.status === 'new').length > 0 && (
+                <Badge className="ml-1 bg-red-500 text-white animate-pulse">
+                  {deliveryOrders.filter(o => o.status === 'new').length}
+                </Badge>
+              )}
+            </Button>
+          )}
+          
           {/* Edit Mode Toggle */}
           {activeView === 'tables' && (
             <Button
