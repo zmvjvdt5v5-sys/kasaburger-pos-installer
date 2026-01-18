@@ -143,6 +143,8 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      {/* Bayi Rehberi - Herkes erişebilir */}
+      <Route path="/bayi-rehber" element={<BayiRehber />} />
       
       {/* Dealer Portal Routes */}
       <Route path="/dealer-login" element={<DealerLogin />} />
