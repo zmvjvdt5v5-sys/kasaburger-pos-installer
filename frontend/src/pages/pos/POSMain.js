@@ -1514,6 +1514,164 @@ export default function POSMain() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* POS Settings Dialog */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              POS Ayarları
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Ses ve Bildirimler */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                <Volume2 className="h-4 w-4" />
+                Ses ve Bildirimler
+              </h3>
+              <div className="space-y-2 pl-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">Sipariş Sesi</span>
+                  <button
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    className={`w-10 h-6 rounded-full transition-colors ${soundEnabled ? 'bg-green-500' : 'bg-zinc-700'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${soundEnabled ? 'translate-x-4' : ''}`} />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">Teslimat Paneli</span>
+                  <button
+                    onClick={() => setShowDeliveryPanel(!showDeliveryPanel)}
+                    className={`w-10 h-6 rounded-full transition-colors ${showDeliveryPanel ? 'bg-green-500' : 'bg-zinc-700'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${showDeliveryPanel ? 'translate-x-4' : ''}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Yazıcı Ayarları */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                <Printer className="h-4 w-4" />
+                Yazıcı Ayarları
+              </h3>
+              <div className="space-y-3 pl-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">Otomatik Fiş Yazdır</span>
+                  <button
+                    onClick={() => setPosSettings(p => ({ ...p, printerEnabled: !p.printerEnabled }))}
+                    className={`w-10 h-6 rounded-full transition-colors ${posSettings.printerEnabled ? 'bg-green-500' : 'bg-zinc-700'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${posSettings.printerEnabled ? 'translate-x-4' : ''}`} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-zinc-500">Yazıcı IP</label>
+                    <Input
+                      value={posSettings.printerIP}
+                      onChange={(e) => setPosSettings(p => ({ ...p, printerIP: e.target.value }))}
+                      placeholder="192.168.1.100"
+                      className="bg-zinc-800 border-zinc-700 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500">Port</label>
+                    <Input
+                      type="number"
+                      value={posSettings.printerPort}
+                      onChange={(e) => setPosSettings(p => ({ ...p, printerPort: parseInt(e.target.value) }))}
+                      placeholder="9100"
+                      className="bg-zinc-800 border-zinc-700 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Teslimat Ayarları */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+                <Bike className="h-4 w-4" />
+                Teslimat Ayarları
+              </h3>
+              <div className="space-y-3 pl-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-400">Otomatik Sipariş Kabul</span>
+                  <button
+                    onClick={() => setPosSettings(p => ({ ...p, autoAcceptOrders: !p.autoAcceptOrders }))}
+                    className={`w-10 h-6 rounded-full transition-colors ${posSettings.autoAcceptOrders ? 'bg-green-500' : 'bg-zinc-700'}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${posSettings.autoAcceptOrders ? 'translate-x-4' : ''}`} />
+                  </button>
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-500">Varsayılan Hazırlık Süresi (dk)</label>
+                  <Input
+                    type="number"
+                    value={posSettings.defaultPrepTime}
+                    onChange={(e) => setPosSettings(p => ({ ...p, defaultPrepTime: parseInt(e.target.value) }))}
+                    min="5"
+                    max="120"
+                    className="bg-zinc-800 border-zinc-700 text-sm w-24"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Hızlı Linkler */}
+            <div className="space-y-3 pt-3 border-t border-zinc-800">
+              <h3 className="text-sm font-medium text-zinc-300">Hızlı Erişim</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowSettings(false);
+                    window.open('/delivery-settings', '_blank');
+                  }}
+                  className="text-xs"
+                >
+                  <Smartphone className="h-3 w-3 mr-1" />
+                  Platform Ayarları
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowSettings(false);
+                    window.open('/dealer-portal/inpos-settings', '_blank');
+                  }}
+                  className="text-xs"
+                >
+                  <Printer className="h-3 w-3 mr-1" />
+                  InPOS Ayarları
+                </Button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+              <Button variant="outline" onClick={() => setShowSettings(false)}>
+                Kapat
+              </Button>
+              <Button
+                onClick={() => {
+                  toast.success('Ayarlar kaydedildi');
+                  setShowSettings(false);
+                }}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                Kaydet
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
