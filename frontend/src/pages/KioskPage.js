@@ -1,4 +1,4 @@
-// KioskPage v2.1 - Updated: 2026-01-17 - Nakit ödeme kaldırıldı, not ekleme eklendi
+// KioskPage v2.1 - Updated: 2026-01-18 - Cloudinary görselleri eklendi
 import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
@@ -8,43 +8,43 @@ import { ShoppingCart, Plus, Minus, Trash2, CreditCard, ArrowLeft, CheckCircle, 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const DEFAULT_PRODUCTS = [
-  // ET BURGER
-  {id: "kasa-classic", name: "Kasa Classic Burger", category: "et-burger", price: 460, image: "https://images.unsplash.com/photo-1599082267955-266a170c214e?w=600&q=80"},
-  {id: "golden-burger", name: "Golden Burger", category: "et-burger", price: 1190, image: "https://images.unsplash.com/photo-1603508102983-99b101395d1a?w=600&q=80", is_premium: true},
-  {id: "cheese-lover", name: "Cheese Lover Burger", category: "et-burger", price: 560, image: "https://images.unsplash.com/photo-1585238341710-4d3ff484184d?w=600&q=80"},
-  {id: "no7-burger", name: "No:7 Burger", category: "et-burger", price: 540, image: "https://images.unsplash.com/photo-1625813506062-0aeb1d7a094b?w=600&q=80"},
-  {id: "hirsiz-polis", name: "Hırsız & Polis Burger", category: "et-burger", price: 490, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80"},
+  // ET BURGER - Cloudinary görselleri
+  {id: "kasa-classic", name: "Kasa Classic Burger", category: "et-burger", price: 460, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719627/kasaburger/products/lxmwj2opjfgpn5wfyvni.jpg"},
+  {id: "golden-burger", name: "Golden Burger", category: "et-burger", price: 1190, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719644/kasaburger/products/etnwv98b4qqa3dhs7j5w.jpg", is_premium: true},
+  {id: "cheese-lover", name: "Cheese Lover Burger", category: "et-burger", price: 560, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719667/kasaburger/products/c2kdofwltpm4xsrcheuu.jpg"},
+  {id: "no7-burger", name: "No:7 Burger", category: "et-burger", price: 540, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719690/kasaburger/products/dvqjrymmcqtfjxiuc29z.jpg"},
+  {id: "hirsiz-polis", name: "Hırsız & Polis Burger", category: "et-burger", price: 490, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719731/kasaburger/products/zo9ysvxshviqu7pbqztq.jpg"},
   // PREMIUM GOURMET
-  {id: "viking-burger", name: "Viking Burger", category: "premium", price: 430, image: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=600&q=80", is_premium: true},
-  {id: "milano-burger", name: "Milano Burger", category: "premium", price: 440, image: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=600&q=80", is_premium: true},
-  {id: "kasa-double-xl", name: "Kasa Double XL", category: "premium", price: 640, image: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=600&q=80", is_premium: true},
-  {id: "smoky-bbq", name: "Smoky BBQ Burger", category: "premium", price: 560, image: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=600&q=80", is_premium: true},
-  {id: "animal-style", name: "Animal Style Burger", category: "premium", price: 550, image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&q=80", is_premium: true},
+  {id: "viking-burger", name: "Viking Burger", category: "premium", price: 430, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719764/kasaburger/products/fojwkaq08bwngprupkgt.jpg", is_premium: true},
+  {id: "milano-burger", name: "Milano Burger", category: "premium", price: 440, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719790/kasaburger/products/oybw8jxjs53wleejjeen.jpg", is_premium: true},
+  {id: "kasa-double-xl", name: "Kasa Double XL", category: "premium", price: 640, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719837/kasaburger/products/e5erpcna8ufgyl4roxhh.jpg", is_premium: true},
+  {id: "smoky-bbq", name: "Smoky BBQ Burger", category: "premium", price: 560, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719856/kasaburger/products/zx1kw1d23traidkigrdv.jpg", is_premium: true},
+  {id: "animal-style", name: "Animal Style Burger", category: "premium", price: 550, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719882/kasaburger/products/sdgw0vm1iicwkjvvkeee.jpg", is_premium: true},
   // TAVUK BURGER
-  {id: "crispy-chicken", name: "Crispy Chicken Burger", category: "tavuk", price: 360, image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=80"},
-  {id: "double-crispy", name: "Double Crispy Chicken", category: "tavuk", price: 410, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=600&q=80"},
-  {id: "animal-chicken", name: "Animal Style Chicken", category: "tavuk", price: 430, image: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=600&q=80"},
-  {id: "spicy-hirsiz", name: "(Spicy) Hırsız Burger", category: "tavuk", price: 420, image: "https://images.unsplash.com/photo-1513185158878-8d8c2a2a3da3?w=600&q=80"},
-  {id: "sweet-polis", name: "(Sweet) Polis Burger", category: "tavuk", price: 420, image: "https://images.unsplash.com/photo-1610440042657-612c34d95e9f?w=600&q=80"},
-  {id: "milano-chicken", name: "Milano Chicken Burger", category: "tavuk", price: 440, image: "https://images.unsplash.com/photo-1585325701165-351af916e581?w=600&q=80"},
-  {id: "viking-chicken", name: "Viking Chicken Burger", category: "tavuk", price: 430, image: "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=600&q=80"},
+  {id: "crispy-chicken", name: "Crispy Chicken Burger", category: "tavuk", price: 360, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719954/kasaburger/products/xobrshlgrwd4opojrmum.jpg"},
+  {id: "double-crispy", name: "Double Crispy Chicken", category: "tavuk", price: 410, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719978/kasaburger/products/ronl4qic10vbgjictclt.jpg"},
+  {id: "animal-chicken", name: "Animal Style Chicken", category: "tavuk", price: 430, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720009/kasaburger/products/lpmkvz6bhfewl5pgskic.jpg"},
+  {id: "spicy-hirsiz", name: "(Spicy) Hırsız Burger", category: "tavuk", price: 420, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720039/kasaburger/products/bvxcrizznvjaqjvxlucu.jpg"},
+  {id: "sweet-polis", name: "(Sweet) Polis Burger", category: "tavuk", price: 420, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720071/kasaburger/products/w50qmsz041zi7h4pjkwu.jpg"},
+  {id: "milano-chicken", name: "Milano Chicken Burger", category: "tavuk", price: 440, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720100/kasaburger/products/tfrehnmtr9juqankalhj.jpg"},
+  {id: "viking-chicken", name: "Viking Chicken Burger", category: "tavuk", price: 430, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720128/kasaburger/products/qwg6eqpyimd8dpn9nr1v.jpg"},
   // ATISTIRMALIKLAR
-  {id: "mac-cheese", name: "Mac and Cheese Topları", category: "atistirmalik", price: 170, image: "https://images.unsplash.com/photo-1543339494-b4cd4f7ba686?w=600&q=80"},
-  {id: "mozarella-sticks", name: "Mozarella Sticks", category: "atistirmalik", price: 210, image: "https://images.unsplash.com/photo-1548340748-6d2b7d7da280?w=600&q=80"},
-  {id: "sogan-halkasi", name: "Soğan Halkası", category: "atistirmalik", price: 180, image: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=600&q=80"},
-  {id: "cheese-fries", name: "Prison Cheese Lover Fries", category: "atistirmalik", price: 150, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&q=80"},
-  {id: "truffle-fries", name: "Prison Truffle Fries", category: "atistirmalik", price: 175, image: "https://images.unsplash.com/photo-1630384060421-cb20aff8a689?w=600&q=80"},
-  {id: "cajun-fries", name: "Prison Hot Lockdown Fries", category: "atistirmalik", price: 160, image: "https://images.unsplash.com/photo-1598679253544-2c97992403ea?w=600&q=80"},
+  {id: "mac-cheese", name: "Mac and Cheese Topları", category: "atistirmalik", price: 170, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720160/kasaburger/products/jnzrcojxzkdrgb5u2exk.jpg"},
+  {id: "mozarella-sticks", name: "Mozarella Sticks", category: "atistirmalik", price: 210, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720187/kasaburger/products/kvsrbiutiqdqhoolov8z.jpg"},
+  {id: "sogan-halkasi", name: "Soğan Halkası", category: "atistirmalik", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720212/kasaburger/products/ujatmwdny3it8dzcikkn.jpg"},
+  {id: "cheese-fries", name: "Prison Cheese Lover Fries", category: "atistirmalik", price: 150, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720240/kasaburger/products/dzxb0lv41xafeybynhri.jpg"},
+  {id: "truffle-fries", name: "Prison Truffle Fries", category: "atistirmalik", price: 175, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720258/kasaburger/products/cj3px5epr92okzergc7c.jpg"},
+  {id: "cajun-fries", name: "Prison Hot Lockdown Fries", category: "atistirmalik", price: 160, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720282/kasaburger/products/csdwzqwozldfxxt7pkpr.jpg"},
   // İÇECEKLER
-  {id: "ayran", name: "Ayran", category: "icecek", price: 35, image: "https://images.unsplash.com/photo-1596151163116-98a5033814c2?w=600&q=80"},
-  {id: "su", name: "Su", category: "icecek", price: 20, image: "https://images.unsplash.com/photo-1564419320461-6870880221ad?w=600&q=80"},
-  {id: "limonata", name: "Limonata", category: "icecek", price: 55, image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=600&q=80"},
-  {id: "pepsi", name: "Pepsi", category: "icecek", price: 45, image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=600&q=80"},
-  {id: "milkshake", name: "Milkshake", category: "icecek", price: 85, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&q=80"},
+  {id: "ayran", name: "Ayran", category: "icecek", price: 35, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720311/kasaburger/products/xgrn8fvph9jaeh1bqwat.jpg"},
+  {id: "su", name: "Su", category: "icecek", price: 20, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720333/kasaburger/products/jl2q8smtq7de6lh16uul.jpg"},
+  {id: "limonata", name: "Limonata", category: "icecek", price: 55, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720355/kasaburger/products/exyjmazfyp4hyx2hbxsu.jpg"},
+  {id: "pepsi", name: "Pepsi", category: "icecek", price: 45, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720380/kasaburger/products/zu98squbgxxa0hppmxwn.jpg"},
+  {id: "milkshake", name: "Milkshake", category: "icecek", price: 85, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720424/kasaburger/products/uitufnzpxr7fatrttobr.jpg"},
   // TATLILAR
-  {id: "choco-bomb", name: "Kasa Choco Bomb", category: "tatli", price: 200, image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=600&q=80"},
-  {id: "churros", name: "Churros", category: "tatli", price: 180, image: "https://images.pexels.com/photos/2035706/pexels-photo-2035706.jpeg?auto=compress&cs=tinysrgb&w=600"},
-  {id: "oreo-dream", name: "Oreo Dream Cup", category: "tatli", price: 220, image: "https://images.unsplash.com/photo-1612078960206-1709f1f0c969?w=600&q=80"},
+  {id: "choco-bomb", name: "Kasa Choco Bomb", category: "tatli", price: 200, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768687930/kasaburger/products/ohr3dgedrnaz53p8p26t.jpg"},
+  {id: "churros", name: "Churros", category: "tatli", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768686916/kasaburger/products/yveoyknzrq0w0kuwxxvq.jpg"},
+  {id: "oreo-dream", name: "Oreo Dream Cup", category: "tatli", price: 220, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768686685/kasaburger/products/ktej7vqaqnm2qt5fjnce.jpg"},
 ];
 
 const MENU_DATA = {
