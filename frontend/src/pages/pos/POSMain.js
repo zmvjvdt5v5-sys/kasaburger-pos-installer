@@ -88,7 +88,7 @@ export default function POSMain() {
       const [sectionsRes, tablesRes, productsRes] = await Promise.all([
         fetch(`${BACKEND_URL}/api/pos/sections`, { headers }),
         fetch(`${BACKEND_URL}/api/pos/tables`, { headers }),
-        fetch(`${BACKEND_URL}/api/products`, { headers })
+        fetch(`${BACKEND_URL}/api/kiosk/products`, { headers })
       ]);
 
       if (sectionsRes.ok) {
