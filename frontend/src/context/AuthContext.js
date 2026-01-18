@@ -23,23 +23,43 @@ export const AuthProvider = ({ children }) => {
       
       if (token && savedUser) {
         try {
-          setUser(JSON.parse(savedUser));
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
           
-          // Verify token is still valid
-          const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
+          // Dealer için farklı verify endpoint kullan
+          const isDealer = parsedUser.role === 'dealer';
+          const verifyUrl = isDealer 
+            ? `${BACKEND_URL}/api/dealer-portal/me`
+            : `${BACKEND_URL}/api/auth/me`;
+          
+          const response = await fetch(verifyUrl, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
           if (response.ok) {
             const data = await response.json();
+            // Dealer için role bilgisini koru
+            if (isDealer) {
+              data.role = 'dealer';
+              data.dealer_code = parsedUser.dealer_code;
+              data.dealer_name = parsedUser.dealer_name || data.name;
+            }
             setUser(data);
             localStorage.setItem('kasaburger_user', JSON.stringify(data));
           } else {
-            logout();
+            // Token geçersiz ama dealer için farklı davran
+            if (isDealer) {
+              // Dealer token'ı geçersizse sadece loglayalım
+              console.log('Dealer token verification failed, using saved data');
+            } else {
+              logout();
+            }
           }
         } catch (error) {
           console.error('Auth verification failed:', error);
-          logout();
+          // Hata olsa bile kayıtlı kullanıcıyı kullan
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
         }
       }
       setLoading(false);
