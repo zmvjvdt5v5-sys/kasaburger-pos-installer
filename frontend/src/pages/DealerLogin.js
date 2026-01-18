@@ -28,13 +28,13 @@ const DealerLogin = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${BACKEND_URL}/api/dealer-portal/login`, {
+      const response = await fetch(`${BACKEND_URL}/api/dealers/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          dealer_code: dealerCode, 
+          code: dealerCode, 
           password: password 
         }),
       });
