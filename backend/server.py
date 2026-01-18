@@ -4613,6 +4613,9 @@ Yazıcınız düzgün çalışıyor! ✓
         
         await db.pos_orders.insert_one(order)
         
+        # _id'yi kaldır
+        order.pop("_id", None)
+        
         # Masa durumunu güncelle
         if order.get("table_id"):
             await db.pos_tables.update_one(
