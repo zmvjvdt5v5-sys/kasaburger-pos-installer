@@ -9,6 +9,40 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Database:** MongoDB
 - **Auth:** JWT (24 saat token)
 
+
+## Update: January 18, 2026 - Teslimat Platform Entegrasyonları Konfigürasyonu
+
+### ✅ Yeni Frontend Sayfası: Platform Entegrasyonları
+
+Admin paneline teslimat platformları (Yemeksepeti, Getir, Trendyol, Migros) için API konfigürasyon sayfası eklendi.
+
+**Yeni Sayfa:**
+- `/delivery-settings` - Platform Entegrasyonları sayfası
+- Sidebar'da "Platform Entegrasyonları" linki (Plug ikonu)
+
+**Özellikler:**
+- ✅ 4 Platform Tab'ı (Yemeksepeti, Getir Yemek, Trendyol Yemek, Migros Yemek)
+- ✅ Platform bazlı API kimlik bilgileri girişi (API Key, API Secret, Restaurant ID, Supplier ID, Store ID)
+- ✅ Aktif/Pasif switch ile platform etkinleştirme
+- ✅ Webhook URL otomatik oluşturma ve kopyalama
+- ✅ Otomatik Kabul ayarı
+- ✅ Varsayılan Hazırlık Süresi ayarı
+- ✅ Bağlantı test butonu
+- ✅ Platform durumu kartları (Aktif/Yapılandırılmamış)
+
+**Backend API'ler (Mevcut - delivery.py):**
+- `GET /api/delivery/platforms` - Tüm platform ayarlarını getir
+- `GET /api/delivery/platforms/{platform}` - Tek platform ayarı
+- `POST /api/delivery/platforms` - Platform ayarı kaydet/güncelle
+- `POST /api/delivery/platforms/{platform}/test` - Bağlantı testi
+
+**Test Sonuçları:**
+- Backend: 100% (15/15 test başarılı)
+- Frontend: 100% (Tüm UI akışları çalışıyor)
+- Test dosyası: `/app/tests/test_delivery_platforms.py`
+
+---
+
 ## Update: January 18, 2026 - Profesyonel POS/Adisyon Sistemi
 
 ### 🍽️ Şefim Adisyon Benzeri POS Sistemi - TAMAMLANDI
