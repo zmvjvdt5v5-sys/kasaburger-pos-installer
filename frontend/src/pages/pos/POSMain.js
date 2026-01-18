@@ -911,7 +911,7 @@ export default function POSMain() {
             {/* Tables Map - Drag & Drop */}
             <div 
               ref={mapContainerRef}
-              className="flex-1 p-4 overflow-auto relative"
+              className={`flex-1 p-4 overflow-auto relative ${showDeliveryPanel ? '' : ''}`}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
@@ -980,6 +980,17 @@ export default function POSMain() {
                 ))}
               </div>
             </div>
+
+            {/* Delivery Orders Panel */}
+            {showDeliveryPanel && (
+              <DeliveryOrdersPanel 
+                orders={deliveryOrders}
+                onAccept={acceptDeliveryOrder}
+                onReject={rejectDeliveryOrder}
+                onReady={markDeliveryReady}
+                onRefresh={loadDeliveryOrders}
+              />
+            )}
           </div>
         )}
 
