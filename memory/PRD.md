@@ -791,13 +791,60 @@ POS Raporları sayfasında delivery platform detayları eklendi:
 - **InPOS Varsayılan:** IP: 192.168.1.100, Port: 59000
 
 ### Sonraki Görevler (P1)
-- [ ] E-fatura GİB gerçek entegrasyonu
-- [ ] Delivery platform API'leri tam entegrasyon
+- [ ] Delivery platform API entegrasyonları (API anahtarları gerekli)
 
 ### Gelecek Görevler (P2)
 - [ ] Push notifications
 - [ ] Barkod/QR kod entegrasyonu
 - [ ] Çevrimdışı mod (Electron)
+
+---
+
+## Update: January 18, 2026 - E-Fatura GİB Entegrasyonu
+
+### ✅ Tamamlanan Özellikler
+
+#### E-Fatura / E-Arşiv Modülü
+Türkiye GİB (Gelir İdaresi Başkanlığı) uyumlu e-fatura sistemi oluşturuldu.
+
+**Backend API'ler:**
+- `GET /api/einvoice/settings` - E-Fatura ayarları
+- `POST /api/einvoice/settings` - Ayarları kaydet
+- `POST /api/einvoice/create` - Fatura oluştur (UBL-TR XML)
+- `GET /api/einvoice/list` - Fatura listesi
+- `GET /api/einvoice/{id}` - Fatura detay
+- `GET /api/einvoice/{id}/xml` - XML indir
+- `POST /api/einvoice/{id}/send` - Faturayı gönder
+- `POST /api/einvoice/{id}/cancel` - İptal et
+- `GET /api/einvoice/reports/summary` - Rapor
+
+**Frontend Sayfası:**
+- `/einvoice` - E-Fatura yönetim sayfası
+- Fatura oluşturma dialog (e-Fatura / e-Arşiv)
+- Müşteri bilgileri (VKN/TCKN)
+- Fatura kalemleri ve KDV hesaplama
+- Durum takibi (Taslak, Gönderildi, Onaylandı, İptal)
+- XML indirme
+
+**Özellikler:**
+- UBL-TR 2.1 formatında XML üretimi
+- ETTN (e-Fatura Tekil Numarası) otomatik oluşturma
+- Fatura serisi ve numaralandırma (GIB2024000000001)
+- KDV oranları: %0, %1, %10, %20
+- Fatura türleri: SATIS, IADE, TEVKIFAT
+- Senaryo: TEMELFATURA, TICARIFATURA
+- Manuel mod (XML indirip GİB portalından yükleme)
+
+**Entegratör Desteği (Hazır - API gerekli):**
+- NES
+- IZIBIZ  
+- Logo
+- Foriba
+
+### Dosyalar
+- `/app/backend/models/einvoice.py`
+- `/app/backend/routers/einvoice.py`
+- `/app/frontend/src/pages/EInvoice.js`
 
 ---
 
