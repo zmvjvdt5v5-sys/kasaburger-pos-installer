@@ -4784,6 +4784,7 @@ Yazıcınız düzgün çalışıyor! ✓
         payment_mappings: Optional[Dict[str, int]] = {
             "cash": 1,
             "card": 2,
+            "online": 7,  # Online ödeme (platformdan ödenmiş)
             "sodexo": 3,
             "multinet": 4,
             "ticket": 5,
