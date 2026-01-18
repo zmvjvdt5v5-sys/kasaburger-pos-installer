@@ -418,33 +418,70 @@ async def get_einvoice_summary(
     if db is None:
         return {"total_count": 0, "total_amount": 0, "by_status": {}, "by_type": {}}
     
-    query = {}
+    # Match stage için query oluştur
+    match_stage = {}
     if start_date:
-        query["created_at"] = {"$gte": start_date}
+        match_stage["created_at"] = {"$gte": start_date}
     if end_date:
-        if "created_at" in query:
-            query["created_at"]["$lte"] = end_date
+        if "created_at" in match_stage:
+            match_stage["created_at"]["$lte"] = end_date
         else:
-            query["created_at"] = {"$lte": end_date}
+            match_stage["created_at"] = {"$lte": end_date}
     
-    invoices = await db.einvoices.find(query, {"_id": 0}).to_list(10000)
+    # MongoDB Aggregation ile optimize edilmiş sorgu
+    pipeline = []
+    if match_stage:
+        pipeline.append({"$match": match_stage})
     
-    total_count = len(invoices)
-    total_amount = sum(inv.get("total", 0) for inv in invoices)
+    pipeline.append({
+        "$facet": {
+            "totals": [
+                {"$group": {
+                    "_id": None,
+                    "total_count": {"$sum": 1},
+                    "total_amount": {"$sum": "$total"}
+                }}
+            ],
+            "by_status": [
+                {"$group": {
+                    "_id": "$status",
+                    "count": {"$sum": 1}
+                }}
+            ],
+            "by_type": [
+                {"$group": {
+                    "_id": "$document_type",
+                    "count": {"$sum": 1}
+                }}
+            ]
+        }
+    })
     
+    result = await db.einvoices.aggregate(pipeline).to_list(1)
+    
+    if not result:
+        return {"total_count": 0, "total_amount": 0, "by_status": {}, "by_type": {}}
+    
+    data = result[0]
+    
+    # Totals
+    totals = data.get("totals", [{}])[0] if data.get("totals") else {}
+    
+    # Status bazlı
     by_status = {}
-    by_type = {}
+    for s in data.get("by_status", []):
+        if s["_id"]:
+            by_status[s["_id"]] = s["count"]
     
-    for inv in invoices:
-        status = inv.get("status", "unknown")
-        doc_type = inv.get("document_type", "unknown")
-        
-        by_status[status] = by_status.get(status, 0) + 1
-        by_type[doc_type] = by_type.get(doc_type, 0) + 1
+    # Type bazlı
+    by_type = {}
+    for t in data.get("by_type", []):
+        if t["_id"]:
+            by_type[t["_id"]] = t["count"]
     
     return {
-        "total_count": total_count,
-        "total_amount": total_amount,
+        "total_count": totals.get("total_count", 0),
+        "total_amount": totals.get("total_amount", 0),
         "by_status": by_status,
         "by_type": by_type
     }
