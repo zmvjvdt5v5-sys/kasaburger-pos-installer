@@ -657,6 +657,25 @@ export default function POSMain() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* WebSocket Status */}
+          <div className={`flex items-center gap-1 text-xs ${wsConnected ? 'text-green-400' : 'text-red-400'}`}>
+            <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+            {wsConnected ? 'Canlı' : 'Bağlantı Yok'}
+          </div>
+          
+          {/* Edit Mode Toggle */}
+          {activeView === 'tables' && (
+            <Button
+              variant={editMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setEditMode(!editMode)}
+              className={editMode ? 'bg-purple-600 hover:bg-purple-700' : ''}
+            >
+              <Edit3 className="h-4 w-4 mr-1" />
+              {editMode ? 'Düzenleme Açık' : 'Masaları Düzenle'}
+            </Button>
+          )}
+          
           {/* Quick Actions */}
           <Button
             variant="outline"
