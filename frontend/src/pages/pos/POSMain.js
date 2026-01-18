@@ -12,10 +12,12 @@ import {
   Plus, Minus, Trash2, Send, Receipt, ChefHat, Printer, Gift,
   Search, X, Check, Split, Percent, MessageSquare, ArrowLeftRight,
   Package, Bike, ShoppingBag, RefreshCw, Settings, LogOut, Home,
-  Clock, DollarSign, TrendingUp, FileText, Merge, Move, Edit3
+  Clock, DollarSign, TrendingUp, FileText, Merge, Move, Edit3,
+  GripVertical, Bell, Volume2
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const WS_URL = BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
 
 // Masa durumları
 const TABLE_STATUS = {
