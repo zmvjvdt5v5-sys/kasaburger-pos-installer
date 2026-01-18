@@ -253,6 +253,61 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Platform Status Card */}
+        <Card className="bg-card border-border/50">
+          <CardHeader>
+            <CardTitle className="font-heading flex items-center gap-2">
+              <Bike className="h-5 w-5 text-pink-400" />
+              Platform Durumu
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { id: 'yemeksepeti', name: 'Yemeksepeti', logo: '🍽️', color: 'pink' },
+              { id: 'getir', name: 'Getir Yemek', logo: '🛵', color: 'purple' },
+              { id: 'trendyol', name: 'Trendyol', logo: '🛒', color: 'orange' },
+              { id: 'migros', name: 'Migros', logo: '🏪', color: 'orange' }
+            ].map(platform => {
+              const config = platforms.find(p => p.platform === platform.id);
+              const isActive = config?.enabled && config?.api_key;
+              return (
+                <div 
+                  key={platform.id}
+                  className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                    isActive ? 'bg-green-500/10 border border-green-500/30' : 'bg-zinc-800/50 border border-zinc-700/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{platform.logo}</span>
+                    <span className="text-sm font-medium">{platform.name}</span>
+                  </div>
+                  {isActive ? (
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Aktif
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-zinc-400 border-zinc-600">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Pasif
+                    </Badge>
+                  )}
+                </div>
+              );
+            })}
+            <a 
+              href="/delivery-settings" 
+              className="block text-center text-sm text-primary hover:underline mt-3"
+            >
+              <Plug className="h-4 w-4 inline mr-1" />
+              Platform Ayarlarını Yapılandır
+            </a>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Third Row - Pie Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pie Chart */}
         <Card className="bg-card border-border/50">
           <CardHeader>
