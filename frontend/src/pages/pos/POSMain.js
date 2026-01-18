@@ -241,6 +241,84 @@ export default function POSMain({ isDealer = false }) {
     return matchesCategory && matchesSearch;
   });
 
+  // Ödeme işlemi
+  const handlePayment = async (method) => {
+    try {
+      const token = getToken();
+      
+      // Önce sipariş yoksa oluştur
+      let orderId = currentOrder.id;
+      
+      if (!orderId) {
+        // Siparişi kaydet
+        const orderData = {
+          source: orderSource,
+          table_id: selectedTable?.id,
+          table_number: selectedTable?.number,
+          items: currentOrder.items,
+          notes: currentOrder.notes,
+          total: calculateTotal(),
+          status: 'completed'
+        };
+
+        const orderRes = await fetch(`${BACKEND_URL}/api/pos/orders`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(orderData)
+        });
+
+        if (!orderRes.ok) throw new Error('Sipariş kaydedilemedi');
+        const orderResult = await orderRes.json();
+        orderId = orderResult.order?.id;
+      }
+
+      // Ödemeyi kaydet
+      const paymentRes = await fetch(`${BACKEND_URL}/api/pos/orders/${orderId}/pay`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: calculateTotal(),
+          method: method
+        })
+      });
+
+      if (paymentRes.ok) {
+        const methodNames = {
+          cash: 'Nakit',
+          card: 'Kredi Kartı',
+          online: 'Online',
+          sodexo: 'Sodexo',
+          multinet: 'Multinet',
+          ticket: 'Ticket',
+          setcard: 'Setcard'
+        };
+        toast.success(`${methodNames[method] || method} ödeme alındı!`);
+        
+        // Masayı güncelle
+        if (selectedTable) {
+          setTables(prev => prev.map(t => 
+            t.id === selectedTable.id ? { ...t, status: 'empty', order: null } : t
+          ));
+        }
+        
+        setShowPayment(false);
+        setCurrentOrder({ items: [], notes: '' });
+        setSelectedTable(null);
+      } else {
+        throw new Error('Ödeme kaydedilemedi');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Ödeme işlemi başarısız!');
+    }
+  };
+
   // Kategori isimleri
   const categoryNames = {
     'et-burger': '🍔 Et Burger',
