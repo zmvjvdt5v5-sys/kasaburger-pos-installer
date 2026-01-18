@@ -9,6 +9,40 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Database:** MongoDB
 - **Auth:** JWT (24 saat token)
 
+## Update: January 18, 2026 - Profesyonel POS/Adisyon Sistemi
+
+### 🍽️ Şefim Adisyon Benzeri POS Sistemi - TAMAMLANDI
+
+**Backend API'ler (pos.py):**
+- `GET/POST /api/pos/sections` - 4 salon (İç Salon, Bahçe, Teras, VIP)
+- `GET/POST /api/pos/tables` - 15 masa, durum yönetimi, masa transferi, birleştirme
+- `GET/POST /api/pos/orders` - Sipariş CRUD, ürün ekleme/çıkarma, ikram
+- `POST /api/pos/orders/{id}/pay` - Ödeme (Nakit, Kart, Sodexo, Multinet, Setcard)
+- `POST /api/pos/orders/{id}/split-pay` - Hesap bölme
+- `GET /api/pos/kitchen` - Mutfak ekranı siparişleri
+- `PUT /api/pos/kitchen/{id}/preparing|ready|served` - Mutfak durum güncelleme
+- `GET /api/pos/reports/summary` - Satış özeti
+- `GET /api/pos/reports/z-report` - Z raporu
+
+**Frontend Özellikleri (POSMain.js):**
+- ✅ Masa haritası (salon bazlı, renk kodlu)
+- ✅ Sipariş alma ekranı (190 ürün, kategori filtresi)
+- ✅ Ödeme ekranı (6 ödeme yöntemi)
+- ✅ İndirim uygulama (% veya TL)
+- ✅ Hesap bölme
+- ✅ Masa transferi
+- ✅ İkram işlemi
+- ✅ Mutfak ekranı (KitchenView component)
+- ✅ Satış raporları (ReportsView component)
+- ✅ Keyboard shortcuts (F1-F5)
+
+**Admin Menü Entegrasyonu:**
+- `/pos` - Adisyon sayfası
+- `/kitchen` - Mutfak ekranı
+- Layout.js'de menü linkleri eklendi
+
+---
+
 ## Update: January 18, 2026 - Bayi Portal Ürün Görüntüleme Düzeltmesi
 
 ### 🔧 Çözülen Kritik Sorun
