@@ -4818,6 +4818,7 @@ Yazıcınız düzgün çalışıyor! ✓
                 "payment_mappings": {
                     "cash": 1,
                     "card": 2,
+                    "online": 7,
                     "sodexo": 3,
                     "multinet": 4,
                     "ticket": 5,
