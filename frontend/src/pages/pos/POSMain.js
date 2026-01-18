@@ -60,6 +60,16 @@ export default function POSMain() {
   const [activeView, setActiveView] = useState('tables'); // tables, order, kitchen, reports
   const [orderSource, setOrderSource] = useState('table'); // table, takeaway, delivery
   
+  // Drag-drop state
+  const [editMode, setEditMode] = useState(false);
+  const [draggingTable, setDraggingTable] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  
+  // WebSocket state
+  const [wsConnected, setWsConnected] = useState(false);
+  const [newOrderAlert, setNewOrderAlert] = useState(null);
+  const wsRef = useRef(null);
+  
   // Dialogs
   const [showPayment, setShowPayment] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
@@ -76,6 +86,7 @@ export default function POSMain() {
   const [splitCount, setSplitCount] = useState(2);
 
   const searchRef = useRef(null);
+  const mapContainerRef = useRef(null);
 
   // Token
   const getToken = () => localStorage.getItem('kasaburger_token') || localStorage.getItem('dealer_token');
