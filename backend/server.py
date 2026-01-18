@@ -4724,6 +4724,7 @@ Yazıcınız düzgün çalışıyor! ✓
                 "averageOrder": (total_sales + yemeksepeti_revenue + getir_revenue + trendyol_revenue + migros_revenue) / (len(pos_orders) + len(delivery_orders)) if (pos_orders or delivery_orders) else 0,
                 "cashSales": cash_sales,
                 "cardSales": card_sales,
+                "onlineSales": online_sales,
                 "mealCardSales": meal_card_sales,
                 "tableOrders": sum(1 for o in pos_orders if o.get("source") == "table"),
                 "takeawayOrders": sum(1 for o in pos_orders if o.get("source") == "takeaway"),
