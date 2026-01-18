@@ -458,6 +458,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ElectronNavigationHandler />
         <AppRoutes />
         <Toaster position="top-right" richColors />
       </AuthProvider>
