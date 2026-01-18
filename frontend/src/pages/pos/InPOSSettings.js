@@ -338,6 +338,23 @@ export default function InPOSSettings() {
               />
             </div>
 
+            {/* Online Ödeme */}
+            <div className="flex items-center justify-between p-3 bg-cyan-500/10 rounded-lg">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5 text-cyan-400" />
+                <span>Online Ödeme</span>
+              </div>
+              <Input
+                type="number"
+                value={config.payment_mappings?.online || 7}
+                onChange={(e) => setConfig(prev => ({
+                  ...prev,
+                  payment_mappings: { ...prev.payment_mappings, online: parseInt(e.target.value) || 7 }
+                }))}
+                className="w-20 bg-zinc-800 border-zinc-700 text-center"
+              />
+            </div>
+
             {/* Sodexo */}
             <div className="flex items-center justify-between p-3 bg-orange-500/10 rounded-lg">
               <div className="flex items-center gap-3">
