@@ -1,160 +1,222 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent } from '../../components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Card } from '../../components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { ScrollArea } from '../../components/ui/scroll-area';
+import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import { 
-  UtensilsCrossed, Users, Clock, CreditCard, Banknote, Smartphone,
-  Plus, Minus, Trash2, Send, Receipt, ChefHat, Bell, Printer,
-  Search, X, Check, Split, Percent, MessageSquare, Coffee,
-  Package, Bike, ShoppingBag, RefreshCw, Volume2, AlertCircle
+  UtensilsCrossed, Users, CreditCard, Banknote, Smartphone, QrCode,
+  Plus, Minus, Trash2, Send, Receipt, ChefHat, Printer, Gift,
+  Search, X, Check, Split, Percent, MessageSquare, ArrowLeftRight,
+  Package, Bike, ShoppingBag, RefreshCw, Settings, LogOut, Home,
+  Clock, DollarSign, TrendingUp, FileText, Merge, Move, Edit3
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Masa durumları
 const TABLE_STATUS = {
-  empty: { label: 'Boş', color: 'bg-green-500/20 border-green-500/50 text-green-400' },
-  occupied: { label: 'Dolu', color: 'bg-orange-500/20 border-orange-500/50 text-orange-400' },
-  reserved: { label: 'Rezerve', color: 'bg-blue-500/20 border-blue-500/50 text-blue-400' },
-  bill: { label: 'Hesap', color: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400' }
+  empty: { label: 'Boş', color: 'bg-emerald-500/20 border-emerald-500 text-emerald-400', bg: 'bg-emerald-500' },
+  occupied: { label: 'Dolu', color: 'bg-orange-500/20 border-orange-500 text-orange-400', bg: 'bg-orange-500' },
+  reserved: { label: 'Rezerve', color: 'bg-blue-500/20 border-blue-500 text-blue-400', bg: 'bg-blue-500' },
+  bill: { label: 'Hesap', color: 'bg-yellow-500/20 border-yellow-500 text-yellow-400', bg: 'bg-yellow-500' },
+  merged: { label: 'Birleşik', color: 'bg-purple-500/20 border-purple-500 text-purple-400', bg: 'bg-purple-500' }
 };
 
-// Sipariş kaynakları
-const ORDER_SOURCES = {
-  table: { label: 'Masa', icon: UtensilsCrossed, color: 'text-orange-400' },
-  takeaway: { label: 'Gel-Al', icon: ShoppingBag, color: 'text-green-400' },
-  delivery: { label: 'Paket', icon: Bike, color: 'text-blue-400' },
-  yemeksepeti: { label: 'Yemeksepeti', icon: Package, color: 'text-pink-400' },
-  getir: { label: 'Getir', icon: Package, color: 'text-purple-400' },
-  trendyol: { label: 'Trendyol', icon: Package, color: 'text-orange-400' },
-  migros: { label: 'Migros', icon: Package, color: 'text-green-400' }
-};
+// Ödeme yöntemleri
+const PAYMENT_METHODS = [
+  { id: 'cash', label: 'Nakit', icon: Banknote, color: 'bg-green-600 hover:bg-green-700' },
+  { id: 'card', label: 'Kredi Kartı', icon: CreditCard, color: 'bg-blue-600 hover:bg-blue-700' },
+  { id: 'online', label: 'Online Ödeme', icon: Smartphone, color: 'bg-purple-600 hover:bg-purple-700' },
+  { id: 'sodexo', label: 'Sodexo', icon: QrCode, color: 'bg-red-600 hover:bg-red-700' },
+  { id: 'multinet', label: 'Multinet', icon: QrCode, color: 'bg-amber-600 hover:bg-amber-700' },
+  { id: 'setcard', label: 'Setcard', icon: QrCode, color: 'bg-cyan-600 hover:bg-cyan-700' },
+];
 
-export default function POSMain({ isDealer = false }) {
+export default function POSMain() {
   // State
+  const [sections, setSections] = useState([]);
   const [tables, setTables] = useState([]);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [selectedSection, setSelectedSection] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [currentOrder, setCurrentOrder] = useState({ items: [], notes: '' });
+  const [currentOrder, setCurrentOrder] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState('tables'); // tables, order, kitchen, reports
+  const [orderSource, setOrderSource] = useState('table'); // table, takeaway, delivery
+  
+  // Dialogs
   const [showPayment, setShowPayment] = useState(false);
-  const [showOrderSource, setShowOrderSource] = useState(false);
-  const [orderSource, setOrderSource] = useState('table');
-  const [pendingOrders, setPendingOrders] = useState([]);
-  const [deliveryOrders, setDeliveryOrders] = useState([]);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showDiscount, setShowDiscount] = useState(false);
+  const [showSplitBill, setShowSplitBill] = useState(false);
+  const [showItemNote, setShowItemNote] = useState(null);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [showIkram, setShowIkram] = useState(null);
+  
+  // Payment state
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [tipAmount, setTipAmount] = useState(0);
+  const [discountType, setDiscountType] = useState('percent');
+  const [discountValue, setDiscountValue] = useState(0);
+  const [splitCount, setSplitCount] = useState(2);
+
+  const searchRef = useRef(null);
 
   // Token
   const getToken = () => localStorage.getItem('kasaburger_token') || localStorage.getItem('dealer_token');
 
-  // Verileri yükle
+  // Veri yükleme
   const loadData = useCallback(async () => {
     try {
       const token = getToken();
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Ürünleri yükle
-      const prodRes = await fetch(`${BACKEND_URL}/api/kiosk/products`, { headers });
-      if (prodRes.ok) {
-        const prodData = await prodRes.json();
-        setProducts(prodData.filter(p => p.is_active !== false));
-        
-        // Kategorileri çıkar
-        const cats = [...new Set(prodData.map(p => p.category))];
-        setCategories(cats);
+      // Paralel istekler
+      const [sectionsRes, tablesRes, productsRes] = await Promise.all([
+        fetch(`${BACKEND_URL}/api/pos/sections`, { headers }),
+        fetch(`${BACKEND_URL}/api/pos/tables`, { headers }),
+        fetch(`${BACKEND_URL}/api/kiosk/products`, { headers })
+      ]);
+
+      if (sectionsRes.ok) {
+        const sectionsData = await sectionsRes.json();
+        setSections(sectionsData);
+        if (!selectedSection && sectionsData.length > 0) {
+          setSelectedSection(sectionsData[0].id);
+        }
       }
 
-      // Masaları yükle veya varsayılan oluştur
-      const tablesRes = await fetch(`${BACKEND_URL}/api/pos/tables`, { headers });
       if (tablesRes.ok) {
         const tablesData = await tablesRes.json();
-        setTables(tablesData.length > 0 ? tablesData : generateDefaultTables());
-      } else {
-        setTables(generateDefaultTables());
+        setTables(tablesData);
       }
 
-      // Platform siparişlerini yükle
-      const deliveryRes = await fetch(`${BACKEND_URL}/api/delivery/orders`, { headers });
-      if (deliveryRes.ok) {
-        const deliveryData = await deliveryRes.json();
-        setDeliveryOrders(deliveryData.filter(o => o.status === 'pending' || o.status === 'preparing'));
+      if (productsRes.ok) {
+        const productsData = await productsRes.json();
+        setProducts(productsData.filter(p => p.is_active !== false));
+        const cats = [...new Set(productsData.map(p => p.category).filter(Boolean))];
+        setCategories(cats);
       }
 
       setLoading(false);
     } catch (error) {
       console.error('Load error:', error);
-      setTables(generateDefaultTables());
       setLoading(false);
     }
-  }, []);
-
-  // Varsayılan masalar
-  const generateDefaultTables = () => {
-    const defaultTables = [];
-    // Salon 1 - 10 masa
-    for (let i = 1; i <= 10; i++) {
-      defaultTables.push({
-        id: `table-${i}`,
-        number: i,
-        section: 'Salon',
-        capacity: i <= 4 ? 2 : 4,
-        status: 'empty',
-        order: null
-      });
-    }
-    // Bahçe - 5 masa
-    for (let i = 11; i <= 15; i++) {
-      defaultTables.push({
-        id: `table-${i}`,
-        number: i,
-        section: 'Bahçe',
-        capacity: 4,
-        status: 'empty',
-        order: null
-      });
-    }
-    return defaultTables;
-  };
+  }, [selectedSection]);
 
   useEffect(() => {
     loadData();
-    // Her 30 saniyede güncelle
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, [loadData]);
 
-  // Masa seç
-  const handleTableSelect = (table) => {
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'F1') { e.preventDefault(); setActiveView('tables'); }
+      if (e.key === 'F2') { e.preventDefault(); setActiveView('kitchen'); }
+      if (e.key === 'F3') { e.preventDefault(); setActiveView('reports'); }
+      if (e.key === 'F5') { e.preventDefault(); loadData(); }
+      if (e.key === 'Escape') {
+        setShowPayment(false);
+        setShowDiscount(false);
+        setShowSplitBill(false);
+        setShowItemNote(null);
+      }
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loadData]);
+
+  // Masa seçimi
+  const handleTableSelect = async (table) => {
+    setSelectedTable(table);
+    
     if (table.status === 'empty') {
-      setSelectedTable(table);
-      setCurrentOrder({ items: [], notes: '', tableId: table.id, tableNumber: table.number });
-      setOrderSource('table');
-    } else if (table.order) {
-      setSelectedTable(table);
-      setCurrentOrder(table.order);
+      // Yeni sipariş başlat
+      setCurrentOrder({
+        items: [],
+        notes: '',
+        table_id: table.id,
+        source: 'table',
+        discount_type: null,
+        discount_value: 0
+      });
+      setActiveView('order');
+    } else if (table.current_order) {
+      // Mevcut siparişi aç
+      setCurrentOrder(table.current_order);
+      setActiveView('order');
+    } else if (table.current_order_id) {
+      // Siparişi API'den al
+      try {
+        const token = getToken();
+        const res = await fetch(`${BACKEND_URL}/api/pos/orders/${table.current_order_id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const order = await res.json();
+          setCurrentOrder(order);
+          setActiveView('order');
+        }
+      } catch (error) {
+        console.error('Order fetch error:', error);
+      }
     }
+  };
+
+  // Sipariş kaynağı seç (Gel-Al, Paket)
+  const handleSourceSelect = (source) => {
+    setOrderSource(source);
+    setSelectedTable(null);
+    setCurrentOrder({
+      items: [],
+      notes: '',
+      source: source,
+      table_id: null,
+      discount_type: null,
+      discount_value: 0
+    });
+    setActiveView('order');
   };
 
   // Ürün ekle
   const addToOrder = (product) => {
+    if (!currentOrder) return;
+    
     setCurrentOrder(prev => {
-      const existingIndex = prev.items.findIndex(item => item.id === product.id && !item.note);
+      const existingIndex = prev.items.findIndex(
+        item => item.product_id === product.id && !item.note && item.portion === 'tam'
+      );
+      
       if (existingIndex >= 0) {
         const newItems = [...prev.items];
         newItems[existingIndex].quantity += 1;
         return { ...prev, items: newItems };
       }
+      
       return {
         ...prev,
-        items: [...prev.items, { ...product, quantity: 1, note: '' }]
+        items: [...prev.items, {
+          product_id: product.id,
+          product_name: product.name,
+          price: product.price || product.base_price || 0,
+          quantity: 1,
+          note: '',
+          portion: 'tam',
+          is_ikram: false
+        }]
       };
     });
   };
@@ -171,19 +233,74 @@ export default function POSMain({ isDealer = false }) {
   const updateQuantity = (index, delta) => {
     setCurrentOrder(prev => {
       const newItems = [...prev.items];
-      newItems[index].quantity = Math.max(1, newItems[index].quantity + delta);
+      const newQty = newItems[index].quantity + delta;
+      if (newQty <= 0) {
+        return { ...prev, items: newItems.filter((_, i) => i !== index) };
+      }
+      newItems[index].quantity = newQty;
       return { ...prev, items: newItems };
     });
   };
 
+  // Ürün notu ekle
+  const addItemNote = (index, note) => {
+    setCurrentOrder(prev => {
+      const newItems = [...prev.items];
+      newItems[index].note = note;
+      return { ...prev, items: newItems };
+    });
+    setShowItemNote(null);
+  };
+
+  // İkram yap
+  const markAsIkram = async (index, reason) => {
+    setCurrentOrder(prev => {
+      const newItems = [...prev.items];
+      newItems[index].is_ikram = true;
+      newItems[index].ikram_reason = reason;
+      newItems[index].original_price = newItems[index].price;
+      newItems[index].price = 0;
+      return { ...prev, items: newItems };
+    });
+    setShowIkram(null);
+    toast.success('Ürün ikram olarak işaretlendi');
+  };
+
   // Toplam hesapla
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
+    if (!currentOrder?.items) return 0;
     return currentOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
+
+  const calculateDiscount = () => {
+    const subtotal = calculateSubtotal();
+    if (currentOrder?.discount_type === 'percent') {
+      return subtotal * (currentOrder.discount_value / 100);
+    }
+    if (currentOrder?.discount_type === 'fixed') {
+      return currentOrder.discount_value;
+    }
+    return 0;
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() - calculateDiscount();
+  };
+
+  // İndirim uygula
+  const applyDiscount = () => {
+    setCurrentOrder(prev => ({
+      ...prev,
+      discount_type: discountType,
+      discount_value: discountValue
+    }));
+    setShowDiscount(false);
+    toast.success('İndirim uygulandı');
   };
 
   // Siparişi gönder
   const sendOrder = async () => {
-    if (currentOrder.items.length === 0) {
+    if (!currentOrder?.items?.length) {
       toast.error('Sipariş boş!');
       return;
     }
@@ -191,18 +308,22 @@ export default function POSMain({ isDealer = false }) {
     try {
       const token = getToken();
       const orderData = {
-        source: orderSource,
-        table_id: selectedTable?.id,
-        table_number: selectedTable?.number,
+        table_id: currentOrder.table_id,
+        source: currentOrder.source || orderSource,
         items: currentOrder.items,
-        notes: currentOrder.notes,
-        total: calculateTotal(),
-        status: 'pending',
-        created_at: new Date().toISOString()
+        notes: currentOrder.notes || '',
+        discount_type: currentOrder.discount_type,
+        discount_value: currentOrder.discount_value || 0
       };
 
-      const response = await fetch(`${BACKEND_URL}/api/pos/orders`, {
-        method: 'POST',
+      const url = currentOrder.id 
+        ? `${BACKEND_URL}/api/pos/orders/${currentOrder.id}`
+        : `${BACKEND_URL}/api/pos/orders`;
+      
+      const method = currentOrder.id ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -211,20 +332,16 @@ export default function POSMain({ isDealer = false }) {
       });
 
       if (response.ok) {
+        const result = await response.json();
         toast.success('Sipariş mutfağa gönderildi!');
         
-        // Masayı güncelle
-        if (selectedTable) {
-          setTables(prev => prev.map(t => 
-            t.id === selectedTable.id 
-              ? { ...t, status: 'occupied', order: { ...currentOrder, total: calculateTotal() } }
-              : t
-          ));
+        // Order ID'yi kaydet
+        if (result.order?.id) {
+          setCurrentOrder(prev => ({ ...prev, id: result.order.id, order_number: result.order.order_number }));
         }
         
-        // Formu temizle
-        setCurrentOrder({ items: [], notes: '' });
-        setSelectedTable(null);
+        // Masaları yenile
+        loadData();
       } else {
         throw new Error('Sipariş gönderilemedi');
       }
@@ -234,40 +351,33 @@ export default function POSMain({ isDealer = false }) {
     }
   };
 
-  // Filtrelenmiş ürünler
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  // Ödeme işlemi
+  // Ödeme al
   const handlePayment = async (method) => {
+    if (!currentOrder?.id && !currentOrder?.items?.length) {
+      toast.error('Önce siparişi kaydedin!');
+      return;
+    }
+
     try {
       const token = getToken();
-      
-      // Önce sipariş yoksa oluştur
       let orderId = currentOrder.id;
-      
-      if (!orderId) {
-        // Siparişi kaydet
-        const orderData = {
-          source: orderSource,
-          table_id: selectedTable?.id,
-          table_number: selectedTable?.number,
-          items: currentOrder.items,
-          notes: currentOrder.notes,
-          total: calculateTotal(),
-          status: 'completed'
-        };
 
+      // Sipariş yoksa önce oluştur
+      if (!orderId) {
         const orderRes = await fetch(`${BACKEND_URL}/api/pos/orders`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify(orderData)
+          body: JSON.stringify({
+            table_id: currentOrder.table_id,
+            source: currentOrder.source || orderSource,
+            items: currentOrder.items,
+            notes: currentOrder.notes || '',
+            discount_type: currentOrder.discount_type,
+            discount_value: currentOrder.discount_value || 0
+          })
         });
 
         if (!orderRes.ok) throw new Error('Sipariş kaydedilemedi');
@@ -283,33 +393,25 @@ export default function POSMain({ isDealer = false }) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
+          method: method,
           amount: calculateTotal(),
-          method: method
+          tip: tipAmount
         })
       });
 
       if (paymentRes.ok) {
-        const methodNames = {
-          cash: 'Nakit',
-          card: 'Kredi Kartı',
-          online: 'Online',
-          sodexo: 'Sodexo',
-          multinet: 'Multinet',
-          ticket: 'Ticket',
-          setcard: 'Setcard'
+        const methodLabels = {
+          cash: 'Nakit', card: 'Kredi Kartı', online: 'Online',
+          sodexo: 'Sodexo', multinet: 'Multinet', setcard: 'Setcard'
         };
-        toast.success(`${methodNames[method] || method} ödeme alındı!`);
-        
-        // Masayı güncelle
-        if (selectedTable) {
-          setTables(prev => prev.map(t => 
-            t.id === selectedTable.id ? { ...t, status: 'empty', order: null } : t
-          ));
-        }
+        toast.success(`${methodLabels[method]} ödeme alındı! ₺${calculateTotal().toFixed(2)}`);
         
         setShowPayment(false);
-        setCurrentOrder({ items: [], notes: '' });
+        setCurrentOrder(null);
         setSelectedTable(null);
+        setTipAmount(0);
+        setActiveView('tables');
+        loadData();
       } else {
         throw new Error('Ödeme kaydedilemedi');
       }
@@ -319,405 +421,953 @@ export default function POSMain({ isDealer = false }) {
     }
   };
 
-  // Kategori isimleri
-  const categoryNames = {
-    'et-burger': '🍔 Et Burger',
-    'tavuk': '🍗 Tavuk',
-    'premium': '⭐ Premium',
-    'atistirmalik': '🍟 Atıştırmalık',
-    'icecek': '🥤 İçecek',
-    'tatli': '🍰 Tatlı'
+  // Hesap böl
+  const handleSplitBill = async () => {
+    if (splitCount < 2) {
+      toast.error('En az 2 kişiye bölünmeli');
+      return;
+    }
+
+    const perPerson = calculateTotal() / splitCount;
+    toast.success(`Kişi başı: ₺${perPerson.toFixed(2)}`);
+    setShowSplitBill(false);
   };
 
-  // Para formatı
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount);
+  // Masa transferi
+  const handleTransfer = async (targetTableId) => {
+    if (!selectedTable) return;
+
+    try {
+      const token = getToken();
+      const response = await fetch(
+        `${BACKEND_URL}/api/pos/tables/${selectedTable.id}/transfer/${targetTableId}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.ok) {
+        toast.success('Sipariş aktarıldı!');
+        setShowTransfer(false);
+        setCurrentOrder(null);
+        setSelectedTable(null);
+        setActiveView('tables');
+        loadData();
+      }
+    } catch (error) {
+      toast.error('Transfer başarısız!');
+    }
   };
+
+  // Filtrelenmiş ürünler
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+    const matchesSearch = p.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Seçili bölgedeki masalar
+  const sectionTables = tables.filter(t => t.section_id === selectedSection);
+
+  // Para formatı
+  const formatCurrency = (amount) => `₺${(amount || 0).toFixed(2)}`;
 
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto"></div>
+          <p className="text-zinc-400 mt-4">Yükleniyor...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex">
-      {/* Sol Panel - Masalar ve Sipariş Kaynakları */}
-      <div className="w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-zinc-800">
-          <h1 className="text-xl font-bold text-orange-500 flex items-center gap-2">
-            <UtensilsCrossed className="h-6 w-6" />
-            KBYS Adisyon
-          </h1>
-          <p className="text-xs text-zinc-500 mt-1">Kasa Burger Yönetim Sistemi</p>
-        </div>
-
-        {/* Sipariş Kaynakları */}
-        <div className="p-3 border-b border-zinc-800">
-          <div className="grid grid-cols-4 gap-2">
-            {Object.entries(ORDER_SOURCES).slice(0, 4).map(([key, source]) => {
-              const Icon = source.icon;
-              return (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setOrderSource(key);
-                    if (key !== 'table') {
-                      setSelectedTable(null);
-                      setCurrentOrder({ items: [], notes: '', source: key });
-                    }
-                  }}
-                  className={`p-2 rounded-lg flex flex-col items-center gap-1 transition-all ${
-                    orderSource === key 
-                      ? 'bg-orange-500/20 border border-orange-500' 
-                      : 'bg-zinc-800 hover:bg-zinc-700'
-                  }`}
-                >
-                  <Icon className={`h-5 w-5 ${source.color}`} />
-                  <span className="text-xs">{source.label}</span>
-                </button>
-              );
-            })}
+    <div className="h-screen bg-zinc-950 text-white flex flex-col overflow-hidden">
+      {/* Top Bar */}
+      <header className="h-14 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <UtensilsCrossed className="h-6 w-6 text-orange-500" />
+            <span className="font-bold text-lg">KBYS Adisyon</span>
+          </div>
+          
+          {/* View Tabs */}
+          <div className="flex bg-zinc-800 rounded-lg p-1 ml-4">
+            <button
+              onClick={() => setActiveView('tables')}
+              className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+                activeView === 'tables' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <span className="hidden sm:inline">Masalar</span>
+              <Home className="h-4 w-4 sm:hidden" />
+            </button>
+            <button
+              onClick={() => setActiveView('kitchen')}
+              className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+                activeView === 'kitchen' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <span className="hidden sm:inline">Mutfak</span>
+              <ChefHat className="h-4 w-4 sm:hidden" />
+            </button>
+            <button
+              onClick={() => setActiveView('reports')}
+              className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+                activeView === 'reports' ? 'bg-orange-500 text-white' : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <span className="hidden sm:inline">Raporlar</span>
+              <TrendingUp className="h-4 w-4 sm:hidden" />
+            </button>
           </div>
         </div>
 
-        {/* Platform Siparişleri */}
-        {deliveryOrders.length > 0 && (
-          <div className="p-3 border-b border-zinc-800">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-zinc-400">Platform Siparişleri</span>
-              <Badge className="bg-red-500">{deliveryOrders.length}</Badge>
-            </div>
-            <ScrollArea className="h-24">
-              {deliveryOrders.map(order => (
-                <div key={order.id} className="p-2 bg-zinc-800 rounded mb-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-orange-400">{order.platform}</span>
-                    <span className="text-zinc-400">#{order.order_id?.slice(-4)}</span>
-                  </div>
-                </div>
+        <div className="flex items-center gap-3">
+          {/* Quick Actions */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSourceSelect('takeaway')}
+            className="border-green-600 text-green-400 hover:bg-green-600/20"
+          >
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            Gel-Al
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSourceSelect('delivery')}
+            className="border-blue-600 text-blue-400 hover:bg-blue-600/20"
+          >
+            <Bike className="h-4 w-4 mr-2" />
+            Paket
+          </Button>
+          
+          <Button variant="ghost" size="icon" onClick={loadData}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Tables View */}
+        {activeView === 'tables' && (
+          <div className="flex-1 flex">
+            {/* Section Tabs */}
+            <div className="w-16 bg-zinc-900 border-r border-zinc-800 flex flex-col py-2">
+              {sections.map(section => (
+                <button
+                  key={section.id}
+                  onClick={() => setSelectedSection(section.id)}
+                  className={`py-3 px-2 text-xs font-medium text-center transition-colors border-l-2 ${
+                    selectedSection === section.id
+                      ? 'border-orange-500 bg-zinc-800 text-white'
+                      : 'border-transparent text-zinc-500 hover:text-white hover:bg-zinc-800'
+                  }`}
+                  style={{ borderLeftColor: selectedSection === section.id ? section.color : 'transparent' }}
+                >
+                  <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ backgroundColor: section.color }}></div>
+                  {section.name?.split(' ')[0]}
+                </button>
               ))}
-            </ScrollArea>
+            </div>
+
+            {/* Tables Grid */}
+            <div className="flex-1 p-4 overflow-auto">
+              <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                {sectionTables.map(table => {
+                  const status = TABLE_STATUS[table.status] || TABLE_STATUS.empty;
+                  return (
+                    <button
+                      key={table.id}
+                      onClick={() => handleTableSelect(table)}
+                      className={`aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center transition-all hover:scale-105 ${status.color}`}
+                    >
+                      <span className="text-2xl font-bold">{table.name?.replace('Masa ', '') || '?'}</span>
+                      <span className="text-xs opacity-70 mt-1">{table.capacity} kişi</span>
+                      {table.current_order && (
+                        <span className="text-sm font-bold mt-1 text-orange-400">
+                          {formatCurrency(table.current_order.total || 0)}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Status Legend */}
+              <div className="flex justify-center gap-6 mt-6 pt-4 border-t border-zinc-800">
+                {Object.entries(TABLE_STATUS).slice(0, 4).map(([key, status]) => (
+                  <div key={key} className="flex items-center gap-2 text-sm text-zinc-400">
+                    <div className={`w-4 h-4 rounded ${status.bg}`}></div>
+                    {status.label}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Masa Listesi */}
-        <ScrollArea className="flex-1 p-3">
-          <div className="space-y-4">
-            {['Salon', 'Bahçe'].map(section => (
-              <div key={section}>
-                <h3 className="text-sm font-medium text-zinc-400 mb-2">{section}</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {tables.filter(t => t.section === section).map(table => {
-                    const status = TABLE_STATUS[table.status];
-                    const isSelected = selectedTable?.id === table.id;
-                    return (
-                      <button
-                        key={table.id}
-                        onClick={() => handleTableSelect(table)}
-                        className={`p-3 rounded-lg border-2 transition-all ${status.color} ${
-                          isSelected ? 'ring-2 ring-orange-500' : ''
-                        }`}
-                      >
-                        <div className="text-lg font-bold">{table.number}</div>
-                        <div className="text-xs opacity-70">{table.capacity} kişi</div>
-                        {table.order && (
-                          <div className="text-xs font-bold mt-1">
-                            {formatCurrency(table.order.total || 0)}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        {/* Durum Göstergesi */}
-        <div className="p-3 border-t border-zinc-800">
-          <div className="flex justify-between text-xs">
-            {Object.entries(TABLE_STATUS).map(([key, status]) => (
-              <div key={key} className="flex items-center gap-1">
-                <div className={`w-3 h-3 rounded ${status.color.split(' ')[0]}`}></div>
-                <span className="text-zinc-500">{status.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Orta Panel - Ürünler */}
-      <div className="flex-1 flex flex-col">
-        {/* Kategori ve Arama */}
-        <div className="p-4 border-b border-zinc-800 bg-zinc-900">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-              <Input
-                placeholder="Ürün ara..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-zinc-800 border-zinc-700"
-              />
-            </div>
-            <Button variant="outline" onClick={loadData} size="icon">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-            <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory('all')}
-              className="whitespace-nowrap"
-            >
-              Tümü
-            </Button>
-            {categories.map(cat => (
-              <Button
-                key={cat}
-                variant={selectedCategory === cat ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory(cat)}
-                className="whitespace-nowrap"
-              >
-                {categoryNames[cat] || cat}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Ürün Grid */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {filteredProducts.map(product => (
-              <button
-                key={product.id}
-                onClick={() => addToOrder(product)}
-                className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-3 text-left transition-all hover:scale-105 active:scale-95"
-              >
-                <div className="aspect-square rounded-lg overflow-hidden bg-zinc-700 mb-2">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => e.target.src = 'https://via.placeholder.com/150?text=🍔'}
+        {/* Order View */}
+        {activeView === 'order' && (
+          <div className="flex-1 flex">
+            {/* Products Panel */}
+            <div className="flex-1 flex flex-col bg-zinc-900">
+              {/* Search & Categories */}
+              <div className="p-3 border-b border-zinc-800">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    ref={searchRef}
+                    placeholder="Ürün ara... (Ctrl+F)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-zinc-800 border-zinc-700"
                   />
                 </div>
-                <h3 className="font-medium text-sm truncate">{product.name}</h3>
-                <p className="text-orange-400 font-bold">{formatCurrency(product.price)}</p>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
-
-      {/* Sağ Panel - Sipariş */}
-      <div className="w-96 bg-zinc-900 border-l border-zinc-800 flex flex-col">
-        {/* Sipariş Başlığı */}
-        <div className="p-4 border-b border-zinc-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-bold text-lg">
-                {selectedTable ? `Masa ${selectedTable.number}` : 
-                 orderSource === 'takeaway' ? 'Gel-Al Sipariş' :
-                 orderSource === 'delivery' ? 'Paket Sipariş' : 'Yeni Sipariş'}
-              </h2>
-              <p className="text-xs text-zinc-500">
-                {currentOrder.items.length} ürün
-              </p>
-            </div>
-            {currentOrder.items.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setCurrentOrder({ items: [], notes: '' })}
-                className="text-red-400 hover:text-red-300"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Temizle
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Sipariş Listesi */}
-        <ScrollArea className="flex-1 p-4">
-          {currentOrder.items.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500">
-              <UtensilsCrossed className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Sipariş boş</p>
-              <p className="text-xs mt-1">Ürün eklemek için tıklayın</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {currentOrder.items.map((item, index) => (
-                <div key={index} className="bg-zinc-800 rounded-lg p-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium">{item.name}</h4>
-                      <p className="text-orange-400 text-sm">{formatCurrency(item.price)}</p>
-                      {item.note && (
-                        <p className="text-xs text-zinc-400 mt-1">Not: {item.note}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
+                <ScrollArea className="w-full" orientation="horizontal">
+                  <div className="flex gap-2 pb-2">
+                    <Button
+                      variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedCategory('all')}
+                    >
+                      Tümü
+                    </Button>
+                    {categories.map(cat => (
                       <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateQuantity(index, -1)}
+                        key={cat}
+                        variant={selectedCategory === cat ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedCategory(cat)}
+                        className="whitespace-nowrap"
                       >
-                        <Minus className="h-3 w-3" />
+                        {cat}
                       </Button>
-                      <span className="w-8 text-center font-bold">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateQuantity(index, 1)}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-400"
-                        onClick={() => removeFromOrder(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                  <div className="text-right text-sm font-bold text-zinc-300 mt-2">
-                    {formatCurrency(item.price * item.quantity)}
+                </ScrollArea>
+              </div>
+
+              {/* Products Grid */}
+              <ScrollArea className="flex-1 p-3">
+                <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                  {filteredProducts.map(product => (
+                    <button
+                      key={product.id}
+                      onClick={() => addToOrder(product)}
+                      className="bg-zinc-800 hover:bg-zinc-700 rounded-lg p-3 text-left transition-colors border border-zinc-700 hover:border-orange-500"
+                    >
+                      <div className="text-sm font-medium truncate">{product.name}</div>
+                      <div className="text-orange-400 font-bold mt-1">
+                        {formatCurrency(product.price || product.base_price)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Order Panel */}
+            <div className="w-96 bg-zinc-950 border-l border-zinc-800 flex flex-col">
+              {/* Order Header */}
+              <div className="p-4 border-b border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-bold text-lg">
+                      {selectedTable ? `Masa ${selectedTable.name?.replace('Masa ', '')}` : 
+                       orderSource === 'takeaway' ? 'Gel-Al Sipariş' : 'Paket Sipariş'}
+                    </h2>
+                    {currentOrder?.order_number && (
+                      <p className="text-sm text-zinc-500">{currentOrder.order_number}</p>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    setActiveView('tables');
+                    setCurrentOrder(null);
+                    setSelectedTable(null);
+                  }}>
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <ScrollArea className="flex-1">
+                <div className="p-3 space-y-2">
+                  {currentOrder?.items?.map((item, index) => (
+                    <div
+                      key={index}
+                      className={`bg-zinc-900 rounded-lg p-3 border ${
+                        item.is_ikram ? 'border-purple-500/50 bg-purple-500/10' : 'border-zinc-800'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium flex items-center gap-2">
+                            {item.product_name}
+                            {item.is_ikram && <Badge className="bg-purple-500 text-xs">İkram</Badge>}
+                          </div>
+                          {item.note && (
+                            <p className="text-xs text-orange-400 mt-1">📝 {item.note}</p>
+                          )}
+                          <div className="text-sm text-zinc-400 mt-1">
+                            {formatCurrency(item.price)} x {item.quantity}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-orange-400">
+                            {formatCurrency(item.price * item.quantity)}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Item Actions */}
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-zinc-800">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => updateQuantity(index, -1)}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center text-sm">{item.quantity}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => updateQuantity(index, 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-zinc-400 hover:text-white"
+                            onClick={() => setShowItemNote(index)}
+                          >
+                            <MessageSquare className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-purple-400 hover:text-purple-300"
+                            onClick={() => setShowIkram(index)}
+                            disabled={item.is_ikram}
+                          >
+                            <Gift className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-red-400 hover:text-red-300"
+                            onClick={() => removeFromOrder(index)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {(!currentOrder?.items || currentOrder.items.length === 0) && (
+                    <div className="text-center py-12 text-zinc-500">
+                      <UtensilsCrossed className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>Sipariş boş</p>
+                      <p className="text-sm">Ürün eklemek için soldan seçin</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              {/* Order Footer */}
+              <div className="border-t border-zinc-800 p-4 space-y-3">
+                {/* Totals */}
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Ara Toplam</span>
+                    <span>{formatCurrency(calculateSubtotal())}</span>
+                  </div>
+                  {calculateDiscount() > 0 && (
+                    <div className="flex justify-between text-green-400">
+                      <span>İndirim</span>
+                      <span>-{formatCurrency(calculateDiscount())}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t border-zinc-700">
+                    <span>Toplam</span>
+                    <span className="text-orange-400">{formatCurrency(calculateTotal())}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
 
-        {/* Sipariş Notu */}
-        {currentOrder.items.length > 0 && (
-          <div className="p-4 border-t border-zinc-800">
-            <div className="relative">
-              <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
-              <Input
-                placeholder="Sipariş notu..."
-                value={currentOrder.notes}
-                onChange={(e) => setCurrentOrder(prev => ({ ...prev, notes: e.target.value }))}
-                className="pl-10 bg-zinc-800 border-zinc-700"
-              />
+                {/* Quick Actions */}
+                <div className="grid grid-cols-4 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDiscount(true)}
+                    className="text-xs"
+                  >
+                    <Percent className="h-3 w-3 mr-1" />
+                    İndirim
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSplitBill(true)}
+                    className="text-xs"
+                  >
+                    <Split className="h-3 w-3 mr-1" />
+                    Böl
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTransfer(true)}
+                    disabled={!selectedTable}
+                    className="text-xs"
+                  >
+                    <Move className="h-3 w-3 mr-1" />
+                    Aktar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <Printer className="h-3 w-3 mr-1" />
+                    Fiş
+                  </Button>
+                </div>
+
+                {/* Main Actions */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={sendOrder}
+                    disabled={!currentOrder?.items?.length}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Mutfağa Gönder
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setPaymentAmount(calculateTotal());
+                      setShowPayment(true);
+                    }}
+                    disabled={!currentOrder?.items?.length}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Ödeme Al
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Toplam ve Butonlar */}
-        <div className="p-4 border-t border-zinc-800 space-y-3">
-          <div className="flex items-center justify-between text-xl font-bold">
-            <span>Toplam</span>
-            <span className="text-orange-400">{formatCurrency(calculateTotal())}</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              onClick={sendOrder}
-              disabled={currentOrder.items.length === 0}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Mutfağa Gönder
-            </Button>
-            <Button
-              onClick={() => setShowPayment(true)}
-              disabled={currentOrder.items.length === 0}
-              className="bg-orange-500 hover:bg-orange-600"
-            >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Ödeme Al
-            </Button>
-          </div>
+        {/* Kitchen View */}
+        {activeView === 'kitchen' && (
+          <KitchenView />
+        )}
 
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" size="sm">
-              <Printer className="h-4 w-4 mr-1" />
-              Yazdır
-            </Button>
-            <Button variant="outline" size="sm">
-              <Split className="h-4 w-4 mr-1" />
-              Böl
-            </Button>
-            <Button variant="outline" size="sm">
-              <Percent className="h-4 w-4 mr-1" />
-              İndirim
-            </Button>
-          </div>
-        </div>
+        {/* Reports View */}
+        {activeView === 'reports' && (
+          <ReportsView />
+        )}
       </div>
 
-      {/* Ödeme Dialog */}
+      {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-orange-500" />
-              Ödeme Al - {formatCurrency(calculateTotal())}
-            </DialogTitle>
+            <DialogTitle>Ödeme Al</DialogTitle>
           </DialogHeader>
-          
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button 
-                className="h-20 flex-col gap-2 bg-green-600 hover:bg-green-700"
-                onClick={() => handlePayment('cash')}
-              >
-                <Banknote className="h-8 w-8" />
-                <span>Nakit</span>
-              </Button>
-              <Button 
-                className="h-20 flex-col gap-2 bg-blue-600 hover:bg-blue-700"
-                onClick={() => handlePayment('card')}
-              >
-                <CreditCard className="h-8 w-8" />
-                <span>Kredi Kartı</span>
-              </Button>
+            <div className="text-center py-4 bg-zinc-800 rounded-lg">
+              <p className="text-sm text-zinc-400">Toplam Tutar</p>
+              <p className="text-3xl font-bold text-orange-400">{formatCurrency(calculateTotal())}</p>
+            </div>
+            
+            <div>
+              <label className="text-sm text-zinc-400">Bahşiş</label>
+              <Input
+                type="number"
+                value={tipAmount}
+                onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
+                className="bg-zinc-800 border-zinc-700"
+              />
             </div>
 
-            {/* Online Ödeme */}
-            <Button 
-              className="w-full h-14 flex-col gap-1 bg-cyan-600 hover:bg-cyan-700"
-              onClick={() => handlePayment('online')}
-            >
-              <span className="text-sm">💳 Online Ödeme (Platformdan Ödenmiş)</span>
-            </Button>
-
-            <div className="grid grid-cols-4 gap-2">
-              {['Sodexo', 'Multinet', 'Ticket', 'Setcard'].map(card => (
-                <Button
-                  key={card}
-                  variant="outline"
-                  className="h-16 flex-col text-xs"
-                  onClick={() => handlePayment(card.toLowerCase())}
-                >
-                  <Smartphone className="h-5 w-5 mb-1" />
-                  {card}
-                </Button>
-              ))}
+            <div className="grid grid-cols-2 gap-2">
+              {PAYMENT_METHODS.map(method => {
+                const Icon = method.icon;
+                return (
+                  <Button
+                    key={method.id}
+                    onClick={() => handlePayment(method.id)}
+                    className={`h-16 ${method.color}`}
+                  >
+                    <Icon className="h-5 w-5 mr-2" />
+                    {method.label}
+                  </Button>
+                );
+              })}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-            <Button variant="outline" className="w-full" onClick={() => setShowPayment(false)}>
-              İptal
+      {/* Discount Dialog */}
+      <Dialog open={showDiscount} onOpenChange={setShowDiscount}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>İndirim Uygula</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant={discountType === 'percent' ? 'default' : 'outline'}
+                onClick={() => setDiscountType('percent')}
+                className="flex-1"
+              >
+                % Yüzde
+              </Button>
+              <Button
+                variant={discountType === 'fixed' ? 'default' : 'outline'}
+                onClick={() => setDiscountType('fixed')}
+                className="flex-1"
+              >
+                ₺ Tutar
+              </Button>
+            </div>
+            <Input
+              type="number"
+              value={discountValue}
+              onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+              placeholder={discountType === 'percent' ? 'Yüzde (%)' : 'Tutar (₺)'}
+              className="bg-zinc-800 border-zinc-700"
+            />
+            <Button onClick={applyDiscount} className="w-full">
+              Uygula
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Split Bill Dialog */}
+      <Dialog open={showSplitBill} onOpenChange={setShowSplitBill}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Hesabı Böl</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-sm text-zinc-400">Toplam: {formatCurrency(calculateTotal())}</p>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <Button variant="outline" onClick={() => setSplitCount(Math.max(2, splitCount - 1))}>
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-2xl font-bold w-16 text-center">{splitCount}</span>
+              <Button variant="outline" onClick={() => setSplitCount(splitCount + 1)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-center py-4 bg-zinc-800 rounded-lg">
+              <p className="text-sm text-zinc-400">Kişi Başı</p>
+              <p className="text-2xl font-bold text-orange-400">
+                {formatCurrency(calculateTotal() / splitCount)}
+              </p>
+            </div>
+            <Button onClick={handleSplitBill} className="w-full">
+              Böl ve Ödeme Al
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Item Note Dialog */}
+      <Dialog open={showItemNote !== null} onOpenChange={() => setShowItemNote(null)}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ürün Notu</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              id="item-note"
+              placeholder="Örn: Soğansız, az pişmiş..."
+              className="bg-zinc-800 border-zinc-700"
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowItemNote(null)} className="flex-1">
+                İptal
+              </Button>
+              <Button
+                onClick={() => {
+                  const note = document.getElementById('item-note').value;
+                  addItemNote(showItemNote, note);
+                }}
+                className="flex-1"
+              >
+                Kaydet
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ikram Dialog */}
+      <Dialog open={showIkram !== null} onOpenChange={() => setShowIkram(null)}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>İkram Sebebi</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              id="ikram-reason"
+              placeholder="İkram sebebi..."
+              className="bg-zinc-800 border-zinc-700"
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowIkram(null)} className="flex-1">
+                İptal
+              </Button>
+              <Button
+                onClick={() => {
+                  const reason = document.getElementById('ikram-reason').value;
+                  markAsIkram(showIkram, reason);
+                }}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                İkram Yap
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer Dialog */}
+      <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
+          <DialogHeader>
+            <DialogTitle>Siparişi Aktar</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-4 gap-2 max-h-64 overflow-auto">
+            {tables.filter(t => t.status === 'empty' && t.id !== selectedTable?.id).map(table => (
+              <Button
+                key={table.id}
+                variant="outline"
+                onClick={() => handleTransfer(table.id)}
+                className="h-16"
+              >
+                {table.name?.replace('Masa ', '')}
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Kitchen View Component
+function KitchenView() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const getToken = () => localStorage.getItem('kasaburger_token') || localStorage.getItem('dealer_token');
+
+  const loadOrders = async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${BACKEND_URL}/api/pos/kitchen`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data);
+      }
+    } catch (error) {
+      console.error('Kitchen load error:', error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadOrders();
+    const interval = setInterval(loadOrders, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const updateStatus = async (orderId, status) => {
+    try {
+      const token = getToken();
+      await fetch(`${BACKEND_URL}/api/pos/kitchen/${orderId}/${status}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(status === 'preparing' ? 'Hazırlanıyor' : status === 'ready' ? 'Hazır!' : 'Servis Edildi');
+      loadOrders();
+    } catch (error) {
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  const statusColors = {
+    pending: 'border-yellow-500 bg-yellow-500/10',
+    preparing: 'border-orange-500 bg-orange-500/10',
+    ready: 'border-green-500 bg-green-500/10'
+  };
+
+  if (loading) {
+    return <div className="flex-1 flex items-center justify-center">Yükleniyor...</div>;
+  }
+
+  return (
+    <div className="flex-1 p-4 overflow-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {orders.map(order => (
+          <Card key={order.id} className={`bg-zinc-900 border-2 ${statusColors[order.status]}`}>
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="font-bold text-lg">{order.order_number}</span>
+                  {order.table_id && (
+                    <Badge className="ml-2 bg-zinc-700">Masa</Badge>
+                  )}
+                </div>
+                <Badge className={
+                  order.status === 'pending' ? 'bg-yellow-500' :
+                  order.status === 'preparing' ? 'bg-orange-500' : 'bg-green-500'
+                }>
+                  {order.status === 'pending' ? 'Bekliyor' :
+                   order.status === 'preparing' ? 'Hazırlanıyor' : 'Hazır'}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2 mb-4">
+                {order.items?.map((item, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span>
+                      <span className="font-medium">{item.quantity}x</span> {item.product_name}
+                      {item.note && <span className="text-orange-400 text-xs ml-1">({item.note})</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                {order.status === 'pending' && (
+                  <Button
+                    onClick={() => updateStatus(order.id, 'preparing')}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700"
+                    size="sm"
+                  >
+                    Hazırla
+                  </Button>
+                )}
+                {order.status === 'preparing' && (
+                  <Button
+                    onClick={() => updateStatus(order.id, 'ready')}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    size="sm"
+                  >
+                    Hazır
+                  </Button>
+                )}
+                {order.status === 'ready' && (
+                  <Button
+                    onClick={() => updateStatus(order.id, 'served')}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    size="sm"
+                  >
+                    Servis Edildi
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+
+        {orders.length === 0 && (
+          <div className="col-span-full text-center py-12 text-zinc-500">
+            <ChefHat className="h-16 w-16 mx-auto mb-4 opacity-20" />
+            <p className="text-lg">Bekleyen sipariş yok</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Reports View Component
+function ReportsView() {
+  const [summary, setSummary] = useState(null);
+  const [range, setRange] = useState('today');
+  const [loading, setLoading] = useState(true);
+
+  const getToken = () => localStorage.getItem('kasaburger_token') || localStorage.getItem('dealer_token');
+
+  const loadSummary = async () => {
+    try {
+      const token = getToken();
+      const res = await fetch(`${BACKEND_URL}/api/pos/reports/summary?range=${range}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSummary(data);
+      }
+    } catch (error) {
+      console.error('Reports load error:', error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadSummary();
+  }, [range]);
+
+  const formatCurrency = (amount) => `₺${(amount || 0).toFixed(2)}`;
+
+  if (loading) {
+    return <div className="flex-1 flex items-center justify-center">Yükleniyor...</div>;
+  }
+
+  return (
+    <div className="flex-1 p-6 overflow-auto">
+      {/* Range Selector */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Satış Raporları</h2>
+        <div className="flex gap-2">
+          {[
+            { id: 'today', label: 'Bugün' },
+            { id: 'week', label: 'Hafta' },
+            { id: 'month', label: 'Ay' }
+          ].map(r => (
+            <Button
+              key={r.id}
+              variant={range === r.id ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setRange(r.id)}
+            >
+              {r.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card className="bg-zinc-900 border-zinc-800 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-green-500/20 rounded-lg">
+              <DollarSign className="h-6 w-6 text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-zinc-400">Toplam Satış</p>
+              <p className="text-2xl font-bold text-green-400">{formatCurrency(summary?.totalSales)}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-500/20 rounded-lg">
+              <Receipt className="h-6 w-6 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm text-zinc-400">Sipariş Sayısı</p>
+              <p className="text-2xl font-bold text-blue-400">{summary?.totalOrders || 0}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-orange-500/20 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-orange-400" />
+            </div>
+            <div>
+              <p className="text-sm text-zinc-400">Ortalama Adisyon</p>
+              <p className="text-2xl font-bold text-orange-400">{formatCurrency(summary?.averageOrder)}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-purple-500/20 rounded-lg">
+              <Gift className="h-6 w-6 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm text-zinc-400">Bahşişler</p>
+              <p className="text-2xl font-bold text-purple-400">{formatCurrency(summary?.tips)}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Payment Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-zinc-900 border-zinc-800 p-4">
+          <h3 className="font-bold mb-4">Ödeme Yöntemleri</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Nakit</span>
+              <span className="font-bold text-green-400">{formatCurrency(summary?.cashSales)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Kredi Kartı</span>
+              <span className="font-bold text-blue-400">{formatCurrency(summary?.cardSales)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Online Ödeme</span>
+              <span className="font-bold text-purple-400">{formatCurrency(summary?.onlineSales)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Yemek Kartı</span>
+              <span className="font-bold text-amber-400">{formatCurrency(summary?.mealCardSales)}</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-zinc-900 border-zinc-800 p-4">
+          <h3 className="font-bold mb-4">Sipariş Kaynakları</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Masa</span>
+              <span className="font-bold">{summary?.tableOrders || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Gel-Al</span>
+              <span className="font-bold">{summary?.takeawayOrders || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Paket</span>
+              <span className="font-bold">{summary?.deliveryOrders || 0}</span>
+            </div>
+            <div className="flex justify-between items-center border-t border-zinc-700 pt-3 mt-3">
+              <span className="text-zinc-400">İndirimler</span>
+              <span className="font-bold text-red-400">-{formatCurrency(summary?.discounts)}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
