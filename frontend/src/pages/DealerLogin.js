@@ -70,11 +70,11 @@ const DealerLogin = () => {
       <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur-sm border-white/10">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-24 h-24">
-            <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="KasaBurger Logo" className="w-full h-full object-contain" />
+            <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="KBYS Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <CardTitle className="text-3xl font-heading font-bold">Bayi Portalı</CardTitle>
-            <CardDescription>Sipariş vermek için giriş yapın</CardDescription>
+            <CardTitle className="text-3xl font-heading font-bold">KBYS Bayi</CardTitle>
+            <CardDescription>Kasa Burger Yönetim Sistemi - Bayi Girişi</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
