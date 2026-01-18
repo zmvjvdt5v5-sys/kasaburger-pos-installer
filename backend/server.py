@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from utils.database import connect_db, close_db, get_db
 
 # Routers
-from routers import auth, pos, inpos, products, materials, dealers, kiosk, delivery, branches, orders, einvoice, dealer_portal
+from routers import auth, pos, inpos, products, materials, dealers, kiosk, delivery, branches, orders, einvoice, dealer_portal, recipes, invoices, campaigns, production
 
 # Logging
 logging.basicConfig(level=logging.INFO)
