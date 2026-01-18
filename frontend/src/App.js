@@ -244,6 +244,14 @@ function AppRoutes() {
           </DealerProtectedRoute>
         }
       />
+      <Route
+        path="/dealer-portal/inpos-settings"
+        element={
+          <DealerProtectedRoute>
+            <InPOSSettings />
+          </DealerProtectedRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
