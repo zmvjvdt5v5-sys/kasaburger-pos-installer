@@ -1,7 +1,7 @@
 {
-  "short_name": "KasaBurger",
-  "name": "KasaBurger Sipariş Portalı",
-  "description": "KasaBurger bayi sipariş ve yönetim sistemi",
+  "short_name": "KBYS",
+  "name": "Kasa Burger Yönetim Sistemi",
+  "description": "KBYS - Kasa Burger bayi sipariş ve yönetim sistemi",
   "icons": [
     {
       "src": "favicon-16x16.png",
