@@ -386,6 +386,21 @@ async def create_pos_order(order: POSOrderCreate, current_user: dict = Depends(g
     pos_count = await db.pos_orders.count_documents({})
     order_number = f"A{str(pos_count + 1).zfill(6)}"
     
+    # Queue number (sıra numarası) oluştur
+    queue_number = None
+    if order.table_id:
+        # Masa siparişi - masa numarasını kullan
+        table = await db.pos_tables.find_one({"id": order.table_id}, {"_id": 0})
+        if table:
+            table_num = table.get("name", "").replace("Masa ", "").replace("masa ", "").strip()
+            queue_number = f"MASA-{table_num}"
+    elif order.source in ["delivery"] or hasattr(order, 'platform') and order.platform:
+        # Online platform siparişi
+        queue_number = await _get_daily_queue_number(db, "ONLNPKT")
+    else:
+        # Paket/Gel-Al siparişi
+        queue_number = await _get_daily_queue_number(db, "PKT")
+    
     # Toplam hesapla
     subtotal = sum(item.price * item.quantity for item in order.items)
     discount_amount = 0
@@ -399,6 +414,7 @@ async def create_pos_order(order: POSOrderCreate, current_user: dict = Depends(g
     order_doc = {
         "id": order_id,
         "order_number": order_number,
+        "queue_number": queue_number,
         "table_id": order.table_id,
         "source": order.source,
         "items": [item.model_dump() for item in order.items],
