@@ -339,7 +339,7 @@ async def dealer_change_password(old_password: str, new_password: str, dealer: d
     if not password_valid:
         try:
             password_valid = verify_password(old_password, stored_password)
-        except:
+        except Exception:
             password_valid = False
     
     if not password_valid:
