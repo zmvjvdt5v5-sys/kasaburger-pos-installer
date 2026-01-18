@@ -115,11 +115,31 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('kasaburger_token');
     localStorage.removeItem('kasaburger_user');
+    localStorage.removeItem('dealer_token');
+    localStorage.removeItem('dealer_info');
     setUser(null);
   };
 
+  // Dealer login fonksiyonu
+  const dealerLogin = (dealerData, token) => {
+    const userData = {
+      ...dealerData,
+      role: 'dealer',
+      dealer_code: dealerData.code,
+      dealer_name: dealerData.name
+    };
+    
+    localStorage.setItem('kasaburger_token', token);
+    localStorage.setItem('kasaburger_user', JSON.stringify(userData));
+    localStorage.setItem('dealer_token', token);
+    localStorage.setItem('dealer_info', JSON.stringify(dealerData));
+    setUser(userData);
+    
+    return userData;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, dealerLogin, setUser }}>
       {children}
     </AuthContext.Provider>
   );
