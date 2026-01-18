@@ -48,7 +48,9 @@ import {
   Percent,
   Tag,
   Bell,
-  Sparkles
+  Sparkles,
+  Plug,
+  Bike
 } from 'lucide-react';
 import { Textarea } from '../components/ui/textarea';
 
