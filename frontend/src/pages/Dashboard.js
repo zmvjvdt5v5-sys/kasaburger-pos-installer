@@ -306,9 +306,24 @@ const Dashboard = () => {
               <Plug className="h-4 w-4 inline mr-1" />
               Platform Ayarlarını Yapılandır
             </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 border-dashed"
+              onClick={() => setShowWizard(true)}
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
+              Kurulum Sihirbazı
+            </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Platform Setup Wizard */}
+      <PlatformSetupWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+      />
 
       {/* Third Row - Pie Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
