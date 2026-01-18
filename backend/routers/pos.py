@@ -819,3 +819,125 @@ async def get_z_report(current_user: dict = Depends(get_current_user)):
             "delivery": sum(1 for o in orders if o.get("source") == "delivery")
         }
     }
+
+
+# ==================== MASA BİRLEŞTİRME ====================
+
+class MergeTablesRequest(BaseModel):
+    main_table_id: str
+    merge_table_ids: List[str]
+
+
+@router.post("/tables/merge")
+async def merge_tables(request: MergeTablesRequest, user: dict = Depends(get_current_user)):
+    """Masaları birleştir - Ana masaya diğer masaları ekle"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Ana masayı al
+    main_table = await db.pos_tables.find_one(
+        {"id": request.main_table_id},
+        {"_id": 0}
+    )
+    if not main_table:
+        raise HTTPException(status_code=404, detail="Ana masa bulunamadı")
+    
+    # Diğer masaları al
+    merge_tables = await db.pos_tables.find(
+        {"id": {"$in": request.merge_table_ids}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    if len(merge_tables) != len(request.merge_table_ids):
+        raise HTTPException(status_code=404, detail="Bazı masalar bulunamadı")
+    
+    # Toplam kapasite hesapla
+    total_capacity = main_table.get("capacity", 4) + sum(t.get("capacity", 4) for t in merge_tables)
+    
+    # Birleşen masa isimlerini kaydet
+    merged_names = [main_table.get("name", "")] + [t.get("name", "") for t in merge_tables]
+    
+    # Ana masayı güncelle
+    await db.pos_tables.update_one(
+        {"id": request.main_table_id},
+        {"$set": {
+            "status": "merged",
+            "capacity": total_capacity,
+            "merged_tables": request.merge_table_ids,
+            "merged_names": merged_names,
+            "original_capacity": main_table.get("capacity", 4),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Diğer masaları gizle (merged_to ile işaretle)
+    for table_id in request.merge_table_ids:
+        await db.pos_tables.update_one(
+            {"id": table_id},
+            {"$set": {
+                "status": "merged_child",
+                "merged_to": request.main_table_id,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    return {
+        "success": True,
+        "message": f"{len(merge_tables) + 1} masa birleştirildi",
+        "main_table_id": request.main_table_id,
+        "merged_capacity": total_capacity
+    }
+
+
+@router.post("/tables/{table_id}/split")
+async def split_tables(table_id: str, user: dict = Depends(get_current_user)):
+    """Birleşik masayı ayır - Orijinal haline döndür"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Ana masayı al
+    main_table = await db.pos_tables.find_one(
+        {"id": table_id},
+        {"_id": 0}
+    )
+    if not main_table:
+        raise HTTPException(status_code=404, detail="Masa bulunamadı")
+    
+    merged_tables = main_table.get("merged_tables", [])
+    if not merged_tables:
+        raise HTTPException(status_code=400, detail="Bu masa birleşik değil")
+    
+    # Ana masayı orijinal haline döndür
+    await db.pos_tables.update_one(
+        {"id": table_id},
+        {"$set": {
+            "status": "empty",
+            "capacity": main_table.get("original_capacity", 4),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        "$unset": {
+            "merged_tables": "",
+            "merged_names": "",
+            "original_capacity": ""
+        }}
+    )
+    
+    # Alt masaları geri getir
+    for child_id in merged_tables:
+        await db.pos_tables.update_one(
+            {"id": child_id},
+            {"$set": {
+                "status": "empty",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$unset": {
+                "merged_to": ""
+            }}
+        )
+    
+    return {
+        "success": True,
+        "message": f"{len(merged_tables) + 1} masa ayrıldı"
+    }
