@@ -4641,7 +4641,7 @@ Yazıcınız düzgün çalışıyor! ✓
     @api_router.post("/pos/orders/{order_id}/pay")
     async def pay_pos_order(order_id: str, payment: dict, current_user: dict = Depends(get_current_user)):
         """Ödeme al"""
-        order = await db.pos_orders.find_one({"id": order_id})
+        order = await db.pos_orders.find_one({"id": order_id}, {"_id": 0})
         if not order:
             raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
         
@@ -4651,10 +4651,13 @@ Yazıcınız düzgün çalışıyor! ✓
             "amount": payment.get("amount", order.get("total", 0)),
             "method": payment.get("method", "cash"),
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "created_by": current_user.get("email")
+            "created_by": current_user.get("email") or current_user.get("code")
         }
         
         await db.pos_payments.insert_one(payment_record)
+        
+        # _id'yi kaldır
+        payment_record.pop("_id", None)
         
         # Sipariş durumunu güncelle
         await db.pos_orders.update_one(
