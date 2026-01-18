@@ -729,28 +729,67 @@ export default function POSMain() {
               ))}
             </div>
 
-            {/* Tables Grid */}
-            <div className="flex-1 p-4 overflow-auto">
-              <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                {sectionTables.map(table => {
-                  const status = TABLE_STATUS[table.status] || TABLE_STATUS.empty;
-                  return (
-                    <button
-                      key={table.id}
-                      onClick={() => handleTableSelect(table)}
-                      className={`aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center transition-all hover:scale-105 ${status.color}`}
-                    >
-                      <span className="text-2xl font-bold">{table.name?.replace('Masa ', '') || '?'}</span>
-                      <span className="text-xs opacity-70 mt-1">{table.capacity} kişi</span>
-                      {table.current_order && (
-                        <span className="text-sm font-bold mt-1 text-orange-400">
-                          {formatCurrency(table.current_order.total || 0)}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Tables Map - Drag & Drop */}
+            <div 
+              ref={mapContainerRef}
+              className="flex-1 p-4 overflow-auto relative"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              {editMode ? (
+                /* Edit Mode - Free positioning */
+                <div className="relative min-h-[600px] bg-zinc-900/50 rounded-xl border-2 border-dashed border-zinc-700">
+                  <div className="absolute top-2 left-2 text-xs text-zinc-500 flex items-center gap-2">
+                    <GripVertical className="h-4 w-4" />
+                    Masaları sürükleyerek konumlandırın
+                  </div>
+                  {sectionTables.map(table => {
+                    const status = TABLE_STATUS[table.status] || TABLE_STATUS.empty;
+                    return (
+                      <div
+                        key={table.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, table)}
+                        style={{
+                          position: 'absolute',
+                          left: table.position_x || 0,
+                          top: (table.position_y || 0) + 30,
+                          cursor: 'move'
+                        }}
+                        className={`w-24 h-24 rounded-xl border-2 p-2 flex flex-col items-center justify-center transition-all ${status.color} ${
+                          draggingTable?.id === table.id ? 'opacity-50 scale-95' : 'hover:scale-105'
+                        }`}
+                      >
+                        <GripVertical className="h-3 w-3 absolute top-1 right-1 text-zinc-500" />
+                        <span className="text-xl font-bold">{table.name?.replace('Masa ', '') || '?'}</span>
+                        <span className="text-xs opacity-70">{table.capacity} kişi</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Normal Mode - Grid layout */
+                <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                  {sectionTables.map(table => {
+                    const status = TABLE_STATUS[table.status] || TABLE_STATUS.empty;
+                    return (
+                      <button
+                        key={table.id}
+                        onClick={() => handleTableSelect(table)}
+                        className={`aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center transition-all hover:scale-105 ${status.color}`}
+                      >
+                        <span className="text-2xl font-bold">{table.name?.replace('Masa ', '') || '?'}</span>
+                        <span className="text-xs opacity-70 mt-1">{table.capacity} kişi</span>
+                        {table.current_order && (
+                          <span className="text-sm font-bold mt-1 text-orange-400">
+                            {formatCurrency(table.current_order.total || 0)}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Status Legend */}
               <div className="flex justify-center gap-6 mt-6 pt-4 border-t border-zinc-800">
