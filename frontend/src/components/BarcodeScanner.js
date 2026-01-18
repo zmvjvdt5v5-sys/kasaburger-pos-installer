@@ -218,3 +218,79 @@ export default function BarcodeScanner({ open, onClose, onScan, title = "Barkod/
     </Dialog>
   );
 }
+
+// Quick scan button component
+export function BarcodeScanButton({ onScan, className = '' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { ScanLine } = require('lucide-react');
+  const { Button } = require('./ui/button');
+
+  const handleScan = (code) => {
+    onScan?.(code);
+    setIsOpen(false);
+  };
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsOpen(true)}
+        className={className}
+        title="Barkod Tara"
+      >
+        <ScanLine className="h-5 w-5" />
+      </Button>
+      
+      <BarcodeScanner
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        onScan={handleScan}
+      />
+    </>
+  );
+}
+
+// Keyboard barcode listener hook
+export function useBarcodeListener(onScan, options = {}) {
+  const { enabled = true, minLength = 4, timeout = 100 } = options;
+  const bufferRef = useRef('');
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const handleKeyDown = (e) => {
+      // Ignore if typing in input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Clear timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Add character to buffer
+      if (e.key.length === 1) {
+        bufferRef.current += e.key;
+      } else if (e.key === 'Enter' && bufferRef.current.length >= minLength) {
+        // Barcode complete
+        onScan?.(bufferRef.current);
+        bufferRef.current = '';
+        return;
+      }
+
+      // Set timeout to clear buffer
+      timeoutRef.current = setTimeout(() => {
+        bufferRef.current = '';
+      }, timeout);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [enabled, minLength, timeout, onScan]);
+}
