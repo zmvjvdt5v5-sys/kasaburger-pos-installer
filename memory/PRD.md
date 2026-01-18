@@ -689,3 +689,49 @@ Merkez Sunucu (erp.kasaburger.net.tr)
 - `/app/frontend/src/App.js` - Route eklendi
 - `/app/frontend/src/components/Layout.js` - Sidebar linki eklendi
 
+
+---
+
+## Update: January 18, 2026 - Push Notifications & Barkod/QR Tarama
+
+### 🆕 Yeni Özellikler
+
+#### 1. Push Bildirimleri
+- **Service Worker:** `/public/sw.js` - Tarayıcı push bildirimleri
+- **React Hook:** `usePushNotifications` - Kolay entegrasyon
+- **Backend API:**
+  - `POST /api/push/subscribe` - Abonelik kaydet
+  - `POST /api/push/unsubscribe` - Abonelik iptal
+  - `POST /api/push/send` - Bildirim gönder (admin)
+- **Özellikler:**
+  - Yeni sipariş bildirimi
+  - Stok uyarısı bildirimi
+  - Teslimnt siparişi bildirimi
+  - Bildirime tıkla → ilgili sayfaya git
+
+#### 2. Barkod/QR Kod Tarama
+- **Bileşen:** `/components/BarcodeScanner.js`
+- **Kütüphane:** @zxing/browser, @zxing/library
+- **Desteklenen Formatlar:**
+  - QR Code
+  - EAN-13, EAN-8
+  - UPC-A, UPC-E
+  - Code 128, Code 39
+  - Data Matrix
+- **Backend API:**
+  - `POST /api/barcode/lookup` - Barkod ile ürün/hammadde ara
+  - `POST /api/barcode/assign` - Barkod ata
+  - `POST /api/barcode/stock-update` - Barkod ile hızlı stok güncelle
+
+#### Kullanım Yerleri
+- **Hammaddeler sayfası:** "Barkod Tara" butonu
+  - Hammadde barkodunu tara
+  - Hızlı stok girişi/çıkışı yap
+- **Ayarlar > Bildirimler:** Push Bildirimleri açma/kapama
+
+### Dosyalar
+- `/app/frontend/src/components/BarcodeScanner.js`
+- `/app/frontend/src/components/PushNotifications.js`
+- `/app/frontend/public/sw.js`
+- Backend: `/app/backend/server.py` (API endpoints eklendi)
+
