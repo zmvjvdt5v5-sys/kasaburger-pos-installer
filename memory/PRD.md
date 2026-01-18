@@ -790,13 +790,63 @@ POS Raporları sayfasında delivery platform detayları eklendi:
 - **Bayi:** MEKGRUP / 1234
 - **InPOS Varsayılan:** IP: 192.168.1.100, Port: 59000
 
-### Sonraki Görevler (P1)
-- [ ] Delivery platform API entegrasyonları (API anahtarları gerekli)
-
-### Gelecek Görevler (P2)
-- [ ] Push notifications
+### Sonraki Görevler (Backlog)
+- [ ] Push notifications (Firebase)
 - [ ] Barkod/QR kod entegrasyonu
 - [ ] Çevrimdışı mod (Electron)
+- [ ] Platform API anahtarları ile canlı test
+
+---
+
+## Update: January 18, 2026 - Delivery Platform API Entegrasyonları
+
+### ✅ Tamamlanan Özellikler
+
+#### Delivery Platform API Client'ları
+Tüm Türkiye yemek platformları için API client'ları oluşturuldu.
+
+**Desteklenen Platformlar:**
+- **Yemeksepeti:** Sipariş alma, kabul/red, durum güncelleme
+- **Getir Yemek:** Sipariş alma, kabul/red, hazırlanıyor/hazır durumları
+- **Trendyol Yemek:** Sipariş alma, durum güncelleme
+- **Migros Yemek:** Sipariş alma, kabul
+
+**Backend API'ler:**
+- `GET /api/delivery/platforms` - Platform listesi
+- `GET /api/delivery/platforms/{platform}` - Platform detay
+- `POST /api/delivery/platforms` - Platform ayarla
+- `POST /api/delivery/platforms/{platform}/test` - Bağlantı testi
+- `GET /api/delivery/orders` - Sipariş listesi
+- `GET /api/delivery/orders/live` - Canlı siparişler
+- `PUT /api/delivery/orders/{id}/accept` - Siparişi kabul et
+- `PUT /api/delivery/orders/{id}/reject` - Siparişi reddet
+- `PUT /api/delivery/orders/{id}/status` - Durum güncelle
+- `GET /api/delivery/reports/summary` - Rapor
+
+**Webhook Endpoints:**
+- `POST /api/delivery/webhook/yemeksepeti`
+- `POST /api/delivery/webhook/getir`
+- `POST /api/delivery/webhook/trendyol`
+- `POST /api/delivery/webhook/migros`
+
+**Özellikler:**
+- Otomatik sipariş kabul seçeneği
+- Varsayılan hazırlık süresi
+- Platform bazlı raporlama
+- Sipariş durumu senkronizasyonu
+
+### Dosyalar
+- `/app/backend/services/delivery_clients.py` - Platform API client'ları
+- `/app/backend/routers/delivery.py` - Güncellenmiş router
+
+### Kullanım
+1. Admin panelinden platform ayarlarını yapın
+2. API Key, Restaurant ID vb. girin
+3. Webhook URL'lerini platformlara tanımlayın:
+   - `https://yourapp.com/api/delivery/webhook/yemeksepeti`
+   - `https://yourapp.com/api/delivery/webhook/getir`
+   - vb.
+4. "Test" butonu ile bağlantıyı doğrulayın
 
 ---
 
