@@ -1065,6 +1065,54 @@ export default function POSMain() {
                     );
                   })}
                 </div>
+              ) : showMerge ? (
+                /* Merge Mode - Select tables to merge */
+                <div className="space-y-4">
+                  <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 text-center">
+                    <p className="text-cyan-400 text-sm">
+                      Birleştirmek istediğiniz masaları seçin. İlk seçilen ana masa olur.
+                    </p>
+                    {selectedMergeTables.length >= 2 && (
+                      <Button
+                        size="sm"
+                        className="mt-2 bg-cyan-600 hover:bg-cyan-700"
+                        onClick={handleMergeTables}
+                      >
+                        <Merge className="h-4 w-4 mr-1" />
+                        {selectedMergeTables.length} Masayı Birleştir
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                    {sectionTables.map(table => {
+                      const status = TABLE_STATUS[table.status] || TABLE_STATUS.empty;
+                      const isSelected = selectedMergeTables.find(t => t.id === table.id);
+                      const selectionIndex = selectedMergeTables.findIndex(t => t.id === table.id);
+                      return (
+                        <button
+                          key={table.id}
+                          onClick={() => toggleTableForMerge(table)}
+                          className={`aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center transition-all hover:scale-105 relative ${
+                            isSelected 
+                              ? 'border-cyan-500 bg-cyan-500/20 ring-2 ring-cyan-500' 
+                              : status.color
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-xs font-bold">
+                              {selectionIndex + 1}
+                            </div>
+                          )}
+                          <span className="text-2xl font-bold">{table.name?.replace('Masa ', '') || '?'}</span>
+                          <span className="text-xs opacity-70 mt-1">{table.capacity} kişi</span>
+                          {table.status === 'merged' && (
+                            <Badge className="mt-1 text-xs bg-purple-500">Birleşik</Badge>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ) : (
                 /* Normal Mode - Grid layout */
                 <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
@@ -1074,13 +1122,37 @@ export default function POSMain() {
                       <button
                         key={table.id}
                         onClick={() => handleTableSelect(table)}
-                        className={`aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center transition-all hover:scale-105 ${status.color}`}
+                        className={`aspect-square rounded-xl border-2 p-3 flex flex-col items-center justify-center transition-all hover:scale-105 ${status.color} relative`}
                       >
+                        {/* Birleşik masa ikonu */}
+                        {table.status === 'merged' && (
+                          <div className="absolute top-1 right-1">
+                            <Merge className="h-3 w-3 text-purple-400" />
+                          </div>
+                        )}
+                        {/* Ayır butonu */}
+                        {table.merged_tables?.length > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSplitTable(table.id);
+                            }}
+                            className="absolute top-1 left-1 p-1 rounded bg-red-500/80 hover:bg-red-500"
+                            title="Masaları Ayır"
+                          >
+                            <Split className="h-3 w-3" />
+                          </button>
+                        )}
                         <span className="text-2xl font-bold">{table.name?.replace('Masa ', '') || '?'}</span>
                         <span className="text-xs opacity-70 mt-1">{table.capacity} kişi</span>
                         {table.current_order && (
                           <span className="text-sm font-bold mt-1 text-orange-400">
                             {formatCurrency(table.current_order.total || 0)}
+                          </span>
+                        )}
+                        {table.merged_tables?.length > 0 && (
+                          <span className="text-xs text-purple-400 mt-1">
+                            +{table.merged_tables.length} masa
                           </span>
                         )}
                       </button>
