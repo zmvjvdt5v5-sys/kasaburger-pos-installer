@@ -899,7 +899,7 @@ export default function POSMain() {
 
       {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
           <DialogHeader>
             <DialogTitle>Ödeme Al</DialogTitle>
           </DialogHeader>
@@ -919,20 +919,44 @@ export default function POSMain() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              {PAYMENT_METHODS.map(method => {
-                const Icon = method.icon;
-                return (
-                  <Button
-                    key={method.id}
-                    onClick={() => handlePayment(method.id)}
-                    className={`h-16 ${method.color}`}
-                  >
-                    <Icon className="h-5 w-5 mr-2" />
-                    {method.label}
-                  </Button>
-                );
-              })}
+            {/* Normal Ödeme Yöntemleri */}
+            <div>
+              <p className="text-sm text-zinc-400 mb-2">Ödeme Yöntemi</p>
+              <div className="grid grid-cols-2 gap-2">
+                {PAYMENT_METHODS.map(method => {
+                  const Icon = method.icon;
+                  return (
+                    <Button
+                      key={method.id}
+                      onClick={() => handlePayment(method.id)}
+                      className={`h-14 ${method.color}`}
+                    >
+                      <Icon className="h-5 w-5 mr-2" />
+                      {method.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Platform Online Ödemeleri */}
+            <div>
+              <p className="text-sm text-zinc-400 mb-2">Platform Online Ödemeleri</p>
+              <div className="grid grid-cols-2 gap-2">
+                {PLATFORM_PAYMENTS.map(method => {
+                  const Icon = method.icon;
+                  return (
+                    <Button
+                      key={method.id}
+                      onClick={() => handlePayment(method.id)}
+                      className={`h-14 ${method.color}`}
+                    >
+                      <Icon className="h-4 w-4 mr-2" />
+                      {method.label}
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </DialogContent>
