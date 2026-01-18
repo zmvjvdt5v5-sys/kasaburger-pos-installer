@@ -8,46 +8,115 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Backend:** FastAPI (Python)
 - **Database:** MongoDB
 - **Auth:** JWT (24 saat token)
-
-
-## Update: January 18, 2026 - Teslimat Platform Entegrasyonları Konfigürasyonu
-
-### ✅ Yeni Frontend Sayfası: Platform Entegrasyonları
-
-Admin paneline teslimat platformları (Yemeksepeti, Getir, Trendyol, Migros) için API konfigürasyon sayfası eklendi.
-
-**Yeni Sayfa:**
-- `/delivery-settings` - Platform Entegrasyonları sayfası
-- Sidebar'da "Platform Entegrasyonları" linki (Plug ikonu)
-
-**Özellikler:**
-- ✅ 4 Platform Tab'ı (Yemeksepeti, Getir Yemek, Trendyol Yemek, Migros Yemek)
-- ✅ Platform bazlı API kimlik bilgileri girişi (API Key, API Secret, Restaurant ID, Supplier ID, Store ID)
-- ✅ Aktif/Pasif switch ile platform etkinleştirme
-- ✅ Webhook URL otomatik oluşturma ve kopyalama
-- ✅ Otomatik Kabul ayarı
-- ✅ Varsayılan Hazırlık Süresi ayarı
-- ✅ Bağlantı test butonu
-- ✅ Platform durumu kartları (Aktif/Yapılandırılmamış)
-
-**Backend API'ler (Mevcut - delivery.py):**
-- `GET /api/delivery/platforms` - Tüm platform ayarlarını getir
-- `GET /api/delivery/platforms/{platform}` - Tek platform ayarı
-- `POST /api/delivery/platforms` - Platform ayarı kaydet/güncelle
-- `POST /api/delivery/platforms/{platform}/test` - Bağlantı testi
-
-**Test Sonuçları:**
-- Backend: 100% (15/15 test başarılı)
-- Frontend: 100% (Tüm UI akışları çalışıyor)
-- Test dosyası: `/app/tests/test_delivery_platforms.py`
+- **Desktop:** Electron.js (Windows/Mac/Linux)
 
 ---
 
-## Update: January 18, 2026 - POS Teslimat Entegrasyonu
+## Update: January 18, 2026 - Kapsamlı Güncellemeler
 
-### ✅ POS'a Teslimat Siparişleri Paneli Eklendi
+### ✅ Electron Desktop Uygulaması (Finalize)
 
-POS (Adisyon) sistemine teslimat platformlarından gelen siparişleri yönetmek için entegre panel eklendi.
+Şubeler için kurulabilir masaüstü uygulaması tamamlandı.
+
+**Dosyalar:**
+- `/app/electron/package.json` - Electron builder yapılandırması
+- `/app/electron/main.js` - Ana pencere, menü, tray, auto-update
+- `/app/electron/preload.js` - IPC köprüsü
+- `/app/electron/README.md` - Kurulum ve kullanım kılavuzu
+
+**Özellikler:**
+- ✅ Windows/Mac/Linux desteği (NSIS installer, DMG, AppImage)
+- ✅ Sistem tepsisinde çalışma (minimize to tray)
+- ✅ Otomatik güncelleme (electron-updater)
+- ✅ Klavye kısayolları (F1=POS, F2=Mutfak, F11=Tam Ekran)
+- ✅ Native bildirimler
+- ✅ Menü yapısı (Dosya, Görünüm, İşlemler, Yardım)
+- ✅ Z/X Raporu, Kasa Aç komutları
+
+**Derleme:**
+```bash
+cd electron
+npm install
+npm run build:win  # Windows
+npm run build:mac  # macOS  
+npm run build:linux # Linux
+```
+
+---
+
+### ✅ Push Notifications
+
+Web push bildirimleri sistemi güncellendi.
+
+**Dosyalar:**
+- `/app/frontend/src/components/PushNotifications.js` - Hook ve UI
+- `/app/frontend/public/sw.js` - Service Worker
+
+**Özellikler:**
+- ✅ VAPID key tabanlı abonelik
+- ✅ Yeni sipariş bildirimleri
+- ✅ Teslimat siparişi bildirimleri
+- ✅ Düşük stok uyarıları
+- ✅ POS header'da toggle butonu
+
+---
+
+### ✅ Barkod Tarama
+
+Kamera ve manuel barkod okuma sistemi.
+
+**Dosyalar:**
+- `/app/frontend/src/components/BarcodeScanner.js` - ZXing tabanlı tarayıcı
+
+**Özellikler:**
+- ✅ Kamera ile barkod/QR kod tarama
+- ✅ Manuel kod girişi
+- ✅ Çoklu kamera desteği (ön/arka)
+- ✅ POS header'da barkod butonu
+- ✅ Tarama sonrası otomatik ürün ekleme
+
+---
+
+### ✅ InPOS (ÖKC/GİB) Entegrasyonu
+
+GİB'e bağlı yazar kasa (Ödeme Kaydedici Cihaz) entegrasyonu.
+
+**Dosyalar:**
+- `/app/backend/routers/inpos.py` - Backend API
+- `/app/frontend/src/pages/pos/InPOSSettings.js` - Ayarlar sayfası
+
+**Özellikler:**
+- ✅ InPOS M530 cihaz bağlantısı (TCP/IP)
+- ✅ Otomatik fiş yazdırma
+- ✅ Z Raporu alma
+- ✅ X Raporu alma
+- ✅ Ödeme tipi eşleştirmeleri (Nakit, Kart, Sodexo, vb.)
+- ✅ Bağlantı testi
+
+**Ödeme Tipleri:**
+| Tip | InPOS Kodu |
+|-----|------------|
+| Nakit | 1 |
+| Kredi Kartı | 2 |
+| Sodexo | 3 |
+| Multinet | 4 |
+| Ticket | 5 |
+| Setcard | 6 |
+| Online | 7 |
+
+---
+
+### ✅ Dashboard Platform Durumu
+
+Dashboard'a teslimat platformlarının canlı durumu eklendi.
+
+**Özellikler:**
+- ✅ 4 platform kartı (Yemeksepeti, Getir, Trendyol, Migros)
+- ✅ Aktif/Pasif durum göstergesi
+- ✅ Renk kodlu görünüm
+- ✅ "Platform Ayarlarını Yapılandır" linki
+
+---
 
 **Yeni Özellikler:**
 - ✅ **Teslimat Siparişleri Paneli** - POS masa görünümünün sağ tarafında
