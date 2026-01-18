@@ -216,6 +216,13 @@ export default function POSReports() {
               </div>
               <span className="font-bold text-blue-400">{formatCurrency(stats.cardSales)}</span>
             </div>
+            <div className="flex items-center justify-between p-3 bg-cyan-500/10 rounded-lg">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5 text-cyan-400" />
+                <span>Online Ödeme</span>
+              </div>
+              <span className="font-bold text-cyan-400">{formatCurrency(stats.onlineSales || 0)}</span>
+            </div>
             <div className="flex items-center justify-between p-3 bg-purple-500/10 rounded-lg">
               <div className="flex items-center gap-3">
                 <Package className="h-5 w-5 text-purple-400" />
