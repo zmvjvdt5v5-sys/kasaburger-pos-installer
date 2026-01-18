@@ -186,7 +186,7 @@ async def admin_delete_user(user_id: str, current_user: dict = Depends(get_curre
 @app.get("/api/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return {"totalProducts": 0, "totalOrders": 0, "totalRevenue": 0, "totalDealers": 0}
     
     products = await db.products.count_documents({})
