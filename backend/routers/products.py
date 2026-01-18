@@ -25,13 +25,13 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
     product_doc.pop("_id", None)
     return ProductResponse(**product_doc)
 
-@router.get("", response_model=List[ProductResponse])
+@router.get("")
 async def get_products(current_user: dict = Depends(get_current_user)):
     db = get_db()
     if db is None:
         return []
     products = await db.products.find({}, {"_id": 0}).to_list(1000)
-    return [ProductResponse(**p) for p in products]
+    return products
 
 @router.get("/{product_id}", response_model=ProductResponse)
 async def get_product(product_id: str, current_user: dict = Depends(get_current_user)):
