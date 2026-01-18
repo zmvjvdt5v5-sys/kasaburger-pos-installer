@@ -1332,3 +1332,111 @@ yarn electron-pack   # Dizine paketleme
 ### Dosyalar
 - `/app/frontend/src/pages/pos/POSMain.js` - Güncellenmiş (handlePayment eklendi)
 - `/app/backend/server.py` - ObjectId fix, order number generator
+
+---
+
+## Update: January 18, 2026 - Birleşik Mutfak Sistemi
+
+### ✅ BİRLEŞİK MUTFAK EKRANI (Yeni Özellik)
+
+Tüm sipariş kaynaklarını (POS, Kiosk, Online Platformlar) tek ekranda birleştiren profesyonel mutfak yönetim sistemi.
+
+**Dosyalar:**
+- `/app/backend/routers/kitchen.py` - Backend API
+- `/app/frontend/src/pages/kitchen/UnifiedKitchen.js` - Birleşik mutfak ekranı
+- `/app/frontend/src/pages/kitchen/SalonDisplay.js` - Müşteri bekleme ekranı
+- `/app/frontend/src/pages/kitchen/ReceiptViewer.js` - Fiş görüntüleme/indirme
+
+**Özellikler:**
+- ✅ **Tüm siparişler tek ekranda:** POS, Kiosk, Online platformlar
+- ✅ **Sipariş Kodları:**
+  - `MASA-X` → Salon siparişleri (masa numarası)
+  - `PKT-XXXX` → Paket/Kiosk siparişleri (günlük sıfırlanır)
+  - `ONLNPKT-XXXX` → Online platform siparişleri (günlük sıfırlanır)
+- ✅ **Renk Kodlu Kartlar:**
+  - 🟠 Turuncu = Masa siparişi
+  - 🟢 Yeşil = Paket/Kiosk
+  - 🟣 Mor = Kiosk
+  - 🔴 Pembe = Online platform
+- ✅ **Dokunmatik Ekran Desteği:** Büyük butonlar, kolay tıklanabilir kartlar
+- ✅ **Sesli Bildirimler:** Yeni sipariş geldiğinde ses çalar
+- ✅ **Durum Filtreleme:** Bekleyen / Hazırlanıyor / Hazır / Tümü
+- ✅ **Süre Gösterimi:** Sipariş bekleme süresi, kritik siparişlerde kırmızı uyarı
+- ✅ **Tam Ekran Modu:** F11 veya butona tıklayarak
+- ✅ **Otomatik Yenileme:** 5 saniyede bir güncelleme
+
+### ✅ SALON BEKLEME EKRANI
+
+Müşterilerin hazır siparişlerini görebileceği TV ekranı.
+
+**URL:** `/salon-ekran` (auth gerektirmez)
+
+**Özellikler:**
+- ✅ Hazır sipariş numaraları büyük font ile gösterilir
+- ✅ Sesli bildirim (yeni hazır sipariş olduğunda)
+- ✅ Canlı saat ve tarih
+- ✅ Renk kodlu numaralar (kaynak tipine göre)
+- ✅ 3 saniyede bir otomatik güncelleme
+- ✅ Full HD TV'ler için optimize edilmiş
+
+### ✅ FİŞ/RECEIPT SİSTEMİ
+
+**Özellikler:**
+- ✅ Müşteri fişi görüntüleme
+- ✅ Sıra numarası büyük font ile
+- ✅ PNG olarak indirme (Screenshot)
+- ✅ PDF olarak yazdırma
+- ✅ Mobil paylaşım desteği (Web Share API)
+- ✅ Termal yazıcı desteği (ESC/POS, CP857 Türkçe)
+
+### ✅ API Endpoint'leri
+
+| Endpoint | Açıklama |
+|----------|----------|
+| `GET /api/kitchen/orders` | Tüm mutfak siparişlerini getir |
+| `GET /api/kitchen/orders/ready` | Hazır siparişleri getir |
+| `GET /api/kitchen/salon-display` | Salon ekranı için public API |
+| `GET /api/kitchen/stats` | Mutfak istatistikleri |
+| `PUT /api/kitchen/orders/{id}/status` | Sipariş durumu güncelle |
+| `PUT /api/kitchen/orders/{id}/preparing` | Hazırlanıyor olarak işaretle |
+| `PUT /api/kitchen/orders/{id}/ready` | Hazır olarak işaretle |
+| `PUT /api/kitchen/orders/{id}/served` | Teslim edildi olarak işaretle |
+| `POST /api/kitchen/orders/{id}/assign-queue` | Sıra numarası ata |
+| `POST /api/kitchen/print` | Termal yazıcıya yazdır |
+| `GET /api/kitchen/receipt/{id}` | Fiş verilerini getir |
+
+### ✅ Sipariş Durumu Akışı
+
+```
+YENİ (pending) → HAZIRLANIYOR (preparing) → HAZIR (ready) → TESLİM EDİLDİ (served)
+```
+
+### ✅ Günlük Sıfırlanan Sıra Numarası
+
+Her gün saat 00:00'da counter sıfırlanır:
+- PKT-0001, PKT-0002, ... (Paket siparişler)
+- ONLNPKT-0001, ONLNPKT-0002, ... (Online siparişler)
+
+**Collection:** `queue_counters`
+
+---
+
+## Routes Özeti
+
+| Route | Sayfa | Erişim |
+|-------|-------|--------|
+| `/mutfak` | Birleşik Mutfak Ekranı | Auth gerekli |
+| `/salon-ekran` | Müşteri Bekleme Ekranı | Public |
+| `/fis?order_id=xxx` | Fiş Görüntüleme | Public |
+| `/dealer-portal/mutfak` | Bayi Mutfak Ekranı | Dealer Auth |
+
+---
+
+## Test Sonuçları
+
+- ✅ Queue number sistemi çalışıyor (PKT-0001, MASA-1, ONLNPKT-XXXX)
+- ✅ Birleşik mutfak ekranı tüm siparişleri gösteriyor
+- ✅ Salon ekranı hazır siparişleri gösteriyor
+- ✅ Durum güncelleme (Hazırla/Hazır/Teslim) çalışıyor
+- ✅ Filtreleme (Bekleyen/Hazırlanıyor/Hazır/Tümü) çalışıyor
+- ✅ Sesli bildirimler çalışıyor
