@@ -699,6 +699,71 @@ const Materials = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Barkod Tarayıcı */}
+      <BarcodeScanner 
+        open={scannerOpen} 
+        onClose={() => setScannerOpen(false)}
+        onScan={handleBarcodeScan}
+        title="Hammadde Barkodu Tara"
+      />
+
+      {/* Hızlı Stok Güncelleme Dialog */}
+      <Dialog open={quickStockOpen} onOpenChange={setQuickStockOpen}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="font-heading flex items-center gap-2">
+              <QrCode className="h-5 w-5 text-primary" />
+              Hızlı Stok Güncelleme
+            </DialogTitle>
+          </DialogHeader>
+          {scannedMaterial && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground">Hammadde</p>
+                <p className="font-bold text-lg">{scannedMaterial.name}</p>
+                <p className="text-sm">Mevcut Stok: <span className="font-mono font-bold">{scannedMaterial.stock_quantity || scannedMaterial.stock || 0} {scannedMaterial.unit}</span></p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>İşlem Tipi</Label>
+                <Select value={quickStockOp} onValueChange={setQuickStockOp}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="add">Stok Girişi (+)</SelectItem>
+                    <SelectItem value="subtract">Stok Çıkışı (-)</SelectItem>
+                    <SelectItem value="set">Stok Ayarla (=)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Miktar ({scannedMaterial.unit})</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={quickStockQty}
+                  onChange={(e) => setQuickStockQty(e.target.value)}
+                  placeholder="0"
+                  className="bg-input/50 text-2xl font-mono text-center"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setQuickStockOpen(false)}>
+                  İptal
+                </Button>
+                <Button className="flex-1" onClick={handleQuickStockUpdate}>
+                  Güncelle
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
