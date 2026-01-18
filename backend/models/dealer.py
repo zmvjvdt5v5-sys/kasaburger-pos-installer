@@ -23,14 +23,15 @@ class DealerResponse(BaseModel):
     id: str
     code: str
     name: str
-    email: str
-    phone: str
-    address: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
     tax_number: Optional[str] = None
-    credit_limit: float
-    current_balance: float = 0
-    status: str = "active"
-    payment_term_days: int = 30
+    credit_limit: Optional[float] = 0
+    current_balance: Optional[float] = 0
+    balance: Optional[float] = 0
+    status: Optional[str] = "active"
+    payment_term_days: Optional[int] = 30
     created_at: Optional[str] = None
 
 class DealerLogin(BaseModel):
