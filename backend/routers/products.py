@@ -28,7 +28,7 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
 @router.get("")
 async def get_products(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 500,
     category: Optional[str] = None,
     search: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
@@ -47,8 +47,8 @@ async def get_products(
             {"sku": {"$regex": search, "$options": "i"}}
         ]
     
-    # Sayfalama ile ürünleri getir (max 100)
-    limit = min(limit, 100)  # Max 100 limit
+    # Sayfalama ile ürünleri getir (max 500)
+    limit = min(limit, 500)  # Max 500 limit
     products = await db.products.find(query, {"_id": 0}).sort("name", 1).skip(skip).limit(limit).to_list(limit)
     return products
 
