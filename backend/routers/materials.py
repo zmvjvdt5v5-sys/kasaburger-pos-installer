@@ -13,7 +13,7 @@ router = APIRouter(prefix="/materials", tags=["Materials"])
 @router.post("", response_model=MaterialResponse)
 async def create_material(material: MaterialCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     material_doc = {
@@ -28,7 +28,7 @@ async def create_material(material: MaterialCreate, current_user: dict = Depends
 @router.get("", response_model=List[MaterialResponse])
 async def get_materials(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     materials = await db.materials.find({}, {"_id": 0}).to_list(1000)
     return [MaterialResponse(**m) for m in materials]
@@ -36,7 +36,7 @@ async def get_materials(current_user: dict = Depends(get_current_user)):
 @router.put("/{material_id}", response_model=MaterialResponse)
 async def update_material(material_id: str, material: MaterialCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.materials.update_one({"id": material_id}, {"$set": material.model_dump()})
@@ -46,7 +46,7 @@ async def update_material(material_id: str, material: MaterialCreate, current_us
 @router.delete("/{material_id}")
 async def delete_material(material_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     result = await db.materials.delete_one({"id": material_id})

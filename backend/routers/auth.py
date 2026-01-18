@@ -28,7 +28,7 @@ def generate_captcha() -> dict:
 @router.post("/register", response_model=TokenResponse)
 async def register(user_data: UserCreate):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     existing = await db.users.find_one({"email": user_data.email})
@@ -64,7 +64,7 @@ async def register(user_data: UserCreate):
 async def get_captcha():
     db = get_db()
     captcha = generate_captcha()
-    if db:
+    if db is not None:
         await db.captchas.insert_one({
             "id": captcha["id"],
             "answer": captcha["answer"],
@@ -75,7 +75,7 @@ async def get_captcha():
 @router.post("/login")
 async def login(credentials: UserLogin, request: Request, captcha_id: Optional[str] = None):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     user = await db.users.find_one({"email": credentials.email})
@@ -110,7 +110,7 @@ async def login(credentials: UserLogin, request: Request, captcha_id: Optional[s
 @router.post("/verify-2fa")
 async def verify_2fa(data: TwoFactorVerify, request: Request):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     code_doc = await db.two_factor_codes.find_one({
@@ -144,7 +144,7 @@ async def verify_2fa(data: TwoFactorVerify, request: Request):
 @router.post("/toggle-2fa")
 async def toggle_2fa(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     user = await db.users.find_one({"id": current_user["user_id"]})
@@ -160,7 +160,7 @@ async def toggle_2fa(current_user: dict = Depends(get_current_user)):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return UserResponse(
             id=current_user["user_id"],
             email=current_user["email"],
@@ -180,7 +180,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 @router.put("/change-password")
 async def change_password(req: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     user = await db.users.find_one({"id": current_user["user_id"]})

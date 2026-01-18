@@ -32,7 +32,7 @@ class DeliveryOrder(BaseModel):
 @router.get("/platforms")
 async def get_delivery_platforms(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     configs = await db.delivery_platforms.find({}, {"_id": 0}).to_list(10)
     return configs
@@ -40,7 +40,7 @@ async def get_delivery_platforms(current_user: dict = Depends(get_current_user))
 @router.post("/platforms")
 async def save_delivery_platform(config: DeliveryPlatformConfig, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.delivery_platforms.update_one(
@@ -54,7 +54,7 @@ async def save_delivery_platform(config: DeliveryPlatformConfig, current_user: d
 @router.get("/orders")
 async def get_delivery_orders(platform: Optional[str] = None, status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     query = {}
@@ -69,7 +69,7 @@ async def get_delivery_orders(platform: Optional[str] = None, status: Optional[s
 @router.post("/orders")
 async def create_delivery_order(order: DeliveryOrder, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     order_count = await db.delivery_orders.count_documents({})
@@ -87,7 +87,7 @@ async def create_delivery_order(order: DeliveryOrder, current_user: dict = Depen
 @router.put("/orders/{order_id}/status")
 async def update_delivery_order_status(order_id: str, status: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.delivery_orders.update_one(
@@ -100,7 +100,7 @@ async def update_delivery_order_status(order_id: str, status: str, current_user:
 @router.post("/webhook/yemeksepeti")
 async def yemeksepeti_webhook(request: Request):
     db = get_db()
-    if not db:
+    if db is None:
         return {"status": "ok"}
     
     try:
@@ -129,7 +129,7 @@ async def yemeksepeti_webhook(request: Request):
 @router.post("/webhook/getir")
 async def getir_webhook(request: Request):
     db = get_db()
-    if not db:
+    if db is None:
         return {"status": "ok"}
     
     try:

@@ -16,7 +16,7 @@ router = APIRouter(prefix="/inpos", tags=["InPOS"])
 @router.get("/config")
 async def get_inpos_config(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return {
             "enabled": False,
             "ip_address": "192.168.1.100",
@@ -47,7 +47,7 @@ async def get_inpos_config(current_user: dict = Depends(get_current_user)):
 @router.post("/config")
 async def save_inpos_config(config: InPOSConfig, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     config_doc = {
@@ -89,7 +89,7 @@ async def test_inpos_connection(current_user: dict = Depends(get_current_user)):
 @router.post("/payment")
 async def process_inpos_payment(request: InPOSPaymentRequest, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
@@ -181,7 +181,7 @@ async def get_inpos_status(current_user: dict = Depends(get_current_user)):
         connected = False
     
     last_transaction = None
-    if db:
+    if db is not None:
         last_transaction = await db.pos_payments.find_one(
             {"inpos_transaction_id": {"$exists": True}},
             {"_id": 0, "created_at": 1, "amount": 1, "method": 1},
@@ -199,7 +199,7 @@ async def get_inpos_status(current_user: dict = Depends(get_current_user)):
 @router.get("/z-report")
 async def get_inpos_z_report(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})

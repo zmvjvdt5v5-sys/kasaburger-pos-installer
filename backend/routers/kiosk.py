@@ -28,7 +28,7 @@ class KioskOrder(BaseModel):
 @router.get("/products")
 async def get_kiosk_products():
     db = get_db()
-    if not db:
+    if db is None:
         return []
     products = await db.kiosk_products.find({"available": True}, {"_id": 0}).to_list(100)
     return products
@@ -36,7 +36,7 @@ async def get_kiosk_products():
 @router.post("/products")
 async def create_kiosk_product(product: KioskProduct, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     product_doc = {
@@ -51,7 +51,7 @@ async def create_kiosk_product(product: KioskProduct, current_user: dict = Depen
 @router.put("/products/{product_id}")
 async def update_kiosk_product(product_id: str, product: KioskProduct, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.kiosk_products.update_one({"id": product_id}, {"$set": product.model_dump()})
@@ -61,7 +61,7 @@ async def update_kiosk_product(product_id: str, product: KioskProduct, current_u
 @router.delete("/products/{product_id}")
 async def delete_kiosk_product(product_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.kiosk_products.delete_one({"id": product_id})
@@ -70,7 +70,7 @@ async def delete_kiosk_product(product_id: str, current_user: dict = Depends(get
 @router.post("/orders")
 async def create_kiosk_order(order: KioskOrder):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     order_count = await db.kiosk_orders.count_documents({})
@@ -88,7 +88,7 @@ async def create_kiosk_order(order: KioskOrder):
 @router.get("/orders")
 async def get_kiosk_orders(status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     query = {}
@@ -101,7 +101,7 @@ async def get_kiosk_orders(status: Optional[str] = None, current_user: dict = De
 @router.put("/orders/{order_id}/status")
 async def update_kiosk_order_status(order_id: str, status: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.kiosk_orders.update_one(

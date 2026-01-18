@@ -13,7 +13,7 @@ router = APIRouter(prefix="/dealers", tags=["Dealers"])
 @router.post("", response_model=DealerResponse)
 async def create_dealer(dealer: DealerCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     existing = await db.dealers.find_one({"code": dealer.code})
@@ -36,7 +36,7 @@ async def create_dealer(dealer: DealerCreate, current_user: dict = Depends(get_c
 @router.get("", response_model=List[DealerResponse])
 async def get_dealers(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     dealers = await db.dealers.find({}, {"_id": 0, "password": 0}).to_list(1000)
     return [DealerResponse(**d) for d in dealers]
@@ -44,7 +44,7 @@ async def get_dealers(current_user: dict = Depends(get_current_user)):
 @router.get("/{dealer_id}", response_model=DealerResponse)
 async def get_dealer(dealer_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=404, detail="Bayi bulunamadı")
     dealer = await db.dealers.find_one({"id": dealer_id}, {"_id": 0, "password": 0})
     if not dealer:
@@ -54,7 +54,7 @@ async def get_dealer(dealer_id: str, current_user: dict = Depends(get_current_us
 @router.put("/{dealer_id}", response_model=DealerResponse)
 async def update_dealer(dealer_id: str, dealer: DealerCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     update_data = dealer.model_dump()
@@ -68,7 +68,7 @@ async def update_dealer(dealer_id: str, dealer: DealerCreate, current_user: dict
 @router.delete("/{dealer_id}")
 async def delete_dealer(dealer_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     result = await db.dealers.delete_one({"id": dealer_id})
@@ -80,7 +80,7 @@ async def delete_dealer(dealer_id: str, current_user: dict = Depends(get_current
 @router.post("/login")
 async def dealer_login(credentials: DealerLogin):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     dealer = await db.dealers.find_one({"code": credentials.code})
@@ -109,7 +109,7 @@ async def dealer_login(credentials: DealerLogin):
 @router.get("/me/info")
 async def get_dealer_info(current_dealer: dict = Depends(get_current_dealer)):
     db = get_db()
-    if not db:
+    if db is None:
         return {"id": current_dealer.get("user_id"), "code": current_dealer.get("email"), "role": "dealer"}
     
     dealer = await db.dealers.find_one(

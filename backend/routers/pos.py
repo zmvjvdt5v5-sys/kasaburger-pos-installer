@@ -21,7 +21,7 @@ router = APIRouter(prefix="/pos", tags=["POS"])
 @router.get("/tables")
 async def get_pos_tables(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     tables = await db.pos_tables.find({}, {"_id": 0}).to_list(100)
     return tables
@@ -29,7 +29,7 @@ async def get_pos_tables(current_user: dict = Depends(get_current_user)):
 @router.post("/tables")
 async def create_pos_table(table: POSTableCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     table_doc = {
@@ -48,7 +48,7 @@ async def create_pos_table(table: POSTableCreate, current_user: dict = Depends(g
 @router.put("/tables/{table_id}/status")
 async def update_table_status(table_id: str, status: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.pos_tables.update_one(
@@ -62,7 +62,7 @@ async def update_table_status(table_id: str, status: str, current_user: dict = D
 @router.get("/orders")
 async def get_pos_orders(status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     query = {}
@@ -75,7 +75,7 @@ async def get_pos_orders(status: Optional[str] = None, current_user: dict = Depe
 @router.post("/orders")
 async def create_pos_order(order: dict, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     order["id"] = str(uuid.uuid4())
@@ -99,7 +99,7 @@ async def create_pos_order(order: dict, current_user: dict = Depends(get_current
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.pos_orders.update_one(
@@ -111,7 +111,7 @@ async def update_order_status(order_id: str, status: str, current_user: dict = D
 @router.post("/orders/{order_id}/pay")
 async def pay_pos_order(order_id: str, payment: dict, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     order = await db.pos_orders.find_one({"id": order_id}, {"_id": 0})
@@ -148,7 +148,7 @@ async def pay_pos_order(order_id: str, payment: dict, current_user: dict = Depen
 @router.get("/kitchen")
 async def get_kitchen_orders(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     orders = await db.pos_orders.find(
@@ -162,7 +162,7 @@ async def get_kitchen_orders(current_user: dict = Depends(get_current_user)):
 @router.get("/reports/summary")
 async def get_pos_summary(range: str = "today", current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return {
             "totalSales": 0, "totalOrders": 0, "averageOrder": 0,
             "cashSales": 0, "cardSales": 0, "onlineSales": 0, "mealCardSales": 0,
@@ -248,7 +248,7 @@ async def get_pos_summary(range: str = "today", current_user: dict = Depends(get
 @router.get("/reports/top-products")
 async def get_top_products(range: str = "today", current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     # Basit implementasyon - gerçek aggregation için genişletilebilir

@@ -35,7 +35,7 @@ class OrderResponse(BaseModel):
 @router.post("", response_model=OrderResponse)
 async def create_order(order: OrderCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     total = sum(item.quantity * item.unit_price for item in order.items)
@@ -60,7 +60,7 @@ async def create_order(order: OrderCreate, current_user: dict = Depends(get_curr
 @router.get("", response_model=List[OrderResponse])
 async def get_orders(status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     query = {}
@@ -73,7 +73,7 @@ async def get_orders(status: Optional[str] = None, current_user: dict = Depends(
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(order_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
     
     order = await db.orders.find_one({"id": order_id}, {"_id": 0})
@@ -84,7 +84,7 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
 @router.put("/{order_id}/status")
 async def update_order_status(order_id: str, status: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.orders.update_one(
@@ -96,7 +96,7 @@ async def update_order_status(order_id: str, status: str, current_user: dict = D
 @router.delete("/{order_id}")
 async def delete_order(order_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     result = await db.orders.delete_one({"id": order_id})
@@ -108,7 +108,7 @@ async def delete_order(order_id: str, current_user: dict = Depends(get_current_u
 @router.post("/dealer", response_model=OrderResponse)
 async def create_dealer_order(order: OrderCreate, current_dealer: dict = Depends(get_current_dealer)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     dealer = await db.dealers.find_one(
@@ -139,7 +139,7 @@ async def create_dealer_order(order: OrderCreate, current_dealer: dict = Depends
 @router.get("/dealer/my-orders", response_model=List[OrderResponse])
 async def get_dealer_orders(current_dealer: dict = Depends(get_current_dealer)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     
     dealer = await db.dealers.find_one(

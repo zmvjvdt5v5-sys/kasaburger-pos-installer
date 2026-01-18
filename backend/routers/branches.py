@@ -32,7 +32,7 @@ class BranchResponse(BaseModel):
 @router.post("", response_model=BranchResponse)
 async def create_branch(branch: BranchCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     existing = await db.branches.find_one({"code": branch.code})
@@ -52,7 +52,7 @@ async def create_branch(branch: BranchCreate, current_user: dict = Depends(get_c
 @router.get("", response_model=List[BranchResponse])
 async def get_branches(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     branches = await db.branches.find({}, {"_id": 0}).to_list(100)
     return [BranchResponse(**b) for b in branches]
@@ -60,7 +60,7 @@ async def get_branches(current_user: dict = Depends(get_current_user)):
 @router.get("/{branch_id}", response_model=BranchResponse)
 async def get_branch(branch_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=404, detail="Şube bulunamadı")
     branch = await db.branches.find_one({"id": branch_id}, {"_id": 0})
     if not branch:
@@ -70,7 +70,7 @@ async def get_branch(branch_id: str, current_user: dict = Depends(get_current_us
 @router.put("/{branch_id}", response_model=BranchResponse)
 async def update_branch(branch_id: str, branch: BranchCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.branches.update_one({"id": branch_id}, {"$set": branch.model_dump()})
@@ -80,7 +80,7 @@ async def update_branch(branch_id: str, branch: BranchCreate, current_user: dict
 @router.delete("/{branch_id}")
 async def delete_branch(branch_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     result = await db.branches.delete_one({"id": branch_id})
@@ -92,7 +92,7 @@ async def delete_branch(branch_id: str, current_user: dict = Depends(get_current
 @router.get("/{branch_id}/reports/summary")
 async def get_branch_summary(branch_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return {"totalSales": 0, "totalOrders": 0, "avgOrder": 0}
     
     # Basit özet
