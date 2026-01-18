@@ -28,6 +28,10 @@ class TableCreate(BaseModel):
     position_y: Optional[int] = 0
     shape: Optional[str] = "square"  # square, round, rectangle
 
+class TablePositionUpdate(BaseModel):
+    position_x: int
+    position_y: int
+
 class OrderItemCreate(BaseModel):
     product_id: str
     product_name: str
