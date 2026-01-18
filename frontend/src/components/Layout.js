@@ -57,6 +57,8 @@ const dealerNavItems = [
   { path: '/dealer-portal/invoices', label: 'Faturalarım', icon: FileText },
   { path: '/dealer-portal/payments', label: 'Ödemelerim', icon: CreditCard },
   { path: '/dealer-portal/campaigns', label: 'Kampanyalar', icon: Megaphone },
+  { path: '/dealer-portal/delivery', label: 'Paket Servis', icon: Package },
+  { path: '/dealer-portal/delivery-panel', label: 'Canlı Siparişler', icon: Bell },
   { path: '/dealer-portal/reports', label: 'Raporlarım', icon: BarChart3 },
   { path: '/dealer-portal/settings', label: 'Hesap Ayarları', icon: Settings },
 ];
