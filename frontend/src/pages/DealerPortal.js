@@ -517,6 +517,17 @@ const DealerPortal = ({ initialTab = 'order' }) => {
                   {formatCurrency(dealer?.balance || 0)}
                 </p>
               </div>
+              {/* Help/Guide Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open('/bayi-rehber', '_blank')}
+                title="Kullanım Rehberi"
+                className="text-blue-400 hover:text-blue-300"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="hidden md:inline ml-1">Rehber</span>
+              </Button>
               {/* Password Change Dialog */}
               <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
                 <DialogTrigger asChild>
