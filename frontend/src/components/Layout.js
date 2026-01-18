@@ -33,20 +33,32 @@ const navItems = [
   { path: '/materials', label: 'Hammaddeler', icon: Boxes },
   { path: '/recipes', label: 'Reçeteler', icon: FlaskConical, adminOnly: true },
   { path: '/production', label: 'Üretim', icon: Factory },
-  { path: '/dealers', label: 'Bayiler', icon: Users },
+  { path: '/dealers', label: 'Bayiler', icon: Users, adminOnly: true },
   { path: '/orders', label: 'Siparişler', icon: ShoppingCart },
   { path: '/invoices', label: 'Faturalar', icon: FileText },
   { path: '/payments', label: 'Ödemeler', icon: CreditCard },
-  { path: '/accounting', label: 'Muhasebe', icon: Wallet },
+  { path: '/accounting', label: 'Muhasebe', icon: Wallet, adminOnly: true },
   { path: '/campaigns', label: 'Kampanyalar', icon: Megaphone },
-  { path: '/kiosk-admin', label: 'Kiosk Ürünleri', icon: Monitor },
+  { path: '/kiosk-admin', label: 'Kiosk Ürünleri', icon: Monitor, adminOnly: true },
   { path: '/kiosk-orders', label: 'Kiosk Siparişleri', icon: Bell },
   { path: '/delivery-orders', label: 'Paket Servis', icon: Package },
   { path: '/delivery-panel', label: 'Canlı Siparişler', icon: Bell },
   { path: '/branches', label: 'Şube Yönetimi', icon: Building2, adminOnly: true },
-  { path: '/branch-reports', label: 'Şube Raporları', icon: TrendingUp },
+  { path: '/branch-reports', label: 'Şube Raporları', icon: TrendingUp, adminOnly: true },
   { path: '/reports', label: 'Raporlar', icon: BarChart3 },
   { path: '/settings', label: 'Ayarlar', icon: Settings },
+];
+
+// Bayilerin görebileceği modüller
+const dealerNavItems = [
+  { path: '/dealer-portal', label: 'Ana Sayfa', icon: LayoutDashboard },
+  { path: '/dealer-portal/orders', label: 'Siparişlerim', icon: ShoppingCart },
+  { path: '/dealer-portal/products', label: 'Ürün Kataloğu', icon: Package },
+  { path: '/dealer-portal/invoices', label: 'Faturalarım', icon: FileText },
+  { path: '/dealer-portal/payments', label: 'Ödemelerim', icon: CreditCard },
+  { path: '/dealer-portal/campaigns', label: 'Kampanyalar', icon: Megaphone },
+  { path: '/dealer-portal/reports', label: 'Raporlarım', icon: BarChart3 },
+  { path: '/dealer-portal/settings', label: 'Hesap Ayarları', icon: Settings },
 ];
 
 const SUPER_ADMIN_EMAIL = 'admin@kasaburger.net.tr';
