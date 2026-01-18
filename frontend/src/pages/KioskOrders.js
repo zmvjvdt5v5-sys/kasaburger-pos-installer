@@ -191,8 +191,12 @@ const KioskOrders = ({ isDealer = false }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Kiosk Siparişleri</h1>
-          <p className="text-muted-foreground">Mobil ve kiosk siparişlerini takip edin</p>
+          <h1 className="text-3xl font-bold">
+            {isDealer ? 'Kiosk Siparişlerim' : 'Kiosk Siparişleri'}
+          </h1>
+          <p className="text-muted-foreground">
+            {isDealer ? 'Şubenize gelen kiosk siparişleri' : 'Mobil ve kiosk siparişlerini takip edin'}
+          </p>
         </div>
         <div className="flex items-center gap-4">
           {/* Sound Toggle */}
