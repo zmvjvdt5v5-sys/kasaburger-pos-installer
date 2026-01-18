@@ -26,7 +26,8 @@ import {
   Building2,
   TrendingUp,
   UtensilsCrossed,
-  Printer
+  Printer,
+  Plug
 } from 'lucide-react';
 
 const navItems = [
@@ -48,6 +49,7 @@ const navItems = [
   { path: '/kiosk-orders', label: 'Kiosk Siparişleri', icon: Bell },
   { path: '/delivery-orders', label: 'Paket Servis', icon: Package },
   { path: '/delivery-panel', label: 'Canlı Siparişler', icon: Bell },
+  { path: '/delivery-settings', label: 'Platform Entegrasyonları', icon: Plug, adminOnly: true },
   { path: '/branches', label: 'Şube Yönetimi', icon: Building2, adminOnly: true },
   { path: '/branch-reports', label: 'Şube Raporları', icon: TrendingUp, adminOnly: true },
   { path: '/reports', label: 'Raporlar', icon: BarChart3 },
