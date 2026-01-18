@@ -87,6 +87,8 @@ export default function POSMain() {
   const [showTransfer, setShowTransfer] = useState(false);
   const [showIkram, setShowIkram] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showMerge, setShowMerge] = useState(false);
+  const [selectedMergeTables, setSelectedMergeTables] = useState([]);
   
   // POS Settings
   const [posSettings, setPosSettings] = useState({
