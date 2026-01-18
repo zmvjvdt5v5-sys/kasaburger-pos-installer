@@ -43,6 +43,37 @@ Admin paneline teslimat platformları (Yemeksepeti, Getir, Trendyol, Migros) iç
 
 ---
 
+## Update: January 18, 2026 - POS Teslimat Entegrasyonu
+
+### ✅ POS'a Teslimat Siparişleri Paneli Eklendi
+
+POS (Adisyon) sistemine teslimat platformlarından gelen siparişleri yönetmek için entegre panel eklendi.
+
+**Yeni Özellikler:**
+- ✅ **Teslimat Siparişleri Paneli** - POS masa görünümünün sağ tarafında
+- ✅ **Sesli Bildirim** - Yeni sipariş geldiğinde ses çalar
+- ✅ **Canlı Sipariş Sayacı** - "Teslimat" butonu üzerinde kırmızı badge
+- ✅ **Sipariş Kabul/Ret** - Tek tıkla sipariş onaylama veya reddetme
+- ✅ **POS'a Aktarma** - Kabul edilen sipariş otomatik olarak POS sipariş paneline aktarılır
+- ✅ **Platform Renk Kodları** - Her platform kendine özgü renk ile görünür
+- ✅ **Durum Takibi** - Yeni/Hazırlanıyor/Hazır bölümleri
+- ✅ **15 Saniyelik Otomatik Yenileme**
+
+**UI Değişiklikleri (POSMain.js):**
+- Header'a ses toggle butonu eklendi
+- Header'a "Teslimat" butonu eklendi (sipariş sayısı badge'i ile)
+- Masalar görünümünün sağına DeliveryOrdersPanel komponenti eklendi
+
+**Akış:**
+1. Platform (Yemeksepeti, Getir vb.) sipariş gönderir
+2. Sipariş POS'ta "YENİ SİPARİŞLER" bölümünde görünür
+3. Sesli bildirim çalar ve toast gösterilir
+4. "Kabul" tıklanır → Sipariş POS'a aktarılır, ürünler otomatik eklenir
+5. İsterseniz ürün ekleyip/çıkarıp mutfağa gönderebilirsiniz
+6. Ödeme alınır (Online ödendi işaretlenebilir)
+
+---
+
 ## Update: January 18, 2026 - Profesyonel POS/Adisyon Sistemi
 
 ### 🍽️ Şefim Adisyon Benzeri POS Sistemi - TAMAMLANDI
