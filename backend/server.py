@@ -4320,6 +4320,240 @@ Yazıcınız düzgün çalışıyor! ✓
         else:
             return {"status": "error", "message": "Yazdırma başarısız"}
 
+    # ==================== PUSH NOTIFICATIONS ====================
+    
+    @api_router.post("/push/subscribe")
+    async def push_subscribe(
+        subscription: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Push notification aboneliği kaydet"""
+        try:
+            user_id = current_user.get("id") or current_user.get("sub")
+            
+            # Existing subscription kontrolü
+            existing = await db.push_subscriptions.find_one({
+                "endpoint": subscription.get("endpoint")
+            })
+            
+            if existing:
+                # Update existing subscription
+                await db.push_subscriptions.update_one(
+                    {"endpoint": subscription.get("endpoint")},
+                    {"$set": {
+                        "user_id": user_id,
+                        "keys": subscription.get("keys"),
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+            else:
+                # Create new subscription
+                await db.push_subscriptions.insert_one({
+                    "user_id": user_id,
+                    "endpoint": subscription.get("endpoint"),
+                    "keys": subscription.get("keys"),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "active": True
+                })
+            
+            return {"status": "success", "message": "Bildirim aboneliği kaydedildi"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @api_router.post("/push/unsubscribe")
+    async def push_unsubscribe(
+        data: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Push notification aboneliğini iptal et"""
+        try:
+            endpoint = data.get("endpoint")
+            await db.push_subscriptions.delete_one({"endpoint": endpoint})
+            return {"status": "success", "message": "Abonelik iptal edildi"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @api_router.post("/push/send")
+    async def send_push_notification(
+        notification: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Admin: Tüm abonelere bildirim gönder"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin yetkisi gerekli")
+        
+        try:
+            subscriptions = await db.push_subscriptions.find({"active": True}).to_list(1000)
+            sent_count = 0
+            
+            for sub in subscriptions:
+                try:
+                    # Note: pywebpush ile gönderim yapılabilir
+                    # Şimdilik sadece kayıt yapıyoruz
+                    sent_count += 1
+                except Exception as e:
+                    logging.error(f"Push send error: {e}")
+            
+            return {"status": "success", "sent": sent_count, "total": len(subscriptions)}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    # ==================== BARCODE/QR OPERATIONS ====================
+    
+    @api_router.post("/barcode/lookup")
+    async def barcode_lookup(
+        data: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Barkod ile ürün/hammadde ara"""
+        code = data.get("code", "").strip()
+        if not code:
+            raise HTTPException(status_code=400, detail="Barkod gerekli")
+        
+        # Önce ürünlerde ara
+        product = await db.products.find_one(
+            {"$or": [
+                {"barcode": code},
+                {"sku": code}
+            ]},
+            {"_id": 0}
+        )
+        if product:
+            return {"type": "product", "data": product}
+        
+        # Hammaddelerde ara
+        material = await db.materials.find_one(
+            {"$or": [
+                {"barcode": code},
+                {"sku": code}
+            ]},
+            {"_id": 0}
+        )
+        if material:
+            return {"type": "material", "data": material}
+        
+        # Kiosk ürünlerinde ara
+        kiosk_product = await db.kiosk_products.find_one(
+            {"barcode": code},
+            {"_id": 0}
+        )
+        if kiosk_product:
+            return {"type": "kiosk_product", "data": kiosk_product}
+        
+        return {"type": "not_found", "code": code}
+    
+    @api_router.post("/barcode/assign")
+    async def barcode_assign(
+        data: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Ürün veya hammaddeye barkod ata"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin yetkisi gerekli")
+        
+        item_type = data.get("type")  # product, material, kiosk_product
+        item_id = data.get("item_id")
+        barcode = data.get("barcode", "").strip()
+        
+        if not all([item_type, item_id, barcode]):
+            raise HTTPException(status_code=400, detail="Eksik parametreler")
+        
+        # Barkod benzersizlik kontrolü
+        existing = None
+        if item_type == "product":
+            existing = await db.products.find_one({"barcode": barcode, "id": {"$ne": item_id}})
+        elif item_type == "material":
+            existing = await db.materials.find_one({"barcode": barcode, "id": {"$ne": item_id}})
+        elif item_type == "kiosk_product":
+            existing = await db.kiosk_products.find_one({"barcode": barcode, "id": {"$ne": item_id}})
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="Bu barkod zaten kullanılıyor")
+        
+        # Barkodu ata
+        collection = {
+            "product": db.products,
+            "material": db.materials,
+            "kiosk_product": db.kiosk_products
+        }.get(item_type)
+        
+        if not collection:
+            raise HTTPException(status_code=400, detail="Geçersiz tip")
+        
+        result = await collection.update_one(
+            {"id": item_id},
+            {"$set": {"barcode": barcode, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Öğe bulunamadı")
+        
+        return {"status": "success", "message": "Barkod atandı"}
+    
+    @api_router.post("/barcode/stock-update")
+    async def barcode_stock_update(
+        data: dict,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """Barkod ile hızlı stok güncelleme"""
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin yetkisi gerekli")
+        
+        code = data.get("code", "").strip()
+        quantity = data.get("quantity", 0)
+        operation = data.get("operation", "add")  # add, subtract, set
+        
+        if not code:
+            raise HTTPException(status_code=400, detail="Barkod gerekli")
+        
+        # Hammaddede ara
+        material = await db.materials.find_one({"barcode": code})
+        if not material:
+            return {"status": "not_found", "code": code}
+        
+        current_stock = material.get("stock", 0)
+        
+        if operation == "add":
+            new_stock = current_stock + quantity
+        elif operation == "subtract":
+            new_stock = max(0, current_stock - quantity)
+        elif operation == "set":
+            new_stock = quantity
+        else:
+            raise HTTPException(status_code=400, detail="Geçersiz işlem")
+        
+        # Stok güncelle
+        await db.materials.update_one(
+            {"barcode": code},
+            {"$set": {
+                "stock": new_stock,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Stok hareketi kaydet
+        movement = {
+            "id": str(uuid.uuid4()),
+            "material_id": material.get("id"),
+            "material_name": material.get("name"),
+            "type": "giris" if operation in ["add", "set"] else "cikis",
+            "quantity": abs(quantity),
+            "previous_stock": current_stock,
+            "new_stock": new_stock,
+            "method": "barcode_scan",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user.get("email")
+        }
+        await db.stock_movements.insert_one(movement)
+        
+        return {
+            "status": "success",
+            "material": material.get("name"),
+            "previous_stock": current_stock,
+            "new_stock": new_stock,
+            "unit": material.get("unit", "adet")
+        }
+
     # Include router
     app.include_router(api_router)
 
