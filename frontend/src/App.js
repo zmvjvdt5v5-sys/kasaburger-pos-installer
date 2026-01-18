@@ -45,6 +45,7 @@ import DeliveryPanel from './pages/DeliveryPanel';
 import POSMain from './pages/pos/POSMain';
 import KitchenDisplay from './pages/pos/KitchenDisplay';
 import POSReports from './pages/pos/POSReports';
+import InPOSSettings from './pages/pos/InPOSSettings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
