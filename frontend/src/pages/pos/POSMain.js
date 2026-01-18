@@ -1792,3 +1792,204 @@ function ReportsView() {
     </div>
   );
 }
+
+// Delivery Orders Panel Component
+function DeliveryOrdersPanel({ orders, onAccept, onReject, onReady, onRefresh }) {
+  const PLATFORM_CONFIG = {
+    yemeksepeti: { name: 'Yemeksepeti', color: 'bg-pink-500', textColor: 'text-pink-400', logo: '🍽️' },
+    getir: { name: 'Getir', color: 'bg-purple-500', textColor: 'text-purple-400', logo: '🛵' },
+    trendyol: { name: 'Trendyol', color: 'bg-orange-500', textColor: 'text-orange-400', logo: '🛒' },
+    migros: { name: 'Migros', color: 'bg-orange-600', textColor: 'text-orange-300', logo: '🏪' }
+  };
+
+  const STATUS_CONFIG = {
+    new: { label: 'YENİ', color: 'bg-blue-500', pulse: true },
+    accepted: { label: 'ONAYLANDI', color: 'bg-green-500', pulse: false },
+    preparing: { label: 'HAZIRLANIYOR', color: 'bg-yellow-500', pulse: false },
+    ready: { label: 'HAZIR', color: 'bg-purple-500', pulse: false }
+  };
+
+  const formatCurrency = (amount) => `₺${(amount || 0).toFixed(2)}`;
+  const newOrders = orders.filter(o => o.status === 'new');
+  const activeOrders = orders.filter(o => ['accepted', 'preparing'].includes(o.status));
+  const readyOrders = orders.filter(o => o.status === 'ready');
+
+  return (
+    <div className="w-80 bg-zinc-900 border-l border-zinc-800 flex flex-col" data-testid="delivery-orders-panel">
+      {/* Header */}
+      <div className="p-3 border-b border-zinc-800 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bike className="h-5 w-5 text-pink-400" />
+          <span className="font-bold">Teslimat Siparişleri</span>
+          {newOrders.length > 0 && (
+            <Badge className="bg-red-500 animate-pulse">{newOrders.length}</Badge>
+          )}
+        </div>
+        <Button variant="ghost" size="icon" onClick={onRefresh}>
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Orders List */}
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-2">
+          {/* New Orders Section */}
+          {newOrders.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs font-medium text-blue-400 px-2 mb-2 flex items-center gap-1">
+                <Bell className="h-3 w-3" />
+                YENİ SİPARİŞLER ({newOrders.length})
+              </p>
+              {newOrders.map(order => {
+                const platform = PLATFORM_CONFIG[order.platform] || PLATFORM_CONFIG.yemeksepeti;
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-2 animate-pulse"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span>{platform.logo}</span>
+                        <span className={`text-sm font-bold ${platform.textColor}`}>{platform.name}</span>
+                      </div>
+                      <Badge className="bg-blue-500">YENİ</Badge>
+                    </div>
+                    
+                    <div className="text-sm mb-2">
+                      <p className="font-medium">{order.customer_name || 'Müşteri'}</p>
+                      <p className="text-xs text-zinc-400 truncate">{order.customer_address}</p>
+                    </div>
+                    
+                    <div className="text-xs text-zinc-400 mb-2">
+                      {(order.items || []).slice(0, 2).map((item, i) => (
+                        <span key={i}>{item.quantity || 1}x {item.name || item.product_name}{i < 1 && order.items?.length > 1 ? ', ' : ''}</span>
+                      ))}
+                      {(order.items?.length || 0) > 2 && <span> +{order.items.length - 2}</span>}
+                    </div>
+                    
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-bold text-lg text-orange-400">
+                        {formatCurrency(order.total)}
+                      </span>
+                      <span className="text-xs text-zinc-500">{order.payment_method === 'online' ? '💳 Online Ödendi' : '💵 Kapıda'}</span>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => onAccept(order)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Kabul
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onReject(order)}
+                        className="text-red-400 border-red-500/30 hover:bg-red-500/20"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Active Orders Section */}
+          {activeOrders.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs font-medium text-yellow-400 px-2 mb-2 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                HAZIRLANIYOR ({activeOrders.length})
+              </p>
+              {activeOrders.map(order => {
+                const platform = PLATFORM_CONFIG[order.platform] || PLATFORM_CONFIG.yemeksepeti;
+                const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.accepted;
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-2"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span>{platform.logo}</span>
+                        <span className="text-xs text-zinc-400">{order.order_number}</span>
+                      </div>
+                      <Badge className={status.color}>{status.label}</Badge>
+                    </div>
+                    
+                    <p className="text-sm font-medium mb-1">{order.customer_name}</p>
+                    <p className="text-sm font-bold text-orange-400 mb-2">{formatCurrency(order.total)}</p>
+                    
+                    <Button
+                      size="sm"
+                      onClick={() => onReady(order)}
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Package className="h-4 w-4 mr-1" />
+                      Hazır
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Ready Orders Section */}
+          {readyOrders.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-purple-400 px-2 mb-2 flex items-center gap-1">
+                <Package className="h-3 w-3" />
+                TESLİMAT BEKLİYOR ({readyOrders.length})
+              </p>
+              {readyOrders.map(order => {
+                const platform = PLATFORM_CONFIG[order.platform] || PLATFORM_CONFIG.yemeksepeti;
+                return (
+                  <div
+                    key={order.id}
+                    className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 mb-2"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span>{platform.logo} {order.order_number}</span>
+                      <Badge className="bg-purple-500">HAZIR</Badge>
+                    </div>
+                    <p className="text-sm">{order.customer_name}</p>
+                    <p className="text-xs text-zinc-400">{order.customer_phone}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {orders.length === 0 && (
+            <div className="text-center py-8 text-zinc-500">
+              <Bike className="h-12 w-12 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Bekleyen sipariş yok</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Footer Stats */}
+      <div className="p-3 border-t border-zinc-800 grid grid-cols-3 gap-2 text-center text-xs">
+        <div>
+          <p className="text-zinc-400">Yeni</p>
+          <p className="font-bold text-blue-400">{newOrders.length}</p>
+        </div>
+        <div>
+          <p className="text-zinc-400">Hazır.</p>
+          <p className="font-bold text-yellow-400">{activeOrders.length}</p>
+        </div>
+        <div>
+          <p className="text-zinc-400">Bekliyor</p>
+          <p className="font-bold text-purple-400">{readyOrders.length}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
