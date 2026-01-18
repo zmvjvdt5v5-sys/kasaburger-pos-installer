@@ -137,6 +137,116 @@ export default function POSMain() {
     return () => clearInterval(interval);
   }, [loadData]);
 
+  // WebSocket bağlantısı
+  useEffect(() => {
+    if (!WS_URL) return;
+    
+    const connectWebSocket = () => {
+      try {
+        const ws = new WebSocket(`${WS_URL}/ws/kitchen`);
+        
+        ws.onopen = () => {
+          console.log('WebSocket bağlandı');
+          setWsConnected(true);
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'order_update') {
+              // Yeni sipariş bildirimi
+              if (data.action === 'new_order') {
+                setNewOrderAlert(data);
+                // Ses çal
+                const audio = new Audio('/notification.mp3');
+                audio.play().catch(() => {});
+                toast.info('🔔 Yeni sipariş geldi!', { duration: 5000 });
+                loadData(); // Verileri yenile
+              } else if (data.action === 'status_change') {
+                loadData();
+              }
+            }
+          } catch (e) {
+            console.error('WS message parse error:', e);
+          }
+        };
+        
+        ws.onclose = () => {
+          console.log('WebSocket kapandı, yeniden bağlanıyor...');
+          setWsConnected(false);
+          setTimeout(connectWebSocket, 3000);
+        };
+        
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+        
+        wsRef.current = ws;
+      } catch (error) {
+        console.error('WebSocket bağlantı hatası:', error);
+      }
+    };
+    
+    connectWebSocket();
+    
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [loadData]);
+
+  // Drag-drop fonksiyonları
+  const handleDragStart = (e, table) => {
+    if (!editMode) return;
+    setDraggingTable(table);
+    const rect = e.target.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const handleDragOver = (e) => {
+    if (!editMode || !draggingTable) return;
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e) => {
+    if (!editMode || !draggingTable || !mapContainerRef.current) return;
+    
+    const containerRect = mapContainerRef.current.getBoundingClientRect();
+    const newX = Math.max(0, e.clientX - containerRect.left - dragOffset.x);
+    const newY = Math.max(0, e.clientY - containerRect.top - dragOffset.y);
+    
+    // API'ye pozisyon güncelle
+    try {
+      const token = getToken();
+      await fetch(`${BACKEND_URL}/api/pos/tables/${draggingTable.id}/position`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ position_x: Math.round(newX), position_y: Math.round(newY) })
+      });
+      
+      // Local state güncelle
+      setTables(prev => prev.map(t => 
+        t.id === draggingTable.id 
+          ? { ...t, position_x: Math.round(newX), position_y: Math.round(newY) }
+          : t
+      ));
+      
+      toast.success('Masa konumu güncellendi');
+    } catch (error) {
+      console.error('Position update error:', error);
+      toast.error('Konum güncellenemedi');
+    }
+    
+    setDraggingTable(null);
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
