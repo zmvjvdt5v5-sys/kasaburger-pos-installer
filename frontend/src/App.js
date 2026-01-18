@@ -56,6 +56,7 @@ import BranchManagement from './pages/BranchManagement';
 import BranchReports from './pages/BranchReports';
 import DeliveryOrders from './pages/DeliveryOrders';
 import DeliveryPanel from './pages/DeliveryPanel';
+import DeliveryPlatformSettings from './pages/DeliveryPlatformSettings';
 
 // POS / Adisyon Pages
 import POSMain from './pages/pos/POSMain';
@@ -453,6 +454,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DeliveryPanel />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Platform Entegrasyonları Ayarları */}
+      <Route
+        path="/delivery-settings"
+        element={
+          <ProtectedRoute>
+            <DeliveryPlatformSettings />
           </ProtectedRoute>
         }
       />
