@@ -26,11 +26,30 @@ async def create_product(product: ProductCreate, current_user: dict = Depends(ge
     return ProductResponse(**product_doc)
 
 @router.get("")
-async def get_products(current_user: dict = Depends(get_current_user)):
+async def get_products(
+    skip: int = 0,
+    limit: int = 100,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
     db = get_db()
     if db is None:
         return []
-    products = await db.products.find({}, {"_id": 0}).to_list(1000)
+    
+    # Query filter oluştur
+    query = {}
+    if category:
+        query["category"] = category
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"sku": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Sayfalama ile ürünleri getir (max 100)
+    limit = min(limit, 100)  # Max 100 limit
+    products = await db.products.find(query, {"_id": 0}).sort("name", 1).skip(skip).limit(limit).to_list(limit)
     return products
 
 @router.get("/{product_id}", response_model=ProductResponse)
