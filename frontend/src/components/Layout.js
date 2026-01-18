@@ -60,7 +60,7 @@ const navItems = [
 const dealerNavItems = [
   { path: '/dealer-portal', label: 'Ana Sayfa', icon: LayoutDashboard },
   { path: '/dealer-portal/pos', label: 'Adisyon', icon: UtensilsCrossed },
-  { path: '/dealer-portal/kitchen', label: 'Mutfak Ekranı', icon: ChefHat },
+  { path: '/dealer-portal/mutfak', label: 'Mutfak Ekranı', icon: ChefHat },
   { path: '/dealer-portal/pos-reports', label: 'Kasa Raporu', icon: BarChart3 },
   { path: '/dealer-portal/inpos-settings', label: 'InPOS / Yazar Kasa', icon: Printer },
   { path: '/dealer-portal/orders', label: 'Siparişlerim', icon: ShoppingCart },
