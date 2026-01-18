@@ -861,11 +861,30 @@ export default function POSMain() {
                     <button
                       key={product.id}
                       onClick={() => addToOrder(product)}
-                      className="bg-zinc-800 hover:bg-zinc-700 rounded-lg p-3 text-left transition-colors border border-zinc-700 hover:border-orange-500"
+                      className="bg-zinc-800 hover:bg-zinc-700 rounded-lg overflow-hidden text-left transition-all border border-zinc-700 hover:border-orange-500 hover:scale-[1.02]"
                     >
-                      <div className="text-sm font-medium truncate">{product.name}</div>
-                      <div className="text-orange-400 font-bold mt-1">
-                        {formatCurrency(product.price || product.base_price)}
+                      {product.image ? (
+                        <div className="aspect-square w-full bg-zinc-900 relative">
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                          {product.is_premium && (
+                            <Badge className="absolute top-1 right-1 bg-yellow-500 text-black text-xs">Premium</Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="aspect-square w-full bg-zinc-900 flex items-center justify-center">
+                          <UtensilsCrossed className="h-8 w-8 text-zinc-600" />
+                        </div>
+                      )}
+                      <div className="p-2">
+                        <div className="text-sm font-medium truncate">{product.name}</div>
+                        <div className="text-orange-400 font-bold text-lg">
+                          {formatCurrency(product.price || product.base_price)}
+                        </div>
                       </div>
                     </button>
                   ))}
