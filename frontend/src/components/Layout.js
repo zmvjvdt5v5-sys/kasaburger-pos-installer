@@ -69,9 +69,16 @@ export const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Kullanıcı rolüne göre navigasyon menüsünü belirle
+  const isDealer = user?.role === 'dealer';
+  const isAdmin = user?.role === 'admin' || user?.email === SUPER_ADMIN_EMAIL;
+  
+  // Bayi ise dealer menüsünü, değilse admin menüsünü göster
+  const currentNavItems = isDealer ? dealerNavItems : navItems;
+
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(isDealer ? '/dealer-login' : '/login');
   };
 
   return (
