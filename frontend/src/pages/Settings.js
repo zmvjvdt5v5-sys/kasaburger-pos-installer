@@ -24,8 +24,10 @@ import {
   ShieldCheck,
   ShieldAlert,
   Lock,
-  RefreshCw
+  RefreshCw,
+  Smartphone
 } from 'lucide-react';
+import PushNotificationSettings from '../components/PushNotifications';
 // axios removed - using fetch
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
