@@ -373,36 +373,78 @@ async def get_delivery_summary(
     if db is None:
         return {"total_orders": 0, "total_revenue": 0, "by_platform": {}}
     
-    query = {}
+    # Match stage için query oluştur
+    match_stage = {}
     if start_date:
-        query["created_at"] = {"$gte": start_date}
+        match_stage["created_at"] = {"$gte": start_date}
     if end_date:
-        if "created_at" in query:
-            query["created_at"]["$lte"] = end_date
+        if "created_at" in match_stage:
+            match_stage["created_at"]["$lte"] = end_date
         else:
-            query["created_at"] = {"$lte": end_date}
+            match_stage["created_at"] = {"$lte": end_date}
     
-    orders = await db.delivery_orders.find(query, {"_id": 0}).to_list(10000)
+    # MongoDB Aggregation ile optimize edilmiş sorgu
+    pipeline = []
+    if match_stage:
+        pipeline.append({"$match": match_stage})
     
+    # Platform ve status bazlı gruplama
+    pipeline.extend([
+        {
+            "$facet": {
+                "totals": [
+                    {"$group": {
+                        "_id": None,
+                        "total_orders": {"$sum": 1},
+                        "total_revenue": {"$sum": "$total"}
+                    }}
+                ],
+                "by_platform": [
+                    {"$group": {
+                        "_id": "$platform",
+                        "count": {"$sum": 1},
+                        "revenue": {"$sum": "$total"}
+                    }}
+                ],
+                "by_status": [
+                    {"$group": {
+                        "_id": "$status",
+                        "count": {"$sum": 1}
+                    }}
+                ]
+            }
+        }
+    ])
+    
+    result = await db.delivery_orders.aggregate(pipeline).to_list(1)
+    
+    if not result:
+        return {"total_orders": 0, "total_revenue": 0, "by_platform": {}, "by_status": {}}
+    
+    data = result[0]
+    
+    # Totals
+    totals = data.get("totals", [{}])[0] if data.get("totals") else {}
+    
+    # Platform bazlı
     by_platform = {}
-    for order in orders:
-        platform = order.get("platform", "unknown")
-        if platform not in by_platform:
-            by_platform[platform] = {"count": 0, "revenue": 0}
-        by_platform[platform]["count"] += 1
-        by_platform[platform]["revenue"] += order.get("total", 0)
+    for p in data.get("by_platform", []):
+        if p["_id"]:
+            by_platform[p["_id"]] = {"count": p["count"], "revenue": p["revenue"]}
+    
+    # Status bazlı
+    by_status = {
+        "new": 0, "accepted": 0, "preparing": 0, "ready": 0,
+        "delivered": 0, "cancelled": 0, "rejected": 0
+    }
+    for s in data.get("by_status", []):
+        if s["_id"] in by_status:
+            by_status[s["_id"]] = s["count"]
     
     return {
-        "total_orders": len(orders),
-        "total_revenue": sum(o.get("total", 0) for o in orders),
+        "total_orders": totals.get("total_orders", 0),
+        "total_revenue": totals.get("total_revenue", 0),
         "by_platform": by_platform,
-        "by_status": {
-            "new": sum(1 for o in orders if o.get("status") == "new"),
-            "accepted": sum(1 for o in orders if o.get("status") == "accepted"),
-            "preparing": sum(1 for o in orders if o.get("status") == "preparing"),
-            "ready": sum(1 for o in orders if o.get("status") == "ready"),
-            "delivered": sum(1 for o in orders if o.get("status") == "delivered"),
-            "cancelled": sum(1 for o in orders if o.get("status") == "cancelled"),
-            "rejected": sum(1 for o in orders if o.get("status") == "rejected")
-        }
+        "by_status": by_status
     }
+
