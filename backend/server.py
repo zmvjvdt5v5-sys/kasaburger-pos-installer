@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     logger.info("KBYS Backend v2.0 başlatılıyor...")
     await connect_db()
     db = get_db()
-    if db:
+    if db is not None:
         logger.info("MongoDB bağlantısı başarılı")
         from utils.auth import hash_password
         # Admin kullanıcı
