@@ -75,12 +75,12 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, password })
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Login failed' }));
-      throw new Error(error.detail || 'Login failed');
+      throw new Error(data.detail || 'Login failed');
     }
 
-    const data = await response.json();
     const { access_token, user: userData } = data;
     
     localStorage.setItem('kasaburger_token', access_token);
@@ -97,12 +97,12 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ name, email, password, role: 'admin' })
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Register failed' }));
-      throw new Error(error.detail || 'Register failed');
+      throw new Error(data.detail || 'Register failed');
     }
 
-    const data = await response.json();
     const { access_token, user: userData } = data;
     
     localStorage.setItem('kasaburger_token', access_token);
