@@ -74,6 +74,44 @@ POS (Adisyon) sistemine teslimat platformlarından gelen siparişleri yönetmek 
 
 ---
 
+## Update: January 18, 2026 - POS Ayarları ve Bayi Platform Entegrasyonu
+
+### ✅ POS Ayarlar Dialogu Eklendi
+
+POS sistemine kapsamlı ayarlar dialogu eklendi:
+- **Ses ve Bildirimler:** Sipariş sesi, Teslimat paneli toggle
+- **Yazıcı Ayarları:** Otomatik fiş yazdır, Yazıcı IP, Port
+- **Teslimat Ayarları:** Otomatik sipariş kabul, Varsayılan hazırlık süresi
+- **Hızlı Erişim:** Platform Ayarları ve InPOS Ayarları butonları
+
+### ✅ Bayiler İçin Platform Entegrasyonu Eklendi
+
+Şubeler (bayiler) artık kendi yemek platformlarını bağımsız olarak yapılandırabilir:
+
+**Yeni Dosyalar:**
+- `/app/frontend/src/pages/DealerDeliverySettings.js` - Bayi platform konfigürasyon sayfası
+- Route: `/dealer-portal/delivery-settings`
+
+**Bayi Portal Değişiklikleri:**
+- Yeni "Platformlar" tab'ı eklendi (DealerPortal.js)
+- 4 platform kartı (Yemeksepeti, Getir, Trendyol, Migros)
+- "Platform Ayarlarına Git" butonu
+
+**Backend API'ler (dealer_portal.py'ye eklendi):**
+- `GET /api/dealer-portal/delivery/platforms` - Bayi platform ayarlarını getir
+- `POST /api/dealer-portal/delivery/platforms` - Platform ayarı kaydet
+- `POST /api/dealer-portal/delivery/platforms/{platform}/test` - Bağlantı testi
+- `GET /api/dealer-portal/delivery/orders` - Bayi teslimat siparişleri
+
+**Özellikler:**
+- Her bayi kendi API key/secret bilgilerini girer
+- Webhook URL bayi kodu ile özelleştirilir: `...?dealer=MEKGRUP`
+- "Nasıl Entegre Ederim?" 6 adımlı rehber
+- Platform bazlı yardım metinleri
+- Otomatik sipariş kabul ve hazırlık süresi ayarları
+
+---
+
 ## Update: January 18, 2026 - Profesyonel POS/Adisyon Sistemi
 
 ### 🍽️ Şefim Adisyon Benzeri POS Sistemi - TAMAMLANDI
