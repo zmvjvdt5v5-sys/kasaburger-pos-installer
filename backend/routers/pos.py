@@ -149,14 +149,14 @@ async def get_pos_tables(section_id: Optional[str] = None, current_user: dict = 
                 "capacity": 4 if i % 3 != 0 else 6,
                 "status": "empty",
                 "current_order_id": None,
-                "current_order": None,
                 "position_x": ((i-1) % 5) * 120,
                 "position_y": ((i-1) // 5) * 120,
                 "shape": "square",
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
+            table_copy = {**table}
+            await db.pos_tables.insert_one(table_copy)
             default_tables.append(table)
-            await db.pos_tables.insert_one(table)
         return default_tables
     
     # Her masa için aktif sipariş bilgisini ekle
