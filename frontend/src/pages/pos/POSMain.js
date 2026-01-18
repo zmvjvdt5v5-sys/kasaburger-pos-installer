@@ -468,6 +468,15 @@ export default function POSMain() {
         // Order ID'yi kaydet
         if (result.order?.id) {
           setCurrentOrder(prev => ({ ...prev, id: result.order.id, order_number: result.order.order_number }));
+          
+          // WebSocket ile mutfağa bildir
+          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+              type: 'new_order',
+              order_id: result.order.id,
+              order_number: result.order.order_number
+            }));
+          }
         }
         
         // Masaları yenile
