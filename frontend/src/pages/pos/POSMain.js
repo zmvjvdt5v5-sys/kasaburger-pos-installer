@@ -60,6 +60,13 @@ export default function POSMain() {
   const [activeView, setActiveView] = useState('tables'); // tables, order, kitchen, reports
   const [orderSource, setOrderSource] = useState('table'); // table, takeaway, delivery
   
+  // Delivery orders state
+  const [deliveryOrders, setDeliveryOrders] = useState([]);
+  const [showDeliveryPanel, setShowDeliveryPanel] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const audioRef = useRef(null);
+  const prevDeliveryCountRef = useRef(0);
+  
   // Drag-drop state
   const [editMode, setEditMode] = useState(false);
   const [draggingTable, setDraggingTable] = useState(null);
