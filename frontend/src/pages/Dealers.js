@@ -160,11 +160,13 @@ const Dealers = () => {
     if (!window.confirm('Bu bayiyi silmek istediğinize emin misiniz?')) return;
 
     try {
-      await dealersAPI.delete(id);
+      const result = await dealersAPI.delete(id);
+      console.log('Delete result:', result);
       toast.success('Bayi silindi');
       loadData();
     } catch (error) {
-      toast.error('Silme işlemi başarısız');
+      console.error('Delete error:', error);
+      toast.error(error.message || 'Silme işlemi başarısız');
     }
   };
 
