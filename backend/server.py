@@ -4684,10 +4684,15 @@ Yazıcınız düzgün çalışıyor! ✓
             else:
                 start = now.replace(hour=0, minute=0, second=0, microsecond=0)
             
-            # Siparişleri getir
-            orders = await db.pos_orders.find({
+            # POS Siparişleri
+            pos_orders = await db.pos_orders.find({
                 "created_at": {"$gte": start.isoformat()},
                 "status": {"$in": ["completed", "paid"]}
+            }).to_list(1000)
+            
+            # Delivery Platform Siparişleri
+            delivery_orders = await db.delivery_orders.find({
+                "created_at": {"$gte": start.isoformat()}
             }).to_list(1000)
             
             # Ödemeler
@@ -4700,18 +4705,40 @@ Yazıcınız düzgün çalışıyor! ✓
             card_sales = sum(p.get("amount", 0) for p in payments if p.get("method") == "card")
             meal_card_sales = sum(p.get("amount", 0) for p in payments if p.get("method") in ["sodexo", "multinet", "ticket", "setcard"])
             
+            # Platform bazlı sipariş sayıları
+            yemeksepeti_orders = sum(1 for o in delivery_orders if o.get("platform", "").lower() == "yemeksepeti")
+            getir_orders = sum(1 for o in delivery_orders if o.get("platform", "").lower() == "getir")
+            trendyol_orders = sum(1 for o in delivery_orders if o.get("platform", "").lower() == "trendyol")
+            migros_orders = sum(1 for o in delivery_orders if o.get("platform", "").lower() == "migros")
+            
+            # Platform gelirlerini de ekle
+            yemeksepeti_revenue = sum(o.get("total", 0) for o in delivery_orders if o.get("platform", "").lower() == "yemeksepeti")
+            getir_revenue = sum(o.get("total", 0) for o in delivery_orders if o.get("platform", "").lower() == "getir")
+            trendyol_revenue = sum(o.get("total", 0) for o in delivery_orders if o.get("platform", "").lower() == "trendyol")
+            migros_revenue = sum(o.get("total", 0) for o in delivery_orders if o.get("platform", "").lower() == "migros")
+            
             return {
-                "totalSales": total_sales,
-                "totalOrders": len(orders),
-                "averageOrder": total_sales / len(orders) if orders else 0,
+                "totalSales": total_sales + yemeksepeti_revenue + getir_revenue + trendyol_revenue + migros_revenue,
+                "totalOrders": len(pos_orders) + len(delivery_orders),
+                "averageOrder": (total_sales + yemeksepeti_revenue + getir_revenue + trendyol_revenue + migros_revenue) / (len(pos_orders) + len(delivery_orders)) if (pos_orders or delivery_orders) else 0,
                 "cashSales": cash_sales,
                 "cardSales": card_sales,
                 "mealCardSales": meal_card_sales,
-                "tableOrders": sum(1 for o in orders if o.get("source") == "table"),
-                "takeawayOrders": sum(1 for o in orders if o.get("source") == "takeaway"),
-                "deliveryOrders": sum(1 for o in orders if o.get("source") in ["delivery", "yemeksepeti", "getir", "trendyol", "migros"])
+                "tableOrders": sum(1 for o in pos_orders if o.get("source") == "table"),
+                "takeawayOrders": sum(1 for o in pos_orders if o.get("source") == "takeaway"),
+                "deliveryOrders": yemeksepeti_orders + getir_orders + trendyol_orders + migros_orders,
+                # Platform bazlı detaylar
+                "yemeksepetiOrders": yemeksepeti_orders,
+                "yemeksepetiRevenue": yemeksepeti_revenue,
+                "getirOrders": getir_orders,
+                "getirRevenue": getir_revenue,
+                "trendyolOrders": trendyol_orders,
+                "trendyolRevenue": trendyol_revenue,
+                "migrosOrders": migros_orders,
+                "migrosRevenue": migros_revenue
             }
         except Exception as e:
+            logging.error(f"POS summary error: {e}")
             return {"totalSales": 0, "totalOrders": 0, "averageOrder": 0}
     
     @api_router.get("/pos/reports/top-products")
