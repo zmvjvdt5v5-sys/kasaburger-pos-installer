@@ -4604,9 +4604,11 @@ Yazıcınız düzgün çalışıyor! ✓
     async def create_pos_order(order: dict, current_user: dict = Depends(get_current_user)):
         """POS sipariş oluştur"""
         order["id"] = str(uuid.uuid4())
-        order["order_number"] = await get_next_order_number()
+        # Sipariş numarası oluştur
+        pos_count = await db.pos_orders.count_documents({})
+        order["order_number"] = f"POS-{str(pos_count + 1).zfill(6)}"
         order["created_at"] = datetime.now(timezone.utc).isoformat()
-        order["created_by"] = current_user.get("email") or current_user.get("dealer_code")
+        order["created_by"] = current_user.get("email") or current_user.get("dealer_code") or current_user.get("code")
         order["status"] = order.get("status", "pending")
         
         await db.pos_orders.insert_one(order)
