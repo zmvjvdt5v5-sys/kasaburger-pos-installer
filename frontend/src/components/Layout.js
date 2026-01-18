@@ -25,7 +25,8 @@ import {
   Bell,
   Building2,
   TrendingUp,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Printer
 } from 'lucide-react';
 
 const navItems = [
