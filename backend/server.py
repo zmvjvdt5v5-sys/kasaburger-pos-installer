@@ -4703,6 +4703,7 @@ Yazıcınız düzgün çalışıyor! ✓
             total_sales = sum(p.get("amount", 0) for p in payments)
             cash_sales = sum(p.get("amount", 0) for p in payments if p.get("method") == "cash")
             card_sales = sum(p.get("amount", 0) for p in payments if p.get("method") == "card")
+            online_sales = sum(p.get("amount", 0) for p in payments if p.get("method") == "online")
             meal_card_sales = sum(p.get("amount", 0) for p in payments if p.get("method") in ["sodexo", "multinet", "ticket", "setcard"])
             
             # Platform bazlı sipariş sayıları
