@@ -890,6 +890,24 @@ export default function POSMain() {
             Paket
           </Button>
           
+          {/* Barcode Scanner */}
+          <BarcodeScanButton 
+            onScan={(code) => {
+              // Barkodla ürün ara ve sepete ekle
+              const product = products.find(p => p.barcode === code || p.sku === code);
+              if (product) {
+                addToOrder(product);
+                toast.success(`${product.name} eklendi`);
+              } else {
+                toast.error(`Ürün bulunamadı: ${code}`);
+              }
+            }}
+            className="text-orange-400"
+          />
+          
+          {/* Push Notifications */}
+          <PushNotificationToggle />
+          
           <Button variant="ghost" size="icon" onClick={loadData}>
             <RefreshCw className="h-4 w-4" />
           </Button>
