@@ -134,17 +134,17 @@ export const Layout = ({ children }) => {
           {/* Navigation */}
           <ScrollArea className="flex-1 py-4">
             <nav className="px-3 space-y-1">
-              {navItems
-                .filter(item => !item.adminOnly || user?.email === SUPER_ADMIN_EMAIL)
+              {currentNavItems
+                .filter(item => !item.adminOnly || isAdmin)
                 .map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setSidebarOpen(false)}
-                    data-testid={`nav-${item.path.slice(1)}`}
+                    data-testid={`nav-${item.path.replace(/\//g, '-').slice(1)}`}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 ${
                       isActive
                         ? 'nav-link-active'
