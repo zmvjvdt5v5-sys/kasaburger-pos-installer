@@ -333,8 +333,12 @@ export default function DeliveryOrders({ isDealer = false }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-orange-500">Paket Servis Siparişleri</h1>
-          <p className="text-zinc-400 mt-1">Yemeksepeti, Trendyol, Getir, Migros</p>
+          <h1 className="text-3xl font-bold text-orange-500">
+            {isDealer ? 'Paket Servis Entegrasyonu' : 'Paket Servis Siparişleri'}
+          </h1>
+          <p className="text-zinc-400 mt-1">
+            {isDealer ? 'Kendi şubeniz için platform bağlantıları' : 'Yemeksepeti, Trendyol, Getir, Migros'}
+          </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
