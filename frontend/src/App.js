@@ -49,6 +49,7 @@ import Settings from './pages/Settings';
 import Campaigns from './pages/Campaigns';
 import DealerLogin from './pages/DealerLogin';
 import DealerPortal from './pages/DealerPortal';
+import DealerDeliverySettings from './pages/DealerDeliverySettings';
 import KioskPage from './pages/KioskPage';
 import KioskAdmin from './pages/KioskAdmin';
 import KioskOrders from './pages/KioskOrders';
