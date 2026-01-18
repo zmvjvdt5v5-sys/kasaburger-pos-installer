@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List
+from typing import List, Optional
 
 from models.product import ProductCreate, ProductResponse
 from utils.auth import get_current_user
