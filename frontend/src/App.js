@@ -66,6 +66,11 @@ import KitchenDisplay from './pages/pos/KitchenDisplay';
 import POSReports from './pages/pos/POSReports';
 import InPOSSettings from './pages/pos/InPOSSettings';
 
+// Kitchen Pages
+import UnifiedKitchen from './pages/kitchen/UnifiedKitchen';
+import SalonDisplay from './pages/kitchen/SalonDisplay';
+import ReceiptPage from './pages/kitchen/ReceiptViewer';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
