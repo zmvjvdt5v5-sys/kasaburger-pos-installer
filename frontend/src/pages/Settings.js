@@ -473,6 +473,22 @@ const Settings = () => {
         {/* Notifications Tab */}
         <TabsContent value="notifications">
           <div className="grid gap-6">
+            {/* Push Notifications */}
+            <Card className="bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 text-blue-500" />
+                  Push Bildirimleri
+                </CardTitle>
+                <CardDescription>
+                  Tarayıcı push bildirimleri ile yeni siparişlerden anında haberdar olun.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PushNotificationSettings />
+              </CardContent>
+            </Card>
+
             {/* SMS Settings - NetGSM */}
             <Card className="bg-card border-border/50">
               <CardHeader>
