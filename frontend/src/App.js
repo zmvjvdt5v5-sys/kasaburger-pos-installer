@@ -217,6 +217,32 @@ function AppRoutes() {
           </DealerProtectedRoute>
         }
       />
+      
+      {/* POS / Adisyon Routes */}
+      <Route
+        path="/dealer-portal/pos"
+        element={
+          <DealerProtectedRoute>
+            <POSMain isDealer={true} />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/kitchen"
+        element={
+          <DealerProtectedRoute>
+            <KitchenDisplay />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/pos-reports"
+        element={
+          <DealerProtectedRoute>
+            <POSReports />
+          </DealerProtectedRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
