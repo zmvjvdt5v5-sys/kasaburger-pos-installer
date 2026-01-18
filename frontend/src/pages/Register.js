@@ -62,14 +62,14 @@ const Register = () => {
           <div className="mx-auto w-24 h-24">
             <img 
               src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
-              alt="KasaBurger Logo"
+              alt="KBYS Logo"
               className="w-full h-full object-contain"
             />
           </div>
           <div>
-            <CardTitle className="text-3xl font-heading font-bold">Kayıt Ol</CardTitle>
+            <CardTitle className="text-3xl font-heading font-bold">KBYS Kayıt</CardTitle>
             <CardDescription className="text-muted-foreground">
-              KasaBurger Sipariş Portalına hoş geldiniz
+              Kasa Burger Yönetim Sistemine hoş geldiniz
             </CardDescription>
           </div>
         </CardHeader>
