@@ -18,7 +18,11 @@ import {
   FileText,
   Bell,
   AlertCircle,
-  Clock
+  Clock,
+  Bike,
+  CheckCircle,
+  XCircle,
+  Plug
 } from 'lucide-react';
 import {
   AreaChart,
