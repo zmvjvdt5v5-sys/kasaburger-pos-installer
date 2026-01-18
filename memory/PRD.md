@@ -735,3 +735,68 @@ Merkez Sunucu (erp.kasaburger.net.tr)
 - `/app/frontend/public/sw.js`
 - Backend: `/app/backend/server.py` (API endpoints eklendi)
 
+---
+
+## Update: January 18, 2026 - InPOS Yazar Kasa Entegrasyonu & Platform Raporları
+
+### ✅ Tamamlanan Özellikler
+
+#### 1. InPOS (ÖKC) Yazar Kasa Entegrasyonu
+InPOS M530 yazar kasa cihazı için tam entegrasyon sağlandı.
+
+**Backend API'ler:**
+- `GET /api/inpos/config` - InPOS yapılandırmasını getir
+- `POST /api/inpos/config` - InPOS yapılandırmasını kaydet
+- `POST /api/inpos/test` - Cihaz bağlantı testi
+- `POST /api/inpos/payment` - Ödeme işlemi başlat
+- `POST /api/inpos/fiscal` - Fiş bilgisi gönder
+- `POST /api/inpos/cancel` - İşlem iptali
+- `GET /api/inpos/z-report` - Z Raporu al
+- `GET /api/inpos/status` - Cihaz durumu
+
+**Frontend Sayfası:**
+- `/dealer-portal/inpos-settings` - InPOS Ayarları sayfası
+- Bağlantı durumu göstergesi (Bağlı/Bağlı Değil)
+- Cihaz IP adresi ve port yapılandırması
+- Ödeme tanım eşleştirmeleri (Nakit, Kredi Kartı, Sodexo, Multinet, Ticket, SetCard)
+- Otomatik fiş yazdırma seçeneği
+- Bağlantı test butonu
+- Z Raporu alma özelliği
+
+**Özellikler:**
+- GMP3 protokolü ile iletişim
+- Ethernet üzerinden bağlantı (varsayılan port: 59000)
+- Tüm ödeme türleri desteği
+- GİB uyumlu fiş yazdırma
+- Z Raporu ile gün sonu kapanış
+
+#### 2. Platform Bazlı Rapor Geliştirmesi
+POS Raporları sayfasında delivery platform detayları eklendi:
+
+- **Yemeksepeti:** Sipariş sayısı + Toplam gelir
+- **Getir Yemek:** Sipariş sayısı + Toplam gelir  
+- **Trendyol Yemek:** Sipariş sayısı + Toplam gelir
+- **Migros Yemek:** Sipariş sayısı + Toplam gelir
+
+### Dosyalar
+- `/app/frontend/src/pages/pos/InPOSSettings.js` - Yeni sayfa
+- `/app/frontend/src/pages/pos/POSReports.js` - Güncellendi (platform gelirleri eklendi)
+- `/app/frontend/src/components/Layout.js` - InPOS menü öğesi eklendi
+- `/app/frontend/src/App.js` - InPOS route eklendi
+- `/app/backend/server.py` - InPOS API endpoint'leri eklendi
+
+### Test Bilgileri
+- **Admin:** admin@kasaburger.net.tr / admin123
+- **Bayi:** MEKGRUP / 1234
+- **InPOS Varsayılan:** IP: 192.168.1.100, Port: 59000
+
+### Sonraki Görevler (P1)
+- [ ] POS Sistemi Tam İmplementasyonu (masa yönetimi, sipariş akışı)
+- [ ] Electron.js Desktop Uygulaması
+- [ ] server.py refactoring (modüler yapı)
+
+### Gelecek Görevler (P2)
+- [ ] E-fatura GİB gerçek entegrasyonu
+- [ ] Delivery platform API'leri tam entegrasyon
+- [ ] Push notifications
+- [ ] Barkod/QR kod entegrasyonu
