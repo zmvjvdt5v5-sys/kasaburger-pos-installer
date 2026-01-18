@@ -152,3 +152,20 @@ h1, h2, h3, h4, h5, h6 {
         display: contents !important;
     }
 }
+
+/* Hide Emergent branding and UI elements */
+[class*="emergent"],
+[id*="emergent"],
+[data-emergent],
+.emergent-badge,
+.emergent-logo,
+.emergent-watermark,
+#emergent-badge,
+#emergent-watermark,
+div[class^="emergent"],
+div[id^="emergent"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
