@@ -4554,6 +4554,197 @@ Yazıcınız düzgün çalışıyor! ✓
             "unit": material.get("unit", "adet")
         }
 
+    # ==================== POS / ADİSYON API'LERİ ====================
+    
+    @api_router.get("/pos/tables")
+    async def get_pos_tables(current_user: dict = Depends(get_current_user)):
+        """Masa listesi"""
+        try:
+            tables = await db.pos_tables.find({}, {"_id": 0}).to_list(100)
+            return tables
+        except Exception as e:
+            return []
+    
+    @api_router.post("/pos/tables")
+    async def create_pos_table(table: dict, current_user: dict = Depends(get_current_user)):
+        """Masa oluştur"""
+        table["id"] = str(uuid.uuid4())
+        table["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.pos_tables.insert_one(table)
+        return {"status": "success", "table": table}
+    
+    @api_router.put("/pos/tables/{table_id}")
+    async def update_pos_table(table_id: str, data: dict, current_user: dict = Depends(get_current_user)):
+        """Masa güncelle"""
+        await db.pos_tables.update_one(
+            {"id": table_id},
+            {"$set": data}
+        )
+        return {"status": "success"}
+    
+    @api_router.get("/pos/orders")
+    async def get_pos_orders(
+        status: str = None,
+        limit: int = 50,
+        current_user: dict = Depends(get_current_user)
+    ):
+        """POS siparişleri"""
+        try:
+            query = {}
+            if status:
+                statuses = status.split(',')
+                query["status"] = {"$in": statuses}
+            
+            orders = await db.pos_orders.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
+            return orders
+        except Exception as e:
+            return []
+    
+    @api_router.post("/pos/orders")
+    async def create_pos_order(order: dict, current_user: dict = Depends(get_current_user)):
+        """POS sipariş oluştur"""
+        order["id"] = str(uuid.uuid4())
+        order["order_number"] = await get_next_order_number()
+        order["created_at"] = datetime.now(timezone.utc).isoformat()
+        order["created_by"] = current_user.get("email") or current_user.get("dealer_code")
+        order["status"] = order.get("status", "pending")
+        
+        await db.pos_orders.insert_one(order)
+        
+        # Masa durumunu güncelle
+        if order.get("table_id"):
+            await db.pos_tables.update_one(
+                {"id": order["table_id"]},
+                {"$set": {"status": "occupied", "current_order_id": order["id"]}}
+            )
+        
+        return {"status": "success", "order": order}
+    
+    @api_router.put("/pos/orders/{order_id}/status")
+    async def update_pos_order_status(order_id: str, data: dict, current_user: dict = Depends(get_current_user)):
+        """Sipariş durumu güncelle"""
+        new_status = data.get("status")
+        await db.pos_orders.update_one(
+            {"id": order_id},
+            {"$set": {
+                "status": new_status,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        return {"status": "success"}
+    
+    @api_router.post("/pos/orders/{order_id}/pay")
+    async def pay_pos_order(order_id: str, payment: dict, current_user: dict = Depends(get_current_user)):
+        """Ödeme al"""
+        order = await db.pos_orders.find_one({"id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+        
+        payment_record = {
+            "id": str(uuid.uuid4()),
+            "order_id": order_id,
+            "amount": payment.get("amount", order.get("total", 0)),
+            "method": payment.get("method", "cash"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user.get("email")
+        }
+        
+        await db.pos_payments.insert_one(payment_record)
+        
+        # Sipariş durumunu güncelle
+        await db.pos_orders.update_one(
+            {"id": order_id},
+            {"$set": {"status": "completed", "paid_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Masa durumunu güncelle
+        if order.get("table_id"):
+            await db.pos_tables.update_one(
+                {"id": order["table_id"]},
+                {"$set": {"status": "empty", "current_order_id": None}}
+            )
+        
+        return {"status": "success", "payment": payment_record}
+    
+    @api_router.get("/pos/reports/summary")
+    async def get_pos_summary(range: str = "today", current_user: dict = Depends(get_current_user)):
+        """Günlük özet rapor"""
+        try:
+            # Tarih aralığı
+            now = datetime.now(timezone.utc)
+            if range == "today":
+                start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            elif range == "yesterday":
+                start = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                now = start + timedelta(days=1)
+            elif range == "week":
+                start = now - timedelta(days=7)
+            elif range == "month":
+                start = now - timedelta(days=30)
+            else:
+                start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # Siparişleri getir
+            orders = await db.pos_orders.find({
+                "created_at": {"$gte": start.isoformat()},
+                "status": {"$in": ["completed", "paid"]}
+            }).to_list(1000)
+            
+            # Ödemeler
+            payments = await db.pos_payments.find({
+                "created_at": {"$gte": start.isoformat()}
+            }).to_list(1000)
+            
+            total_sales = sum(p.get("amount", 0) for p in payments)
+            cash_sales = sum(p.get("amount", 0) for p in payments if p.get("method") == "cash")
+            card_sales = sum(p.get("amount", 0) for p in payments if p.get("method") == "card")
+            meal_card_sales = sum(p.get("amount", 0) for p in payments if p.get("method") in ["sodexo", "multinet", "ticket", "setcard"])
+            
+            return {
+                "totalSales": total_sales,
+                "totalOrders": len(orders),
+                "averageOrder": total_sales / len(orders) if orders else 0,
+                "cashSales": cash_sales,
+                "cardSales": card_sales,
+                "mealCardSales": meal_card_sales,
+                "tableOrders": sum(1 for o in orders if o.get("source") == "table"),
+                "takeawayOrders": sum(1 for o in orders if o.get("source") == "takeaway"),
+                "deliveryOrders": sum(1 for o in orders if o.get("source") in ["delivery", "yemeksepeti", "getir", "trendyol", "migros"])
+            }
+        except Exception as e:
+            return {"totalSales": 0, "totalOrders": 0, "averageOrder": 0}
+    
+    @api_router.get("/pos/reports/top-products")
+    async def get_top_products(range: str = "today", current_user: dict = Depends(get_current_user)):
+        """En çok satan ürünler"""
+        try:
+            now = datetime.now(timezone.utc)
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            orders = await db.pos_orders.find({
+                "created_at": {"$gte": start.isoformat()}
+            }).to_list(1000)
+            
+            product_sales = {}
+            for order in orders:
+                for item in order.get("items", []):
+                    name = item.get("name")
+                    if name:
+                        if name not in product_sales:
+                            product_sales[name] = {"name": name, "quantity": 0, "revenue": 0}
+                        product_sales[name]["quantity"] += item.get("quantity", 1)
+                        product_sales[name]["revenue"] += item.get("price", 0) * item.get("quantity", 1)
+            
+            sorted_products = sorted(product_sales.values(), key=lambda x: x["quantity"], reverse=True)
+            return sorted_products[:10]
+        except Exception as e:
+            return []
+    
+    @api_router.get("/pos/reports/hourly")
+    async def get_hourly_sales(range: str = "today", current_user: dict = Depends(get_current_user)):
+        """Saatlik satış"""
+        return []  # TODO: Implement
+
     # Include router
     app.include_router(api_router)
 
@@ -4563,7 +4754,7 @@ Yazıcınız düzgün çalışıyor! ✓
         client.close()
 
     logging.basicConfig(level=logging.INFO)
-    logging.info("KasaBurger API v1.0.3 loaded successfully")
+    logging.info("KasaBurger API v1.0.4 - POS/Adisyon sistemi eklendi")
 
 except Exception as e:
     # If anything fails, keep health check working
