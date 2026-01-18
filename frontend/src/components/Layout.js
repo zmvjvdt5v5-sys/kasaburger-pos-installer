@@ -101,10 +101,10 @@ export const Layout = ({ children }) => {
             <div className="flex items-center gap-2">
               <img 
                 src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
-                alt="KasaBurger"
+                alt="KBYS"
                 className="h-8 w-8 object-contain"
               />
-              <span className="font-heading font-bold text-lg">KasaBurger</span>
+              <span className="font-heading font-bold text-lg">KBYS</span>
             </div>
           </div>
         </div>
