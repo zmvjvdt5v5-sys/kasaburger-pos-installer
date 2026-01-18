@@ -891,7 +891,7 @@ export default function POSMain() {
           <Button variant="ghost" size="icon" onClick={loadData}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
             <Settings className="h-4 w-4" />
           </Button>
         </div>
