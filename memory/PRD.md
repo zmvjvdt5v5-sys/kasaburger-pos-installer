@@ -115,6 +115,49 @@ Dashboard'a teslimat platformlarının canlı durumu eklendi.
 - ✅ Aktif/Pasif durum göstergesi
 - ✅ Renk kodlu görünüm
 - ✅ "Platform Ayarlarını Yapılandır" linki
+- ✅ **"Kurulum Sihirbazı"** butonu
+
+---
+
+### ✅ Platform Kurulum Sihirbazı (Wizard)
+
+Adım adım platform entegrasyonu sihirbazı eklendi.
+
+**Dosya:** `/app/frontend/src/components/PlatformSetupWizard.js`
+
+**Özellikler:**
+- ✅ 4 adımlı wizard: Panel Girişi → API Bilgileri → Webhook → Test
+- ✅ Her platform için özelleştirilmiş akış
+- ✅ Progress indicator (1-2-3-4 adımlar)
+- ✅ Harici panel linkleri (Panele Git butonu)
+- ✅ API Key/Secret form alanları
+- ✅ Webhook URL otomatik oluşturma ve kopyalama
+- ✅ Bağlantı testi
+- ✅ "Platformu Değiştir" seçeneği
+
+---
+
+### ✅ Masa Birleştirme/Ayırma
+
+POS sistemine gelişmiş masa yönetimi özellikleri eklendi.
+
+**Backend API'ler (pos.py'ye eklendi):**
+- `POST /api/pos/tables/merge` - Masaları birleştir
+- `POST /api/pos/tables/{table_id}/split` - Birleşik masayı ayır
+
+**Frontend (POSMain.js):**
+- ✅ "Masa Birleştir" butonu (header'da, cyan renk)
+- ✅ Birleştirme modu - masaları seçme UI
+- ✅ Seçim sırası gösterimi (1, 2, 3...)
+- ✅ "X Masayı Birleştir" butonu
+- ✅ Birleşik masalarda "Ayır" butonu
+- ✅ Birleşik masa göstergesi (+N masa)
+
+**Akış:**
+1. "Masa Birleştir" butonuna tıkla
+2. Birleştirmek istediğin masaları seç (ilk seçilen ana masa olur)
+3. "X Masayı Birleştir" butonuna tıkla
+4. Ayırmak için birleşik masadaki "Ayır" butonuna tıkla
 
 ---
 
