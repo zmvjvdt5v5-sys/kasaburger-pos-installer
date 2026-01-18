@@ -89,7 +89,7 @@ const getStatusText = (status) => {
   return texts[status] || status;
 };
 
-const DealerPortal = () => {
+const DealerPortal = ({ initialTab = 'order' }) => {
   const navigate = useNavigate();
   const [dealer, setDealer] = useState(null);
   const [products, setProducts] = useState([]);
@@ -106,7 +106,7 @@ const DealerPortal = () => {
   const [submitting, setSubmitting] = useState(false);
   const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [changingPassword, setChangingPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState('order');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   
