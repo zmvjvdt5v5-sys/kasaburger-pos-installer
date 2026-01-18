@@ -56,6 +56,32 @@ class PaymentCreate(BaseModel):
     tip: Optional[float] = 0
     split_count: Optional[int] = 1
 
+# ==================== YARDIMCI FONKSİYONLAR ====================
+
+async def _get_daily_queue_number(db, prefix: str) -> str:
+    """Günlük sıfırlanan sıra numarası üret"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Bugünkü counter'ı al veya oluştur
+    counter = await db.queue_counters.find_one(
+        {"prefix": prefix, "date": today},
+        {"_id": 0}
+    )
+    
+    if counter:
+        new_count = counter.get("count", 0) + 1
+    else:
+        new_count = 1
+    
+    # Counter'ı güncelle veya oluştur
+    await db.queue_counters.update_one(
+        {"prefix": prefix, "date": today},
+        {"$set": {"count": new_count, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
+    return f"{prefix}-{str(new_count).zfill(4)}"
+
 # ==================== SALON/BÖLGE YÖNETİMİ ====================
 
 @router.get("/sections")
