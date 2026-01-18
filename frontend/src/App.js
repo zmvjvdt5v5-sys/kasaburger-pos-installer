@@ -41,6 +41,11 @@ import BranchReports from './pages/BranchReports';
 import DeliveryOrders from './pages/DeliveryOrders';
 import DeliveryPanel from './pages/DeliveryPanel';
 
+// POS / Adisyon Pages
+import POSMain from './pages/pos/POSMain';
+import KitchenDisplay from './pages/pos/KitchenDisplay';
+import POSReports from './pages/pos/POSReports';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
