@@ -84,6 +84,19 @@ export default function POSMain() {
   const [showItemNote, setShowItemNote] = useState(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showIkram, setShowIkram] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // POS Settings
+  const [posSettings, setPosSettings] = useState({
+    soundEnabled: true,
+    autoAcceptOrders: false,
+    defaultPrepTime: 30,
+    printerEnabled: false,
+    printerIP: '192.168.1.100',
+    printerPort: 9100,
+    showDeliveryPanel: true,
+    autoRefreshInterval: 15
+  });
   
   // Payment state
   const [paymentAmount, setPaymentAmount] = useState(0);
