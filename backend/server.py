@@ -206,3 +206,96 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         "totalRevenue": revenue,
         "totalDealers": dealers
     }
+
+
+
+# ==================== WEBSOCKET ====================
+
+class ConnectionManager:
+    """WebSocket bağlantı yöneticisi"""
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+        self.kitchen_connections: List[WebSocket] = []
+    
+    async def connect(self, websocket: WebSocket, connection_type: str = "general"):
+        await websocket.accept()
+        if connection_type == "kitchen":
+            self.kitchen_connections.append(websocket)
+        else:
+            self.active_connections.append(websocket)
+    
+    def disconnect(self, websocket: WebSocket, connection_type: str = "general"):
+        if connection_type == "kitchen":
+            if websocket in self.kitchen_connections:
+                self.kitchen_connections.remove(websocket)
+        else:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+    
+    async def broadcast(self, message: dict, connection_type: str = "general"):
+        """Tüm bağlantılara mesaj gönder"""
+        connections = self.kitchen_connections if connection_type == "kitchen" else self.active_connections
+        for connection in connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass
+    
+    async def send_to_kitchen(self, message: dict):
+        """Mutfağa bildirim gönder"""
+        await self.broadcast(message, "kitchen")
+
+manager = ConnectionManager()
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """Genel WebSocket endpoint"""
+    await manager.connect(websocket, "general")
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Ping-pong
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, "general")
+
+
+@app.websocket("/ws/kitchen")
+async def kitchen_websocket(websocket: WebSocket):
+    """Mutfak ekranı WebSocket - Gerçek zamanlı bildirimler"""
+    await manager.connect(websocket, "kitchen")
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, "kitchen")
+
+
+@app.post("/api/kitchen/notify")
+async def notify_kitchen(order_id: str, action: str, current_user: dict = Depends(get_current_user)):
+    """Mutfağa bildirim gönder"""
+    message = {
+        "type": "order_update",
+        "order_id": order_id,
+        "action": action,  # new_order, status_change, cancelled
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await manager.send_to_kitchen(message)
+    return {"status": "sent"}
+
+
+# Mutfak bildirimi gönderme helper fonksiyonu
+async def send_kitchen_notification(order_id: str, action: str, order_data: dict = None):
+    """Yardımcı fonksiyon - POS router'dan çağrılabilir"""
+    message = {
+        "type": "order_update",
+        "order_id": order_id,
+        "action": action,
+        "order": order_data,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    await manager.send_to_kitchen(message)
