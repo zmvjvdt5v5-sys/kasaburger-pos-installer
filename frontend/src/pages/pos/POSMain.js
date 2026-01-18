@@ -939,6 +939,22 @@ export default function POSMain() {
               {editMode ? 'Düzenleme Açık' : 'Masaları Düzenle'}
             </Button>
           )}
+
+          {/* Merge Tables Toggle */}
+          {activeView === 'tables' && (
+            <Button
+              variant={showMerge ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setShowMerge(!showMerge);
+                setSelectedMergeTables([]);
+              }}
+              className={showMerge ? 'bg-cyan-600 hover:bg-cyan-700' : ''}
+            >
+              <Merge className="h-4 w-4 mr-1" />
+              {showMerge ? `Birleştir (${selectedMergeTables.length})` : 'Masa Birleştir'}
+            </Button>
+          )}
           
           {/* Quick Actions */}
           <Button
