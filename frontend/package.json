@@ -41,6 +41,7 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "file-saver": "^2.0.5",
+    "html2canvas": "^1.4.1",
     "http-proxy-middleware": "^3.0.5",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.507.0",
@@ -84,15 +85,23 @@
       "public/logo192.png"
     ],
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "public/logo192.png"
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "icon": "public/logo192.png"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "public/logo192.png"
     },
     "nsis": {
