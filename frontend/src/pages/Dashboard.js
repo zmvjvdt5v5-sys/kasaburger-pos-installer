@@ -4,7 +4,9 @@ import { formatCurrency, getStatusColor, getStatusText } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Skeleton } from '../components/ui/skeleton';
+import { Button } from '../components/ui/button';
 import PWAInstall from '../components/PWAInstall';
+import PlatformSetupWizard from '../components/PlatformSetupWizard';
 // axios removed - using fetch
 import {
   Package,
@@ -22,7 +24,8 @@ import {
   Bike,
   CheckCircle,
   XCircle,
-  Plug
+  Plug,
+  Sparkles
 } from 'lucide-react';
 import {
   AreaChart,
