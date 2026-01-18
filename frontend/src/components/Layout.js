@@ -38,6 +38,7 @@ const navItems = [
   { path: '/dealers', label: 'Bayiler', icon: Users, adminOnly: true },
   { path: '/orders', label: 'Siparişler', icon: ShoppingCart },
   { path: '/invoices', label: 'Faturalar', icon: FileText },
+  { path: '/einvoice', label: 'E-Fatura/GİB', icon: FileText },
   { path: '/payments', label: 'Ödemeler', icon: CreditCard },
   { path: '/accounting', label: 'Muhasebe', icon: Wallet, adminOnly: true },
   { path: '/campaigns', label: 'Kampanyalar', icon: Megaphone },
