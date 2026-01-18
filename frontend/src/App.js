@@ -304,6 +304,24 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      
+      {/* Unified Kitchen Routes */}
+      <Route
+        path="/mutfak"
+        element={
+          <ProtectedRoute>
+            <UnifiedKitchen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/salon-ekran"
+        element={<SalonDisplay />}
+      />
+      <Route
+        path="/fis"
+        element={<ReceiptPage />}
+      />
 
       {/* Protected Routes */}
       <Route
