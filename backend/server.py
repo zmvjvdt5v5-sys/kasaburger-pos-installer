@@ -142,7 +142,7 @@ class AdminUserCreate(BaseModel):
 @app.post("/api/admin/users")
 async def admin_create_user(user_data: AdminUserCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return {"error": "Veritabanı bağlantısı yok"}
     
     if current_user.get("role") != "admin":
@@ -165,7 +165,7 @@ async def admin_create_user(user_data: AdminUserCreate, current_user: dict = Dep
 @app.get("/api/admin/users")
 async def admin_list_users(current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return []
     users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(100)
     return users
@@ -173,7 +173,7 @@ async def admin_list_users(current_user: dict = Depends(get_current_user)):
 @app.delete("/api/admin/users/{user_id}")
 async def admin_delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
-    if not db:
+    if db is None:
         return {"error": "Veritabanı bağlantısı yok"}
     
     if current_user.get("role") != "admin":
