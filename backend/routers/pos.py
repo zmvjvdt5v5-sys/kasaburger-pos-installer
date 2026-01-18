@@ -70,8 +70,8 @@ async def get_sections(current_user: dict = Depends(get_current_user)):
             {"id": "section-4", "name": "VIP", "color": "#a855f7", "order": 4}
         ]
         for s in default_sections:
-            s["created_at"] = datetime.now(timezone.utc).isoformat()
-            await db.pos_sections.insert_one(s)
+            s_copy = {**s, "created_at": datetime.now(timezone.utc).isoformat()}
+            await db.pos_sections.insert_one(s_copy)
         return default_sections
     return sections
 
