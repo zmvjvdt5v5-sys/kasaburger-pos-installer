@@ -67,10 +67,12 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
+  const [platforms, setPlatforms] = useState([]);
 
   useEffect(() => {
     loadStats();
     loadNotifications();
+    loadPlatforms();
   }, []);
 
   const loadStats = async () => {
@@ -96,6 +98,21 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Notifications error:', error);
+    }
+  };
+
+  const loadPlatforms = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${API_URL}/api/delivery/platforms`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPlatforms(data);
+      }
+    } catch (error) {
+      console.error('Platforms error:', error);
     }
   };
 
