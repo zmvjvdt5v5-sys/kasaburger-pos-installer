@@ -457,6 +457,17 @@ const Materials = () => {
                 Yeni Hammadde
               </Button>
             </DialogTrigger>
+
+          {/* Barkod Tarama Butonu */}
+          <Button 
+            variant="outline" 
+            onClick={() => setScannerOpen(true)}
+            className="ml-2"
+            data-testid="barcode-scan-btn"
+          >
+            <ScanLine className="h-4 w-4 mr-2" />
+            Barkod Tara
+          </Button>
             <DialogContent className="bg-card border-border">
               <DialogHeader>
                 <DialogTitle className="font-heading">
