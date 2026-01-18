@@ -140,9 +140,144 @@ export default function POSMain() {
 
   useEffect(() => {
     loadData();
+    loadDeliveryOrders();
     const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
+    const deliveryInterval = setInterval(loadDeliveryOrders, 15000); // Delivery siparişlerini 15 saniyede bir kontrol et
+    return () => {
+      clearInterval(interval);
+      clearInterval(deliveryInterval);
+    };
   }, [loadData]);
+
+  // Delivery siparişlerini yükle
+  const loadDeliveryOrders = async () => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/delivery/orders/live`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Yeni sipariş geldi mi kontrol et
+        const newOrders = data.filter(o => o.status === 'new');
+        if (newOrders.length > prevDeliveryCountRef.current) {
+          // Sesli bildirim
+          if (soundEnabled) {
+            playNotificationSound();
+          }
+          toast.success(`🚀 ${newOrders.length - prevDeliveryCountRef.current} yeni teslimat siparişi!`, { duration: 5000 });
+        }
+        prevDeliveryCountRef.current = newOrders.length;
+        
+        setDeliveryOrders(data);
+      }
+    } catch (error) {
+      console.error('Delivery orders load error:', error);
+    }
+  };
+
+  // Sesli bildirim çal
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.volume = 0.7;
+      audio.play().catch(() => {});
+    } catch (e) {
+      console.log('Audio play error:', e);
+    }
+  };
+
+  // Delivery siparişini POS'a al
+  const acceptDeliveryOrder = async (order) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/delivery/orders/${order.id}/accept`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ prep_time: 30 })
+      });
+      
+      if (response.ok) {
+        toast.success('Sipariş kabul edildi!');
+        loadDeliveryOrders();
+        
+        // Siparişi POS'a aktar
+        const items = (order.items || []).map(item => ({
+          product_id: item.product_id || item.id,
+          product_name: item.name || item.product_name,
+          price: item.price || item.unit_price || 0,
+          quantity: item.quantity || 1,
+          note: item.note || '',
+          portion: 'tam',
+          is_ikram: false
+        }));
+        
+        setCurrentOrder({
+          items,
+          notes: `${order.platform?.toUpperCase()} - ${order.customer_name || 'Müşteri'} - ${order.customer_phone || ''}\n${order.customer_address || ''}`,
+          table_id: null,
+          source: 'delivery',
+          platform: order.platform,
+          external_id: order.external_id,
+          discount_type: null,
+          discount_value: 0
+        });
+        setOrderSource('delivery');
+        setActiveView('order');
+      } else {
+        toast.error('Sipariş kabul edilemedi');
+      }
+    } catch (error) {
+      console.error('Accept error:', error);
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  // Delivery siparişini reddet
+  const rejectDeliveryOrder = async (order, reason = 'Yoğunluk') => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/delivery/orders/${order.id}/reject`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason })
+      });
+      
+      if (response.ok) {
+        toast.success('Sipariş reddedildi');
+        loadDeliveryOrders();
+      }
+    } catch (error) {
+      console.error('Reject error:', error);
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  // Delivery siparişini hazır işaretle
+  const markDeliveryReady = async (order) => {
+    try {
+      const token = getToken();
+      await fetch(`${BACKEND_URL}/api/delivery/orders/${order.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'ready' })
+      });
+      toast.success('Sipariş hazır!');
+      loadDeliveryOrders();
+    } catch (error) {
+      console.error('Status update error:', error);
+    }
+  };
 
   // WebSocket bağlantısı
   useEffect(() => {
