@@ -4772,6 +4772,393 @@ Yazıcınız düzgün çalışıyor! ✓
         """Saatlik satış"""
         return []  # TODO: Implement
 
+    # ==================== INPOS ENTEGRASYONU ====================
+    
+    class InPOSConfig(BaseModel):
+        enabled: bool = False
+        ip_address: str = "192.168.1.100"
+        port: int = 59000
+        timeout: int = 30
+        auto_print: bool = True
+        # Ödeme tanım eşleştirmeleri
+        payment_mappings: Optional[Dict[str, int]] = {
+            "cash": 1,
+            "card": 2,
+            "sodexo": 3,
+            "multinet": 4,
+            "ticket": 5,
+            "setcard": 6
+        }
+    
+    class InPOSPaymentRequest(BaseModel):
+        order_id: str
+        amount: float
+        payment_method: str  # cash, card, sodexo, multinet, ticket, setcard
+        tip_amount: Optional[float] = 0
+        installments: Optional[int] = 1
+    
+    class InPOSFiscalRequest(BaseModel):
+        order_id: str
+        items: List[Dict]
+        payments: List[Dict]
+        customer_info: Optional[Dict] = None
+    
+    @api_router.get("/inpos/config")
+    async def get_inpos_config(current_user: dict = Depends(get_current_user)):
+        """InPOS yapılandırmasını getir"""
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config:
+            return {
+                "enabled": False,
+                "ip_address": "192.168.1.100",
+                "port": 59000,
+                "timeout": 30,
+                "auto_print": True,
+                "payment_mappings": {
+                    "cash": 1,
+                    "card": 2,
+                    "sodexo": 3,
+                    "multinet": 4,
+                    "ticket": 5,
+                    "setcard": 6
+                }
+            }
+        return config
+    
+    @api_router.post("/inpos/config")
+    async def save_inpos_config(config: InPOSConfig, current_user: dict = Depends(get_current_user)):
+        """InPOS yapılandırmasını kaydet"""
+        config_doc = {
+            "type": "inpos",
+            **config.model_dump(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_user.get("id")
+        }
+        await db.settings.update_one(
+            {"type": "inpos"},
+            {"$set": config_doc},
+            upsert=True
+        )
+        return {"success": True, "message": "InPOS ayarları kaydedildi"}
+    
+    @api_router.post("/inpos/test")
+    async def test_inpos_connection(current_user: dict = Depends(get_current_user)):
+        """InPOS cihaz bağlantısını test et"""
+        import socket
+        
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config:
+            return {"success": False, "error": "InPOS yapılandırması bulunamadı"}
+        
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            result = sock.connect_ex((config.get("ip_address", "192.168.1.100"), config.get("port", 59000)))
+            sock.close()
+            
+            if result == 0:
+                return {"success": True, "message": f"InPOS cihazına bağlantı başarılı ({config.get('ip_address')}:{config.get('port')})"}
+            else:
+                return {"success": False, "error": f"InPOS cihazına bağlanılamadı. Hata kodu: {result}"}
+        except socket.timeout:
+            return {"success": False, "error": "Bağlantı zaman aşımı - Cihaz yanıt vermiyor"}
+        except Exception as e:
+            return {"success": False, "error": f"Bağlantı hatası: {str(e)}"}
+    
+    @api_router.post("/inpos/payment")
+    async def process_inpos_payment(request: InPOSPaymentRequest, current_user: dict = Depends(get_current_user)):
+        """InPOS üzerinden ödeme işlemi başlat"""
+        import socket
+        import json
+        
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config or not config.get("enabled"):
+            return {"success": False, "error": "InPOS entegrasyonu aktif değil"}
+        
+        # Sipariş bilgilerini al
+        order = await db.pos_orders.find_one({"id": request.order_id}, {"_id": 0})
+        if not order:
+            return {"success": False, "error": "Sipariş bulunamadı"}
+        
+        # InPOS protokol mesajı oluştur (GMP3 formatı)
+        payment_type = config.get("payment_mappings", {}).get(request.payment_method, 2)
+        
+        inpos_command = {
+            "command": "PAYMENT",
+            "transaction_id": str(uuid.uuid4())[:8].upper(),
+            "amount": int(request.amount * 100),  # Kuruş cinsinden
+            "payment_type": payment_type,
+            "tip_amount": int(request.tip_amount * 100) if request.tip_amount else 0,
+            "installments": request.installments or 1,
+            "order_id": request.order_id
+        }
+        
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(config.get("timeout", 30))
+            sock.connect((config.get("ip_address"), config.get("port")))
+            
+            # Komut gönder
+            message = json.dumps(inpos_command).encode('utf-8')
+            sock.sendall(message + b'\n')
+            
+            # Yanıt al
+            response = sock.recv(4096).decode('utf-8')
+            sock.close()
+            
+            response_data = json.loads(response)
+            
+            if response_data.get("status") == "SUCCESS" or response_data.get("result_code") == "00":
+                # Başarılı ödeme - kaydet
+                payment_record = {
+                    "id": str(uuid.uuid4()),
+                    "order_id": request.order_id,
+                    "amount": request.amount,
+                    "method": request.payment_method,
+                    "tip_amount": request.tip_amount or 0,
+                    "inpos_transaction_id": inpos_command["transaction_id"],
+                    "inpos_response": response_data,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.pos_payments.insert_one(payment_record)
+                
+                # Siparişi güncelle
+                await db.pos_orders.update_one(
+                    {"id": request.order_id},
+                    {"$set": {"status": "paid", "payment_method": request.payment_method}}
+                )
+                
+                return {
+                    "success": True, 
+                    "message": "Ödeme başarılı",
+                    "transaction_id": inpos_command["transaction_id"],
+                    "approval_code": response_data.get("approval_code"),
+                    "receipt_no": response_data.get("receipt_no")
+                }
+            else:
+                return {
+                    "success": False, 
+                    "error": response_data.get("error_message", "Ödeme reddedildi"),
+                    "error_code": response_data.get("result_code")
+                }
+                
+        except socket.timeout:
+            return {"success": False, "error": "İşlem zaman aşımı - Cihaz yanıt vermiyor"}
+        except ConnectionRefusedError:
+            return {"success": False, "error": "InPOS cihazına bağlanılamadı - Bağlantı reddedildi"}
+        except json.JSONDecodeError:
+            return {"success": False, "error": "InPOS yanıtı okunamadı"}
+        except Exception as e:
+            logging.error(f"InPOS payment error: {e}")
+            return {"success": False, "error": f"Ödeme hatası: {str(e)}"}
+    
+    @api_router.post("/inpos/fiscal")
+    async def send_inpos_fiscal(request: InPOSFiscalRequest, current_user: dict = Depends(get_current_user)):
+        """InPOS'a fiş bilgisi gönder (Z raporu için)"""
+        import socket
+        import json
+        
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config or not config.get("enabled"):
+            return {"success": False, "error": "InPOS entegrasyonu aktif değil"}
+        
+        # Fiş satırları oluştur
+        fiscal_items = []
+        total = 0
+        for item in request.items:
+            item_total = item.get("price", 0) * item.get("quantity", 1)
+            total += item_total
+            fiscal_items.append({
+                "name": item.get("name", "Ürün")[:24],  # Max 24 karakter
+                "quantity": item.get("quantity", 1),
+                "unit_price": int(item.get("price", 0) * 100),
+                "total": int(item_total * 100),
+                "vat_rate": 10  # %10 KDV
+            })
+        
+        inpos_command = {
+            "command": "FISCAL_RECEIPT",
+            "transaction_id": str(uuid.uuid4())[:8].upper(),
+            "items": fiscal_items,
+            "payments": [
+                {
+                    "type": config.get("payment_mappings", {}).get(p.get("method"), 1),
+                    "amount": int(p.get("amount", 0) * 100)
+                } for p in request.payments
+            ],
+            "total": int(total * 100)
+        }
+        
+        if request.customer_info:
+            inpos_command["customer"] = request.customer_info
+        
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(config.get("timeout", 30))
+            sock.connect((config.get("ip_address"), config.get("port")))
+            
+            message = json.dumps(inpos_command).encode('utf-8')
+            sock.sendall(message + b'\n')
+            
+            response = sock.recv(4096).decode('utf-8')
+            sock.close()
+            
+            response_data = json.loads(response)
+            
+            if response_data.get("status") == "SUCCESS":
+                return {
+                    "success": True,
+                    "message": "Fiş başarıyla yazıldı",
+                    "fiscal_no": response_data.get("fiscal_no"),
+                    "z_no": response_data.get("z_no")
+                }
+            else:
+                return {"success": False, "error": response_data.get("error_message", "Fiş yazılamadı")}
+                
+        except Exception as e:
+            logging.error(f"InPOS fiscal error: {e}")
+            return {"success": False, "error": f"Fiş hatası: {str(e)}"}
+    
+    @api_router.post("/inpos/cancel")
+    async def cancel_inpos_transaction(transaction_id: str, current_user: dict = Depends(get_current_user)):
+        """InPOS işlem iptali"""
+        import socket
+        import json
+        
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config or not config.get("enabled"):
+            return {"success": False, "error": "InPOS entegrasyonu aktif değil"}
+        
+        inpos_command = {
+            "command": "CANCEL",
+            "original_transaction_id": transaction_id
+        }
+        
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(config.get("timeout", 30))
+            sock.connect((config.get("ip_address"), config.get("port")))
+            
+            message = json.dumps(inpos_command).encode('utf-8')
+            sock.sendall(message + b'\n')
+            
+            response = sock.recv(4096).decode('utf-8')
+            sock.close()
+            
+            response_data = json.loads(response)
+            
+            if response_data.get("status") == "SUCCESS":
+                # İptali kaydet
+                await db.pos_payments.update_one(
+                    {"inpos_transaction_id": transaction_id},
+                    {"$set": {"status": "cancelled", "cancelled_at": datetime.now(timezone.utc).isoformat()}}
+                )
+                return {"success": True, "message": "İşlem iptal edildi"}
+            else:
+                return {"success": False, "error": response_data.get("error_message", "İptal başarısız")}
+                
+        except Exception as e:
+            logging.error(f"InPOS cancel error: {e}")
+            return {"success": False, "error": f"İptal hatası: {str(e)}"}
+    
+    @api_router.get("/inpos/z-report")
+    async def get_inpos_z_report(current_user: dict = Depends(get_current_user)):
+        """InPOS Z Raporu al"""
+        import socket
+        import json
+        
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config or not config.get("enabled"):
+            return {"success": False, "error": "InPOS entegrasyonu aktif değil"}
+        
+        inpos_command = {
+            "command": "Z_REPORT"
+        }
+        
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(60)  # Z raporu uzun sürebilir
+            sock.connect((config.get("ip_address"), config.get("port")))
+            
+            message = json.dumps(inpos_command).encode('utf-8')
+            sock.sendall(message + b'\n')
+            
+            response = sock.recv(8192).decode('utf-8')
+            sock.close()
+            
+            response_data = json.loads(response)
+            
+            if response_data.get("status") == "SUCCESS":
+                # Z raporu kaydet
+                z_report = {
+                    "id": str(uuid.uuid4()),
+                    "z_no": response_data.get("z_no"),
+                    "date": datetime.now(timezone.utc).isoformat(),
+                    "total_sales": response_data.get("total_sales", 0),
+                    "cash_sales": response_data.get("cash_sales", 0),
+                    "card_sales": response_data.get("card_sales", 0),
+                    "vat_total": response_data.get("vat_total", 0),
+                    "receipt_count": response_data.get("receipt_count", 0),
+                    "raw_data": response_data,
+                    "created_by": current_user.get("id")
+                }
+                await db.z_reports.insert_one(z_report)
+                
+                return {
+                    "success": True,
+                    "message": "Z Raporu alındı",
+                    "report": z_report
+                }
+            else:
+                return {"success": False, "error": response_data.get("error_message", "Z raporu alınamadı")}
+                
+        except Exception as e:
+            logging.error(f"InPOS Z report error: {e}")
+            return {"success": False, "error": f"Z raporu hatası: {str(e)}"}
+    
+    @api_router.get("/inpos/status")
+    async def get_inpos_status(current_user: dict = Depends(get_current_user)):
+        """InPOS cihaz durumu"""
+        import socket
+        import json
+        
+        config = await db.settings.find_one({"type": "inpos"}, {"_id": 0})
+        if not config:
+            return {
+                "connected": False,
+                "enabled": False,
+                "config": None
+            }
+        
+        if not config.get("enabled"):
+            return {
+                "connected": False,
+                "enabled": False,
+                "config": config
+            }
+        
+        # Bağlantı kontrolü
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(3)
+            result = sock.connect_ex((config.get("ip_address"), config.get("port")))
+            sock.close()
+            connected = result == 0
+        except:
+            connected = False
+        
+        return {
+            "connected": connected,
+            "enabled": config.get("enabled", False),
+            "ip_address": config.get("ip_address"),
+            "port": config.get("port"),
+            "last_transaction": await db.pos_payments.find_one(
+                {"inpos_transaction_id": {"$exists": True}},
+                {"_id": 0, "created_at": 1, "amount": 1, "method": 1},
+                sort=[("created_at", -1)]
+            )
+        }
+
     # Include router
     app.include_router(api_router)
 
