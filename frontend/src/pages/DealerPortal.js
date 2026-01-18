@@ -1403,6 +1403,80 @@ const DealerPortal = ({ initialTab = 'order' }) => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* PLATFORMLAR TAB */}
+          <TabsContent value="platforms" className="space-y-6">
+            <Card className="bg-card border-pink-500/30">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-pink-500/20">
+                      <Bike className="h-6 w-6 text-pink-400" />
+                    </div>
+                    <div>
+                      <CardTitle>Yemek Platform Entegrasyonları</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Yemeksepeti, Getir, Trendyol ve Migros platformlarını bağlayın
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Info */}
+                <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                  <div className="flex items-start gap-3">
+                    <Bell className="h-5 w-5 text-blue-400 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-blue-300 font-medium mb-2">Platform Entegrasyonu Nasıl Çalışır?</p>
+                      <ul className="text-blue-300/70 space-y-1 list-disc ml-4">
+                        <li>Platform API bilgilerinizi girerek siparişleri otomatik alın</li>
+                        <li>Yeni sipariş geldiğinde POS sisteminde sesli bildirim alın</li>
+                        <li>Siparişleri tek tıkla kabul edin veya reddedin</li>
+                        <li>Hazırlık sürelerini platformlara otomatik bildirin</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Platform Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { id: 'yemeksepeti', name: 'Yemeksepeti', logo: '🍽️', color: 'bg-pink-500' },
+                    { id: 'getir', name: 'Getir Yemek', logo: '🛵', color: 'bg-purple-500' },
+                    { id: 'trendyol', name: 'Trendyol Yemek', logo: '🛒', color: 'bg-orange-500' },
+                    { id: 'migros', name: 'Migros Yemek', logo: '🏪', color: 'bg-orange-600' }
+                  ].map(platform => (
+                    <Card 
+                      key={platform.id}
+                      className="cursor-pointer hover:scale-[1.02] transition-all border-white/10 hover:border-white/30"
+                      onClick={() => navigate('/dealer-portal/delivery-settings')}
+                    >
+                      <CardContent className="p-4 text-center">
+                        <span className="text-4xl">{platform.logo}</span>
+                        <p className="text-sm font-medium mt-2">{platform.name}</p>
+                        <Badge variant="outline" className="mt-2 text-xs">
+                          Yapılandır →
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <div className="text-center pt-4">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate('/dealer-portal/delivery-settings')}
+                    className="bg-pink-500 hover:bg-pink-600"
+                  >
+                    <Plug className="h-5 w-5 mr-2" />
+                    Platform Ayarlarına Git
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
     </div>
