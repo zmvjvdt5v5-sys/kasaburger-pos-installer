@@ -35,7 +35,7 @@ const STATUS_MAP = {
 // Ses dosyası URL'si
 const NOTIFICATION_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
-export default function DeliveryPanel() {
+export default function DeliveryPanel({ isDealer = false }) {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({ pending: 0, today: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
