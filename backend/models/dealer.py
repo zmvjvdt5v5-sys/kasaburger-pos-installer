@@ -14,6 +14,7 @@ class DealerCreate(BaseModel):
     phone: str
     address: str
     password: str
+    contact_person: Optional[str] = None
     tax_number: Optional[str] = None
     pricing: Optional[List[DealerPricing]] = []
     credit_limit: float = 0
@@ -26,6 +27,7 @@ class DealerResponse(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    contact_person: Optional[str] = None
     tax_number: Optional[str] = None
     credit_limit: Optional[float] = 0
     current_balance: Optional[float] = 0
