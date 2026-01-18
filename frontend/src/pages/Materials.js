@@ -62,6 +62,76 @@ const Materials = () => {
     reason: '',
   });
   const [saving, setSaving] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [quickStockOpen, setQuickStockOpen] = useState(false);
+  const [scannedMaterial, setScannedMaterial] = useState(null);
+  const [quickStockQty, setQuickStockQty] = useState('');
+  const [quickStockOp, setQuickStockOp] = useState('add');
+
+  // Barkod tarama sonucu
+  const handleBarcodeScan = async (code, format) => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${API_URL}/api/barcode/lookup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ code })
+      });
+      
+      const result = await response.json();
+      
+      if (result.type === 'material') {
+        setScannedMaterial(result.data);
+        setQuickStockOpen(true);
+        setScannerOpen(false);
+        toast.success(`Hammadde bulundu: ${result.data.name}`);
+      } else if (result.type === 'not_found') {
+        toast.error(`Barkod bulunamadı: ${code}`);
+      } else {
+        toast.info(`Bu barkod bir ${result.type === 'product' ? 'ürüne' : 'kiosk ürününe'} ait`);
+      }
+    } catch (error) {
+      toast.error('Barkod sorgulanamadı');
+    }
+  };
+
+  // Hızlı stok güncelleme
+  const handleQuickStockUpdate = async () => {
+    if (!scannedMaterial || !quickStockQty) return;
+    
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${API_URL}/api/barcode/stock-update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          code: scannedMaterial.barcode,
+          quantity: parseFloat(quickStockQty),
+          operation: quickStockOp
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        toast.success(`${result.material}: ${result.previous_stock} → ${result.new_stock} ${result.unit}`);
+        setQuickStockOpen(false);
+        setScannedMaterial(null);
+        setQuickStockQty('');
+        loadData();
+      } else {
+        toast.error(result.message || 'Güncelleme başarısız');
+      }
+    } catch (error) {
+      toast.error('Stok güncellenemedi');
+    }
+  };
 
   useEffect(() => {
     loadData();
