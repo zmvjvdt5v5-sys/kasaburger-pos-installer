@@ -578,22 +578,26 @@ const DealerPortal = ({ initialTab = 'order' }) => {
       <main className="container mx-auto px-4 py-6">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-card border border-border">
+          <TabsList className="grid w-full grid-cols-5 bg-card border border-border">
             <TabsTrigger value="order" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <ShoppingCart className="h-4 w-4 mr-2" />
-              Sipariş Ver
+              <span className="hidden sm:inline">Sipariş</span>
             </TabsTrigger>
             <TabsTrigger value="make-payment" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <CreditCard className="h-4 w-4 mr-2" />
-              Ödeme Yap
+              <span className="hidden sm:inline">Ödeme</span>
             </TabsTrigger>
             <TabsTrigger value="payments" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <History className="h-4 w-4 mr-2" />
-              Ödemelerim
+              <span className="hidden sm:inline">Ödemeler</span>
             </TabsTrigger>
             <TabsTrigger value="ekstre" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <Receipt className="h-4 w-4 mr-2" />
-              Ekstre
+              <span className="hidden sm:inline">Ekstre</span>
+            </TabsTrigger>
+            <TabsTrigger value="platforms" className="data-[state=active]:bg-pink-500 data-[state=active]:text-white">
+              <Bike className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Platformlar</span>
             </TabsTrigger>
           </TabsList>
 
