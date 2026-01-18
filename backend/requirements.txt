@@ -15,3 +15,6 @@ starlette==0.37.2
 httpx==0.28.1
 
 cloudinary
+http_ece==1.2.1
+py-vapid==1.9.4
+pywebpush==2.2.0
