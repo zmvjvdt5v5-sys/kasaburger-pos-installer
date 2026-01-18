@@ -122,6 +122,72 @@ function AppRoutes() {
       {/* Dealer Portal Routes */}
       <Route path="/dealer-login" element={<DealerLogin />} />
       <Route path="/dealer" element={<DealerPortal />} />
+      
+      {/* Dealer Protected Routes - Bayi Paneli */}
+      <Route
+        path="/dealer-portal"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/orders"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="orders" />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/products"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="products" />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/invoices"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="invoices" />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/payments"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="payments" />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/campaigns"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="campaigns" />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/reports"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="reports" />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/settings"
+        element={
+          <DealerProtectedRoute>
+            <DealerPortal initialTab="settings" />
+          </DealerProtectedRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
