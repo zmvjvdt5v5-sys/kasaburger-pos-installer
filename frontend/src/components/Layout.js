@@ -162,16 +162,23 @@ export const Layout = ({ children }) => {
           {/* User Section */}
           <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">
-                  {user?.name?.charAt(0).toUpperCase()}
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${isDealer ? 'bg-blue-500/20' : 'bg-primary/20'}`}>
+                <span className={`text-sm font-bold ${isDealer ? 'text-blue-400' : 'text-primary'}`}>
+                  {user?.name?.charAt(0).toUpperCase() || user?.dealer_name?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                <p className="text-sm font-medium truncate">{user?.name || user?.dealer_name}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {isDealer ? `Bayi: ${user?.dealer_code || user?.code}` : user?.email}
+                </p>
               </div>
             </div>
+            {isDealer && (
+              <div className="mb-3 px-2 py-1.5 bg-blue-500/10 rounded-md">
+                <p className="text-xs text-blue-400 text-center">Bayi Portalı</p>
+              </div>
+            )}
             <Button
               variant="ghost"
               className="w-full justify-start text-muted-foreground hover:text-destructive"
