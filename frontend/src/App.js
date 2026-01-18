@@ -197,6 +197,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/dealer-portal/kiosk-orders"
+        element={
+          <DealerProtectedRoute>
+            <KioskOrders isDealer={true} />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
         path="/dealer-portal/delivery-panel"
         element={
           <DealerProtectedRoute>
