@@ -9,6 +9,36 @@ Burger köftesi imalathanesi için üretim yönetimi, bayi satış, depo stok ta
 - **Database:** MongoDB
 - **Auth:** JWT (24 saat token)
 
+## Update: January 18, 2026 - Bayi Portal Ürün Görüntüleme Düzeltmesi
+
+### 🔧 Çözülen Kritik Sorun
+
+**Sorun:** Bayi panelinde ürünler görünmüyordu ("Bu kategoride ürün bulunamadı" mesajı).
+
+**Kök Neden:** Backend modülarizasyonu sırasında `/api/dealer-portal/*` endpoint'leri yeni router yapısına taşınmamıştı. Frontend bu endpoint'leri kullanıyordu ama backend'de mevcut değildi.
+
+**Çözüm:** Yeni `/app/backend/routers/dealer_portal.py` router dosyası oluşturuldu ve aşağıdaki endpoint'ler eklendi:
+- `GET /api/dealer-portal/me` - Bayi bilgileri
+- `GET /api/dealer-portal/products` - Ürün listesi (190 ürün)
+- `GET /api/dealer-portal/orders` - Siparişler
+- `POST /api/dealer-portal/orders` - Sipariş oluşturma
+- `GET /api/dealer-portal/invoices` - Faturalar
+- `GET /api/dealer-portal/invoices/{id}/pdf` - Fatura PDF
+- `GET /api/dealer-portal/campaigns` - Kampanyalar
+- `GET /api/dealer-portal/payments` - Ödeme geçmişi
+- `POST /api/dealer-portal/submit-payment` - Ödeme bildirimi
+- `PUT /api/dealer-portal/change-password` - Şifre değiştirme
+- `POST /api/dealer-portal/iyzico-payment` - Sanal POS ödemesi
+- `POST /api/dealer-portal/iyzico-bin-check` - BIN kontrolü
+
+### ✅ Test Sonuçları
+- Bayi girişi çalışıyor: MEKGRUP / 1234
+- Ürünler görünüyor: 190 ürün, kategorilere ayrılmış
+- Kampanyalar görünüyor: %15 Yaz İndirimi aktif
+- Tüm API endpoint'leri doğrulandı
+
+---
+
 ## Update: January 17, 2026 - Kiosk Admin "0 Ürün" Sorunu Düzeltmesi
 
 ### 🔧 Yapılan Değişiklikler
