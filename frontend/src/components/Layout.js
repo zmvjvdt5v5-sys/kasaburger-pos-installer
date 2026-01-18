@@ -33,7 +33,7 @@ import {
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/pos', label: 'Adisyon', icon: UtensilsCrossed },
-  { path: '/kitchen', label: 'Mutfak Ekranı', icon: ChefHat },
+  { path: '/mutfak', label: 'Mutfak Ekranı', icon: ChefHat },
   { path: '/products', label: 'Ürünler', icon: Package },
   { path: '/materials', label: 'Hammaddeler', icon: Boxes },
   { path: '/recipes', label: 'Reçeteler', icon: FlaskConical, adminOnly: true },
