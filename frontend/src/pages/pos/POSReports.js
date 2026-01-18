@@ -234,18 +234,40 @@ export default function POSReports() {
               Sipariş Kaynakları
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-orange-500/10 rounded-lg">
-              <span>Masa</span>
+              <span>🍽️ Masa</span>
               <span className="font-bold text-orange-400">{stats.tableOrders} sipariş</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
-              <span>Gel-Al</span>
+              <span>🛍️ Gel-Al</span>
               <span className="font-bold text-green-400">{stats.takeawayOrders} sipariş</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg">
-              <span>Paket Servis</span>
+              <span>🚴 Paket Servis</span>
               <span className="font-bold text-blue-400">{stats.deliveryOrders} sipariş</span>
+            </div>
+            {/* Platform Bazlı */}
+            <div className="border-t border-zinc-700 pt-3 mt-3">
+              <p className="text-xs text-zinc-500 mb-2">Platform Detayı</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-2 bg-pink-500/10 rounded">
+                  <span className="text-sm">🔴 Yemeksepeti</span>
+                  <span className="font-bold text-pink-400">{stats.yemeksepetiOrders || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-purple-500/10 rounded">
+                  <span className="text-sm">🟣 Getir Yemek</span>
+                  <span className="font-bold text-purple-400">{stats.getirOrders || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-orange-500/10 rounded">
+                  <span className="text-sm">🟠 Trendyol Yemek</span>
+                  <span className="font-bold text-orange-400">{stats.trendyolOrders || 0}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-green-500/10 rounded">
+                  <span className="text-sm">🟢 Migros Yemek</span>
+                  <span className="font-bold text-green-400">{stats.migrosOrders || 0}</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
