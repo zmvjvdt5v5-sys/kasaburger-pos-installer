@@ -227,6 +227,19 @@ async def update_table(table_id: str, table: TableCreate, current_user: dict = D
     )
     return {"status": "success"}
 
+@router.put("/tables/{table_id}/position")
+async def update_table_position(table_id: str, position: TablePositionUpdate, current_user: dict = Depends(get_current_user)):
+    """Masa pozisyonunu güncelle (drag-drop için)"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    await db.pos_tables.update_one(
+        {"id": table_id},
+        {"$set": {"position_x": position.position_x, "position_y": position.position_y}}
+    )
+    return {"status": "success"}
+
 @router.put("/tables/{table_id}/status")
 async def update_table_status(table_id: str, status: str, current_user: dict = Depends(get_current_user)):
     """Masa durumunu güncelle"""
