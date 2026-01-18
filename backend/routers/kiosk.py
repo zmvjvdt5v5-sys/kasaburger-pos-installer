@@ -153,9 +153,22 @@ async def create_kiosk_order(order: KioskOrder):
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     order_count = await db.kiosk_orders.count_documents({})
+    
+    # Queue number (günlük sıfırlanan sıra numarası) oluştur
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    counter = await db.queue_counters.find_one({"prefix": "PKT", "date": today}, {"_id": 0})
+    new_count = (counter.get("count", 0) if counter else 0) + 1
+    await db.queue_counters.update_one(
+        {"prefix": "PKT", "date": today},
+        {"$set": {"count": new_count, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    queue_number = f"PKT-{str(new_count).zfill(4)}"
+    
     order_doc = {
         "id": str(uuid.uuid4()),
         "order_number": f"K-{str(order_count + 1).zfill(6)}",
+        "queue_number": queue_number,
         **order.model_dump(),
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
