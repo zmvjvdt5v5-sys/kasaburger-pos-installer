@@ -8,7 +8,7 @@ import { Bell, BellOff, Printer, Clock, CheckCircle, ChefHat, Package, QrCode, V
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-const KioskOrders = () => {
+const KioskOrders = ({ isDealer = false }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
