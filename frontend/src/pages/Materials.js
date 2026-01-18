@@ -30,7 +30,8 @@ import {
 } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Boxes, Search, Loader2, ArrowDownCircle, ArrowUpCircle, Upload, Download, FileSpreadsheet } from 'lucide-react';
+import { Plus, Pencil, Trash2, Boxes, Search, Loader2, ArrowDownCircle, ArrowUpCircle, Upload, Download, FileSpreadsheet, QrCode, ScanLine } from 'lucide-react';
+import BarcodeScanner from '../components/BarcodeScanner';
 // axios removed - using fetch
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
