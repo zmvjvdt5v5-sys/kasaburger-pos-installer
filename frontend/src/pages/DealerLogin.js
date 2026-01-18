@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -9,6 +11,8 @@ import { Store, KeyRound, Loader2 } from 'lucide-react';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const DealerLogin = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [dealerCode, setDealerCode] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,12 +45,24 @@ const DealerLogin = () => {
         throw new Error(data.detail || 'Giriş başarısız');
       }
 
+      // AuthContext üzerinden login yap - dealer rolü ile
+      const dealerUser = {
+        ...data.dealer,
+        role: 'dealer',
+        dealer_code: data.dealer.code,
+        dealer_name: data.dealer.name
+      };
+      
+      localStorage.setItem('kasaburger_token', data.access_token);
+      localStorage.setItem('kasaburger_user', JSON.stringify(dealerUser));
       localStorage.setItem('dealer_token', data.access_token);
       localStorage.setItem('dealer_info', JSON.stringify(data.dealer));
+      
       toast.success('Giriş başarılı!');
       
+      // Dealer portal'a yönlendir
       setTimeout(() => {
-        window.location.href = '/dealer';
+        window.location.href = '/dealer-portal';
       }, 300);
       
     } catch (error) {
