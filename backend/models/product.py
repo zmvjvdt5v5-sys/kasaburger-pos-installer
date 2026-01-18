@@ -14,9 +14,9 @@ class ProductCreate(BaseModel):
 class ProductResponse(BaseModel):
     id: str
     name: str
-    sku: str
-    price: float
-    stock: int
+    sku: Optional[str] = None
+    price: Optional[float] = 0
+    stock: Optional[int] = 0
     category: Optional[str] = None
     description: Optional[str] = None
 
