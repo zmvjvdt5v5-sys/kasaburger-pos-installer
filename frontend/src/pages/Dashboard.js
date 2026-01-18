@@ -71,6 +71,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [platforms, setPlatforms] = useState([]);
+  const [showWizard, setShowWizard] = useState(false);
 
   useEffect(() => {
     loadStats();
