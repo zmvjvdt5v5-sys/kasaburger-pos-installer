@@ -598,39 +598,27 @@ export default function POSMain({ isDealer = false }) {
             <div className="grid grid-cols-2 gap-3">
               <Button 
                 className="h-20 flex-col gap-2 bg-green-600 hover:bg-green-700"
-                onClick={() => {
-                  toast.success('Nakit ödeme alındı!');
-                  setShowPayment(false);
-                  setCurrentOrder({ items: [], notes: '' });
-                  if (selectedTable) {
-                    setTables(prev => prev.map(t => 
-                      t.id === selectedTable.id ? { ...t, status: 'empty', order: null } : t
-                    ));
-                  }
-                  setSelectedTable(null);
-                }}
+                onClick={() => handlePayment('cash')}
               >
                 <Banknote className="h-8 w-8" />
                 <span>Nakit</span>
               </Button>
               <Button 
                 className="h-20 flex-col gap-2 bg-blue-600 hover:bg-blue-700"
-                onClick={() => {
-                  toast.success('Kredi kartı ödemesi alındı!');
-                  setShowPayment(false);
-                  setCurrentOrder({ items: [], notes: '' });
-                  if (selectedTable) {
-                    setTables(prev => prev.map(t => 
-                      t.id === selectedTable.id ? { ...t, status: 'empty', order: null } : t
-                    ));
-                  }
-                  setSelectedTable(null);
-                }}
+                onClick={() => handlePayment('card')}
               >
                 <CreditCard className="h-8 w-8" />
                 <span>Kredi Kartı</span>
               </Button>
             </div>
+
+            {/* Online Ödeme */}
+            <Button 
+              className="w-full h-14 flex-col gap-1 bg-cyan-600 hover:bg-cyan-700"
+              onClick={() => handlePayment('online')}
+            >
+              <span className="text-sm">💳 Online Ödeme (Platformdan Ödenmiş)</span>
+            </Button>
 
             <div className="grid grid-cols-4 gap-2">
               {['Sodexo', 'Multinet', 'Ticket', 'Setcard'].map(card => (
@@ -638,12 +626,7 @@ export default function POSMain({ isDealer = false }) {
                   key={card}
                   variant="outline"
                   className="h-16 flex-col text-xs"
-                  onClick={() => {
-                    toast.success(`${card} ödemesi alındı!`);
-                    setShowPayment(false);
-                    setCurrentOrder({ items: [], notes: '' });
-                    setSelectedTable(null);
-                  }}
+                  onClick={() => handlePayment(card.toLowerCase())}
                 >
                   <Smartphone className="h-5 w-5 mb-1" />
                   {card}
