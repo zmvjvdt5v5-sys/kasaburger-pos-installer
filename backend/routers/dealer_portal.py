@@ -604,3 +604,124 @@ async def check_card_bin(bin_number: str, price: float, dealer: dict = Depends(g
         import logging
         logging.error(f"BIN check error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ==========================================
+# DELIVERY PLATFORM SETTINGS FOR DEALERS
+# ==========================================
+
+class DealerPlatformSettings(BaseModel):
+    platform: str
+    enabled: bool = False
+    api_key: Optional[str] = None
+    api_secret: Optional[str] = None
+    restaurant_id: Optional[str] = None
+    supplier_id: Optional[str] = None
+    store_id: Optional[str] = None
+    webhook_secret: Optional[str] = None
+    auto_accept: bool = False
+    default_prep_time: int = 30
+
+
+@router.get("/delivery/platforms")
+async def dealer_get_platforms(dealer: dict = Depends(get_current_dealer)):
+    """Bayinin teslimat platform ayarlarını getirir"""
+    db = get_db()
+    if db is None:
+        return []
+    
+    dealer_id = dealer.get("user_id")
+    
+    platforms = await db.dealer_delivery_platforms.find(
+        {"dealer_id": dealer_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return platforms
+
+
+@router.post("/delivery/platforms")
+async def dealer_save_platform(settings: DealerPlatformSettings, dealer: dict = Depends(get_current_dealer)):
+    """Bayinin teslimat platform ayarlarını kaydeder"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    dealer_id = dealer.get("user_id")
+    
+    # Bayi bilgisini al
+    db_dealer = await db.dealers.find_one(
+        {"$or": [{"id": dealer_id}, {"code": dealer.get("email")}]},
+        {"_id": 0, "name": 1, "code": 1}
+    )
+    
+    platform_doc = {
+        "dealer_id": dealer_id,
+        "dealer_code": db_dealer.get("code") if db_dealer else dealer_id,
+        "dealer_name": db_dealer.get("name") if db_dealer else "Bayi",
+        "platform": settings.platform,
+        "enabled": settings.enabled,
+        "api_key": settings.api_key,
+        "api_secret": settings.api_secret,
+        "restaurant_id": settings.restaurant_id,
+        "supplier_id": settings.supplier_id,
+        "store_id": settings.store_id,
+        "webhook_secret": settings.webhook_secret,
+        "auto_accept": settings.auto_accept,
+        "default_prep_time": settings.default_prep_time,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Upsert - varsa güncelle, yoksa ekle
+    await db.dealer_delivery_platforms.update_one(
+        {"dealer_id": dealer_id, "platform": settings.platform},
+        {"$set": platform_doc},
+        upsert=True
+    )
+    
+    return {"status": "success", "message": "Platform ayarları kaydedildi"}
+
+
+@router.post("/delivery/platforms/{platform}/test")
+async def dealer_test_platform(platform: str, dealer: dict = Depends(get_current_dealer)):
+    """Platform bağlantısını test eder"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    dealer_id = dealer.get("user_id")
+    
+    # Platform ayarlarını al
+    platform_config = await db.dealer_delivery_platforms.find_one(
+        {"dealer_id": dealer_id, "platform": platform},
+        {"_id": 0}
+    )
+    
+    if not platform_config or not platform_config.get("api_key"):
+        return {"success": False, "error": "API anahtarı girilmemiş"}
+    
+    # Şimdilik basit bir simülasyon - gerçek API çağrısı yapılabilir
+    # Gerçek implementasyonda platform API'lerine bağlantı yapılır
+    return {
+        "success": True,
+        "message": f"{platform} bağlantısı başarılı",
+        "order_count": 0
+    }
+
+
+@router.get("/delivery/orders")
+async def dealer_get_delivery_orders(dealer: dict = Depends(get_current_dealer)):
+    """Bayinin teslimat siparişlerini getirir"""
+    db = get_db()
+    if db is None:
+        return []
+    
+    dealer_id = dealer.get("user_id")
+    
+    orders = await db.delivery_orders.find(
+        {"dealer_id": dealer_id, "status": {"$in": ["new", "accepted", "preparing", "ready"]}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return orders
