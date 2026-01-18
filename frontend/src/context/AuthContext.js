@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
           // Dealer için farklı verify endpoint kullan
           const isDealer = parsedUser.role === 'dealer';
           const verifyUrl = isDealer 
-            ? `${BACKEND_URL}/api/dealer-portal/me`
+            ? `${BACKEND_URL}/api/dealers/me/info`
             : `${BACKEND_URL}/api/auth/me`;
           
           const response = await fetch(verifyUrl, {
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
             // Dealer için role bilgisini koru
             if (isDealer) {
               data.role = 'dealer';
-              data.dealer_code = parsedUser.dealer_code;
+              data.dealer_code = parsedUser.dealer_code || data.code;
               data.dealer_name = parsedUser.dealer_name || data.name;
             }
             setUser(data);
@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
             if (isDealer) {
               // Dealer token'ı geçersizse sadece loglayalım
               console.log('Dealer token verification failed, using saved data');
+              setUser(parsedUser);
             } else {
               logout();
             }
