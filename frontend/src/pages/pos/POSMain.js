@@ -13,8 +13,10 @@ import {
   Search, X, Check, Split, Percent, MessageSquare, ArrowLeftRight,
   Package, Bike, ShoppingBag, RefreshCw, Settings, LogOut, Home,
   Clock, DollarSign, TrendingUp, FileText, Merge, Move, Edit3,
-  GripVertical, Bell, Volume2
+  GripVertical, Bell, Volume2, ScanLine
 } from 'lucide-react';
+import { BarcodeScanButton, useBarcodeListener } from '../../components/BarcodeScanner';
+import { PushNotificationToggle } from '../../components/PushNotifications';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const WS_URL = BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
