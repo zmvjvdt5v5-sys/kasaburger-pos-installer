@@ -269,6 +269,24 @@ function AppRoutes() {
         }
       />
 
+      {/* Admin POS Routes */}
+      <Route
+        path="/pos"
+        element={
+          <ProtectedRoute>
+            <POSMain />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/kitchen"
+        element={
+          <ProtectedRoute>
+            <KitchenDisplay />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Protected Routes */}
       <Route
         path="/dashboard"
