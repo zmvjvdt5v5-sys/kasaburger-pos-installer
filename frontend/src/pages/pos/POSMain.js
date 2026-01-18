@@ -587,6 +587,74 @@ export default function POSMain() {
     toast.success('İndirim uygulandı');
   };
 
+  // Masa Birleştir
+  const handleMergeTables = async () => {
+    if (selectedMergeTables.length < 2) {
+      toast.error('En az 2 masa seçin');
+      return;
+    }
+
+    try {
+      const token = getToken();
+      const mainTable = selectedMergeTables[0];
+      const otherTables = selectedMergeTables.slice(1);
+
+      const response = await fetch(`${BACKEND_URL}/api/pos/tables/merge`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          main_table_id: mainTable.id,
+          merge_table_ids: otherTables.map(t => t.id)
+        })
+      });
+
+      if (response.ok) {
+        toast.success(`${selectedMergeTables.length} masa birleştirildi`);
+        loadData();
+        setShowMerge(false);
+        setSelectedMergeTables([]);
+      } else {
+        toast.error('Birleştirme başarısız');
+      }
+    } catch (error) {
+      console.error('Merge error:', error);
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  // Masa Ayır
+  const handleSplitTable = async (tableId) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/pos/tables/${tableId}/split`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        toast.success('Masa ayrıldı');
+        loadData();
+      } else {
+        toast.error('Ayırma başarısız');
+      }
+    } catch (error) {
+      console.error('Split error:', error);
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  // Toggle masa seçimi (birleştirme için)
+  const toggleTableForMerge = (table) => {
+    if (selectedMergeTables.find(t => t.id === table.id)) {
+      setSelectedMergeTables(prev => prev.filter(t => t.id !== table.id));
+    } else {
+      setSelectedMergeTables(prev => [...prev, table]);
+    }
+  };
+
   // Siparişi gönder
   const sendOrder = async () => {
     if (!currentOrder?.items?.length) {
