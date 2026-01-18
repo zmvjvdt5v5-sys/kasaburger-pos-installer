@@ -271,6 +271,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/dealer-portal/mutfak"
+        element={
+          <DealerProtectedRoute>
+            <UnifiedKitchen />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
         path="/dealer-portal/pos-reports"
         element={
           <DealerProtectedRoute>
