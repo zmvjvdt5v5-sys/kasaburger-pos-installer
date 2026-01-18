@@ -249,23 +249,35 @@ export default function POSReports() {
             </div>
             {/* Platform Bazlı */}
             <div className="border-t border-zinc-700 pt-3 mt-3">
-              <p className="text-xs text-zinc-500 mb-2">Platform Detayı</p>
+              <p className="text-xs text-zinc-500 mb-2">Platform Detayı (Sipariş / Gelir)</p>
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-pink-500/10 rounded">
                   <span className="text-sm">🔴 Yemeksepeti</span>
-                  <span className="font-bold text-pink-400">{stats.yemeksepetiOrders || 0}</span>
+                  <div className="text-right">
+                    <span className="font-bold text-pink-400">{stats.yemeksepetiOrders || 0} sipariş</span>
+                    <div className="text-xs text-pink-300">{formatCurrency(stats.yemeksepetiRevenue || 0)}</div>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-purple-500/10 rounded">
                   <span className="text-sm">🟣 Getir Yemek</span>
-                  <span className="font-bold text-purple-400">{stats.getirOrders || 0}</span>
+                  <div className="text-right">
+                    <span className="font-bold text-purple-400">{stats.getirOrders || 0} sipariş</span>
+                    <div className="text-xs text-purple-300">{formatCurrency(stats.getirRevenue || 0)}</div>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-orange-500/10 rounded">
                   <span className="text-sm">🟠 Trendyol Yemek</span>
-                  <span className="font-bold text-orange-400">{stats.trendyolOrders || 0}</span>
+                  <div className="text-right">
+                    <span className="font-bold text-orange-400">{stats.trendyolOrders || 0} sipariş</span>
+                    <div className="text-xs text-orange-300">{formatCurrency(stats.trendyolRevenue || 0)}</div>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-green-500/10 rounded">
                   <span className="text-sm">🟢 Migros Yemek</span>
-                  <span className="font-bold text-green-400">{stats.migrosOrders || 0}</span>
+                  <div className="text-right">
+                    <span className="font-bold text-green-400">{stats.migrosOrders || 0} sipariş</span>
+                    <div className="text-xs text-green-300">{formatCurrency(stats.migrosRevenue || 0)}</div>
+                  </div>
                 </div>
               </div>
             </div>
