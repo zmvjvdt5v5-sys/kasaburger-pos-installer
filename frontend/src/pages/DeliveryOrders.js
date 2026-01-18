@@ -55,7 +55,7 @@ const STATUS_CONFIG = {
   cancelled: { label: 'İptal', color: 'bg-red-500', icon: X }
 };
 
-export default function DeliveryOrders() {
+export default function DeliveryOrders({ isDealer = false }) {
   const [platforms, setPlatforms] = useState([]);
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(null);
