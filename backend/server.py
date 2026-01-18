@@ -196,9 +196,11 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     orders = await db.orders.count_documents({})
     dealers = await db.dealers.count_documents({})
     
-    # Toplam gelir
-    all_orders = await db.orders.find({}, {"total": 1}).to_list(1000)
-    revenue = sum(o.get("total", 0) for o in all_orders)
+    # Toplam gelir - MongoDB aggregation ile optimize edildi
+    revenue_result = await db.orders.aggregate([
+        {"$group": {"_id": None, "total": {"$sum": "$total"}}}
+    ]).to_list(1)
+    revenue = revenue_result[0]["total"] if revenue_result else 0
     
     return {
         "totalProducts": products,
