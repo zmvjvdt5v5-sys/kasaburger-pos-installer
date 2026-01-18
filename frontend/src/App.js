@@ -188,6 +188,22 @@ function AppRoutes() {
           </DealerProtectedRoute>
         }
       />
+      <Route
+        path="/dealer-portal/delivery"
+        element={
+          <DealerProtectedRoute>
+            <DeliveryOrders isDealer={true} />
+          </DealerProtectedRoute>
+        }
+      />
+      <Route
+        path="/dealer-portal/delivery-panel"
+        element={
+          <DealerProtectedRoute>
+            <DeliveryPanel isDealer={true} />
+          </DealerProtectedRoute>
+        }
+      />
 
       {/* Protected Routes */}
       <Route
