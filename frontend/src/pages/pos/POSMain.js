@@ -30,10 +30,17 @@ const TABLE_STATUS = {
 const PAYMENT_METHODS = [
   { id: 'cash', label: 'Nakit', icon: Banknote, color: 'bg-green-600 hover:bg-green-700' },
   { id: 'card', label: 'Kredi Kartı', icon: CreditCard, color: 'bg-blue-600 hover:bg-blue-700' },
-  { id: 'online', label: 'Online Ödeme', icon: Smartphone, color: 'bg-purple-600 hover:bg-purple-700' },
   { id: 'sodexo', label: 'Sodexo', icon: QrCode, color: 'bg-red-600 hover:bg-red-700' },
   { id: 'multinet', label: 'Multinet', icon: QrCode, color: 'bg-amber-600 hover:bg-amber-700' },
   { id: 'setcard', label: 'Setcard', icon: QrCode, color: 'bg-cyan-600 hover:bg-cyan-700' },
+];
+
+// Platform Online Ödemeleri
+const PLATFORM_PAYMENTS = [
+  { id: 'yemeksepeti_online', label: 'Yemeksepeti Online', icon: Smartphone, color: 'bg-pink-600 hover:bg-pink-700' },
+  { id: 'getir_online', label: 'Getir Online', icon: Smartphone, color: 'bg-purple-600 hover:bg-purple-700' },
+  { id: 'trendyol_online', label: 'Trendyol Online', icon: Smartphone, color: 'bg-orange-600 hover:bg-orange-700' },
+  { id: 'migros_online', label: 'Migros Online', icon: Smartphone, color: 'bg-green-700 hover:bg-green-800' },
 ];
 
 export default function POSMain() {
