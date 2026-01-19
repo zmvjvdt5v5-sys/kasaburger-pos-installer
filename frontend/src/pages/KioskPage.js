@@ -1257,6 +1257,204 @@ const KioskPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Sadakat Programı Dialog */}
+      <Dialog open={showLoyalty} onOpenChange={setShowLoyalty}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-3">
+              ⭐ Sadakat Programı
+            </DialogTitle>
+          </DialogHeader>
+          
+          {!loyaltyMember ? (
+            // Telefon numarası girişi
+            <div className="space-y-4 py-4">
+              <p className="text-zinc-400 text-center">
+                Telefon numaranızı girerek puan kazanın ve ödüller kazanın!
+              </p>
+              <div className="space-y-2">
+                <label className="text-sm text-zinc-400">Telefon Numarası</label>
+                <Input
+                  type="tel"
+                  placeholder="05XX XXX XX XX"
+                  value={loyaltyPhone}
+                  onChange={(e) => setLoyaltyPhone(e.target.value.replace(/\D/g, ''))}
+                  className="bg-zinc-800 border-zinc-700 text-white text-center text-xl py-6"
+                  maxLength={11}
+                />
+              </div>
+              <Button 
+                onClick={lookupLoyaltyMember} 
+                className="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-lg"
+                disabled={loyaltyPhone.length < 10}
+              >
+                Devam Et
+              </Button>
+              
+              {/* Avantajlar */}
+              <div className="mt-4 pt-4 border-t border-zinc-800">
+                <p className="text-sm text-zinc-400 mb-3">Üyelik Avantajları:</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                    <span className="text-2xl block mb-1">🎯</span>
+                    <p>Her ₺1 = 1 Puan</p>
+                  </div>
+                  <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                    <span className="text-2xl block mb-1">🎁</span>
+                    <p>Ücretsiz Ürünler</p>
+                  </div>
+                  <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                    <span className="text-2xl block mb-1">💎</span>
+                    <p>VIP Seviyeler</p>
+                  </div>
+                  <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                    <span className="text-2xl block mb-1">🎉</span>
+                    <p>Özel İndirimler</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Üye bilgileri
+            <div className="space-y-4 py-4">
+              {/* Üye Kartı */}
+              <div className={`rounded-2xl p-6 relative overflow-hidden ${
+                loyaltyMember.member.tier === 'platinum' ? 'bg-gradient-to-br from-slate-800 to-slate-900' :
+                loyaltyMember.member.tier === 'gold' ? 'bg-gradient-to-br from-yellow-600 to-amber-700' :
+                loyaltyMember.member.tier === 'silver' ? 'bg-gradient-to-br from-slate-400 to-slate-600' :
+                'bg-gradient-to-br from-orange-700 to-amber-900'
+              }`}>
+                <div className="absolute top-0 right-0 w-32 h-32 opacity-10 text-8xl">
+                  {loyaltyMember.tier_info?.icon || '🥉'}
+                </div>
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-4xl">{loyaltyMember.tier_info?.icon || '🥉'}</span>
+                    <div>
+                      <p className="font-bold text-lg">{loyaltyMember.member.name || 'Üye'}</p>
+                      <p className="text-white/70 text-sm">{loyaltyMember.tier_info?.name || 'Bronz'} Üye</p>
+                    </div>
+                  </div>
+                  <div className="text-center py-4">
+                    <p className="text-sm text-white/70">Toplam Puan</p>
+                    <p className="text-5xl font-black">{loyaltyMember.member.total_points}</p>
+                  </div>
+                  {loyaltyMember.next_tier && (
+                    <div className="mt-2 bg-black/20 rounded-lg p-2 text-center text-sm">
+                      {loyaltyMember.next_tier.icon} {loyaltyMember.next_tier.name} için {loyaltyMember.next_tier.points_needed} puan
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* İstatistikler */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-orange-500">{loyaltyMember.member.total_orders}</p>
+                  <p className="text-xs text-zinc-400">Sipariş</p>
+                </div>
+                <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-green-500">₺{loyaltyMember.member.total_spent?.toFixed(0) || 0}</p>
+                  <p className="text-xs text-zinc-400">Harcama</p>
+                </div>
+              </div>
+              
+              {/* Aksiyonlar */}
+              <div className="space-y-2">
+                <Button 
+                  onClick={() => { setShowLoyalty(false); setShowRewards(true); }}
+                  className="w-full py-5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-lg"
+                >
+                  🎁 Ödüllerimi Gör ({loyaltyRewards.filter(r => loyaltyMember.member.total_points >= r.points_required).length} kullanılabilir)
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => { setLoyaltyMember(null); setLoyaltyPhone(''); }}
+                >
+                  Farklı Numara Gir
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Ödüller Dialog */}
+      <Dialog open={showRewards} onOpenChange={setShowRewards}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center justify-between">
+              <span>🎁 Ödüllerim</span>
+              {loyaltyMember && (
+                <span className="text-lg font-normal bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-full">
+                  {loyaltyMember.member.total_points} Puan
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            {loyaltyRewards.map(reward => {
+              const canRedeem = loyaltyMember?.member?.total_points >= reward.points_required;
+              const progress = Math.min(100, ((loyaltyMember?.member?.total_points || 0) / reward.points_required) * 100);
+              
+              return (
+                <div 
+                  key={reward.id}
+                  className={`rounded-xl p-4 border ${canRedeem ? 'bg-zinc-800 border-yellow-500/50' : 'bg-zinc-800/50 border-zinc-700'}`}
+                >
+                  <div className="flex gap-4">
+                    {reward.image && (
+                      <img src={reward.image} alt={reward.name} className="w-20 h-20 object-cover rounded-lg" />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-bold">{reward.name}</h4>
+                        <span className={`text-sm font-bold ${canRedeem ? 'text-yellow-500' : 'text-zinc-500'}`}>
+                          {reward.points_required} Puan
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-400 mb-2">{reward.description}</p>
+                      
+                      {!canRedeem && (
+                        <div className="mb-2">
+                          <div className="h-2 bg-zinc-700 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-yellow-500 to-amber-600 transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-zinc-500 mt-1">
+                            {reward.points_required - (loyaltyMember?.member?.total_points || 0)} puan daha gerekli
+                          </p>
+                        </div>
+                      )}
+                      
+                      <Button
+                        size="sm"
+                        onClick={() => redeemReward(reward)}
+                        disabled={!canRedeem}
+                        className={canRedeem 
+                          ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700' 
+                          : 'bg-zinc-700 cursor-not-allowed'
+                        }
+                      >
+                        {canRedeem ? '🎁 Kullan' : '🔒 Kilitli'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <Button variant="outline" onClick={() => setShowRewards(false)} className="w-full">
+            Kapat
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
