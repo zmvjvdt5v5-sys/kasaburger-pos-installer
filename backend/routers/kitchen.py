@@ -229,8 +229,8 @@ async def get_salon_display_data():
     if db is None:
         return {"ready_orders": [], "calling_orders": []}
     
-    # Son 30 dakika içinde hazır olan siparişler veya ready_at olmayan ready siparişler
-    thirty_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
+    # Son 24 saat içinde hazır olan siparişler veya ready_at olmayan ready siparişler
+    one_day_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     
     ready_orders = []
     
