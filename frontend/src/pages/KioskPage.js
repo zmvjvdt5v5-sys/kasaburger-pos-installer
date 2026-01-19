@@ -49,12 +49,12 @@ const DEFAULT_PRODUCTS = [
 
 const MENU_DATA = {
   categories: [
-    { id: 'et-burger', name: 'Burger', icon: '🍔' },
-    { id: 'premium', name: 'Premium', icon: '👑' },
-    { id: 'tavuk', name: 'Tavuk', icon: '🍗' },
-    { id: 'atistirmalik', name: 'Yan Ürün', icon: '🍟' },
-    { id: 'icecek', name: 'İçecek', icon: '🥤' },
-    { id: 'tatli', name: 'Tatlı', icon: '🍫' },
+    { id: 'Et Burger', name: 'Burger', icon: '🍔' },
+    { id: 'Premium', name: 'Premium', icon: '👑' },
+    { id: 'Tavuk', name: 'Tavuk', icon: '🍗' },
+    { id: 'Yan Ürün', name: 'Yan Ürün', icon: '🍟' },
+    { id: 'İçecek', name: 'İçecek', icon: '🥤' },
+    { id: 'Tatlı', name: 'Tatlı', icon: '🍫' },
   ],
   products: DEFAULT_PRODUCTS
 };
