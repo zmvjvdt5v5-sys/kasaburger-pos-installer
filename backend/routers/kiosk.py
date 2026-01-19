@@ -145,6 +145,9 @@ class LoyaltyMember(BaseModel):
     qr_code: Optional[str] = None
     created_at: Optional[str] = None
     last_order_at: Optional[str] = None
+    # Doğum günü alanları
+    birth_date: Optional[str] = None  # Format: MM-DD
+    last_birthday_bonus_year: Optional[int] = None  # Son bonus alınan yıl
 
 
 class LoyaltyReward(BaseModel):
