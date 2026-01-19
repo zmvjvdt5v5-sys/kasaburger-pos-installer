@@ -1458,3 +1458,85 @@ Her gün saat 00:00'da counter sıfırlanır:
 - [ ] E-fatura GIB entegrasyonu (API credentials bekleniyor)
 - [ ] InPOS yazıcı gerçek cihaz testi
 - [ ] Termal yazıcı gerçek cihaz entegrasyonu
+
+---
+
+## Update: January 19, 2026 - Action Items Tamamlandı
+
+### ✅ 1. PDF Bayi Kullanım Rehberi
+
+**Durum:** TAMAMLANDI
+
+**Dosyalar:**
+- `/app/docs/BAYI_KULLANIM_REHBERI.pdf` - PDF rehber
+- `/app/frontend/public/BAYI_KULLANIM_REHBERI.pdf` - Public erişim için kopyası
+- `/app/docs/generate_pdf.py` - PDF oluşturma scripti
+
+**Özellikler:**
+- ✅ Profesyonel tasarım (ReportLab ile)
+- ✅ Kapak sayfası
+- ✅ Tüm bölümler: Giriş, Sipariş, Ödeme, Ekstre, Platform Entegrasyonu, POS, Mutfak, Salon Ekranı
+- ✅ Sipariş kodları tablosu (MASA-X, PKT-XXXX, ONLNPKT-XXXX)
+- ✅ İletişim bilgileri
+- ✅ `/bayi-rehber` sayfasında "PDF Olarak İndir" butonu
+
+### ✅ 2. WebSocket Production Fix
+
+**Durum:** TAMAMLANDI
+
+**Değişiklik:** `/app/frontend/src/pages/pos/POSMain.js`
+
+**Önceki:**
+```javascript
+const WS_URL = BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
+```
+
+**Sonrası:**
+```javascript
+const getWebSocketUrl = () => {
+  if (!BACKEND_URL) return null;
+  try {
+    const url = new URL(BACKEND_URL);
+    const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${url.host}`;
+    return wsUrl;
+  } catch (e) {
+    console.error('WebSocket URL oluşturma hatası:', e);
+    return null;
+  }
+};
+const WS_URL = getWebSocketUrl();
+```
+
+**Neden?** Önceki yöntem `localhost` içeren URL'lerde sorun çıkarıyordu. Yeni yöntem `URL` API'sini kullanarak daha güvenilir URL parsing yapıyor.
+
+### ⚠️ 3. Electron Desktop Build
+
+**Durum:** KISMI TAMAMLANDI
+
+**Linux ARM64 Build:** ✅ Hazır
+- `/app/electron/dist/linux-arm64-unpacked/kasaburger-pos`
+
+**Windows Build:** ❌ Wine gerekli
+- Sunucu ortamında Windows binary oluşturulamadı
+- Bayiler kendi Windows bilgisayarlarında build yapmalı
+
+**Kurulum Rehberi:** `/app/electron/KURULUM_REHBERI.md`
+
+**Windows'ta Build Komutu:**
+```bash
+cd electron
+npm install
+npm run build:win
+```
+
+---
+
+## Özet
+
+| Görev | Durum | Not |
+|-------|-------|-----|
+| PDF Rehber | ✅ | 7.3 KB, indirilebilir |
+| WebSocket Fix | ✅ | URL API kullanıyor |
+| Electron Linux | ✅ | 262 MB unpacked |
+| Electron Windows | ⚠️ | Wine gerekli - kullanıcı build yapmalı |
