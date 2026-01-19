@@ -145,7 +145,7 @@ def create_content(styles):
     
     elements.append(Paragraph("<b>Adım 1: Tarayıcıyı Açın</b>", styles['Heading3Custom']))
     elements.append(Paragraph("Chrome, Firefox, Safari veya Edge tarayıcısını açın ve adres çubuğuna aşağıdaki adresi yazın:", styles['BodyCustom']))
-    elements.append(Paragraph("https://franchise-pos.preview.emergentagent.com/dealer-login", styles['Code']))
+    elements.append(Paragraph("https://franchise-pos.preview.emergentagent.com/dealer-login", styles['CodeCustom']))
     
     elements.append(Paragraph("<b>Adım 2: Giriş Bilgilerini Girin</b>", styles['Heading3Custom']))
     elements.append(Paragraph("• <b>Bayi Kodu:</b> Merkez tarafından size verilen kod (örn: MEKGRUP, BY-001)", styles['ListItem']))
@@ -233,7 +233,7 @@ def create_content(styles):
     elements.append(Spacer(1, 10))
     
     elements.append(Paragraph("<b>Sipariş Durumu Akışı:</b>", styles['Heading3Custom']))
-    elements.append(Paragraph("YENİ → HAZIRLANIYOR → HAZIR → TESLİM EDİLDİ", styles['Code']))
+    elements.append(Paragraph("YENİ → HAZIRLANIYOR → HAZIR → TESLİM EDİLDİ", styles['CodeCustom']))
     elements.append(Paragraph("Her siparişin yanındaki butonlara tıklayarak durumu güncelleyin.", styles['BodyCustom']))
     
     # Bölüm 8: Salon Ekranı
