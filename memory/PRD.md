@@ -1841,6 +1841,38 @@ DELETE /api/kiosk/products/cleanup-test              - Test ürünlerini temizle
 
 ---
 
+## Update: January 19, 2026 - Backend Kiosk Modülü Refactoring
+
+### ✅ Tamamlanan Refactoring
+
+Monolitik `kiosk.py` (1588 satır) 3 küçük modüle bölündü:
+
+**Yeni Dosya Yapısı:**
+```
+/app/backend/routers/
+├── kiosk_core.py        # 401 satır - Ürünler, Kategoriler, Siparişler
+├── kiosk_loyalty.py     # 492 satır - Sadakat, Referans, Doğum Günü
+├── kiosk_promotions.py  # 262 satır - Combo Menüler, Promosyonlar
+└── kiosk_old_backup.py  # Yedek (eski monolitik dosya)
+```
+
+**Avantajlar:**
+- Her modül tek bir sorumluluğa odaklı
+- Daha kolay bakım ve test
+- Bağımsız geliştirme imkanı
+- Hot-reload performansı artışı
+
+**Test Sonuçları:**
+- ✅ /api/kiosk/products - Çalışıyor (31 ürün)
+- ✅ /api/kiosk/categories - Çalışıyor (6 kategori)
+- ✅ /api/kiosk/combos - Çalışıyor (4 combo)
+- ✅ /api/kiosk/promotions - Çalışıyor (2 promosyon)
+- ✅ /api/kiosk/loyalty/* - Çalışıyor (tüm endpointler)
+- ✅ Frontend Kiosk sayfası - Düzgün görüntüleniyor
+
+
+---
+
 ## Update: January 19, 2026 - Doğum Günü Bonusu (Birthday Bonus)
 
 ### ✅ Tamamlanan Özellikler
