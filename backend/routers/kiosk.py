@@ -145,6 +145,25 @@ async def create_kiosk_category(category: KioskCategory, current_user: dict = De
     return cat_doc
 
 
+@router.put("/categories/reorder")
+async def reorder_kiosk_categories(request: CategoryReorderRequest, current_user: dict = Depends(get_current_user)):
+    """Kategorileri yeniden sırala"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    for idx, cat_id in enumerate(request.category_ids):
+        await db.kiosk_categories.update_one(
+            {"id": cat_id},
+            {"$set": {"order": idx + 1}}
+        )
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return {"status": "success", "order": request.category_ids}
+
+
 @router.put("/categories/{category_id}")
 async def update_kiosk_category(category_id: str, category: KioskCategory, current_user: dict = Depends(get_current_user)):
     """Kategori güncelle"""
