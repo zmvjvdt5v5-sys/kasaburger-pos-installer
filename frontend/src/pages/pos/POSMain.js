@@ -19,7 +19,25 @@ import { BarcodeScanButton, useBarcodeListener } from '../../components/BarcodeS
 import { PushNotificationToggle } from '../../components/PushNotifications';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const WS_URL = BACKEND_URL?.replace('https://', 'wss://').replace('http://', 'ws://');
+
+// WebSocket URL'ini doğru şekilde oluştur
+const getWebSocketUrl = () => {
+  if (!BACKEND_URL) return null;
+  
+  try {
+    const url = new URL(BACKEND_URL);
+    // Production'da wss, development'da ws kullan
+    const wsProtocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    // Port varsa ekle, yoksa varsayılan port kullanılır
+    const wsUrl = `${wsProtocol}//${url.host}`;
+    return wsUrl;
+  } catch (e) {
+    console.error('WebSocket URL oluşturma hatası:', e);
+    return null;
+  }
+};
+
+const WS_URL = getWebSocketUrl();
 
 // Masa durumları
 const TABLE_STATUS = {
