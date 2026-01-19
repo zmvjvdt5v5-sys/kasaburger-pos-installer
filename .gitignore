@@ -107,3 +107,7 @@ frontend/node_modules/.cache/default-development/14.pack
 electron/dist/linux-arm64-unpacked/kasaburger-pos
 electron/dist/win-unpacked/KasaBurger
 POS.exe
+-e 
+# Environment files
+*.env
+*.env.*
