@@ -649,7 +649,7 @@ const KioskAdmin = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
             Ürünler
@@ -657,6 +657,14 @@ const KioskAdmin = () => {
           <TabsTrigger value="categories" className="flex items-center gap-2">
             <Layers className="h-4 w-4" />
             Kategoriler
+          </TabsTrigger>
+          <TabsTrigger value="combos" className="flex items-center gap-2">
+            <Gift className="h-4 w-4" />
+            Menüler
+          </TabsTrigger>
+          <TabsTrigger value="promotions" className="flex items-center gap-2">
+            <Percent className="h-4 w-4" />
+            Kampanyalar
           </TabsTrigger>
         </TabsList>
 
