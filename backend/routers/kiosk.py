@@ -1414,3 +1414,175 @@ async def get_referral_stats(current_user: dict = Depends(get_current_user)):
         "bonus_per_referral": REFERRAL_BONUS,
         "top_referrers": top_referrers
     }
+
+
+
+# ==================== DOĞUM GÜNÜ BONUSU ====================
+
+@router.post("/loyalty/member/set-birthday")
+async def set_member_birthday(phone: str = Body(...), birth_date: str = Body(...)):
+    """Üyenin doğum gününü ayarla (Format: MM-DD, örn: 05-15 = 15 Mayıs)"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    
+    # Format kontrolü (MM-DD)
+    try:
+        month, day = birth_date.split("-")
+        month = int(month)
+        day = int(day)
+        if not (1 <= month <= 12 and 1 <= day <= 31):
+            raise ValueError()
+        birth_date_formatted = f"{month:02d}-{day:02d}"
+    except:
+        raise HTTPException(status_code=400, detail="Geçersiz tarih formatı. Format: MM-DD (örn: 05-15)")
+    
+    # Üyeyi güncelle
+    result = await db.loyalty_members.update_one(
+        {"phone": clean_phone},
+        {"$set": {"birth_date": birth_date_formatted}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    return {
+        "status": "success",
+        "birth_date": birth_date_formatted,
+        "message": "Doğum günü kaydedildi! 🎂"
+    }
+
+
+@router.get("/loyalty/member/{phone}/birthday-status")
+async def check_birthday_bonus(phone: str):
+    """Doğum günü bonusu durumunu kontrol et"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    birth_date = member.get("birth_date")
+    if not birth_date:
+        return {
+            "has_birthday": False,
+            "is_birthday_today": False,
+            "can_claim_bonus": False,
+            "message": "Doğum günü bilgisi kayıtlı değil"
+        }
+    
+    # Bugün doğum günü mü?
+    today = datetime.now(timezone.utc)
+    today_mmdd = f"{today.month:02d}-{today.day:02d}"
+    is_birthday = (birth_date == today_mmdd)
+    
+    # Bu yıl bonus aldı mı?
+    last_bonus_year = member.get("last_birthday_bonus_year")
+    can_claim = is_birthday and (last_bonus_year != today.year)
+    
+    birthday_config = LOYALTY_CONFIG.get("birthday_bonus", {})
+    
+    return {
+        "has_birthday": True,
+        "birth_date": birth_date,
+        "is_birthday_today": is_birthday,
+        "can_claim_bonus": can_claim,
+        "already_claimed_this_year": (last_bonus_year == today.year),
+        "bonus_points": birthday_config.get("points", 200),
+        "free_product": birthday_config.get("free_product_name", "Kasa Classic Burger"),
+        "message": birthday_config.get("message") if is_birthday else None
+    }
+
+
+@router.post("/loyalty/member/claim-birthday-bonus")
+async def claim_birthday_bonus(phone: str = Body(..., embed=True)):
+    """Doğum günü bonusunu al (200 puan + ücretsiz burger)"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    birth_date = member.get("birth_date")
+    if not birth_date:
+        raise HTTPException(status_code=400, detail="Doğum günü bilgisi kayıtlı değil")
+    
+    # Bugün doğum günü mü?
+    today = datetime.now(timezone.utc)
+    today_mmdd = f"{today.month:02d}-{today.day:02d}"
+    
+    if birth_date != today_mmdd:
+        raise HTTPException(status_code=400, detail="Bugün doğum gününüz değil")
+    
+    # Bu yıl bonus aldı mı?
+    last_bonus_year = member.get("last_birthday_bonus_year")
+    if last_bonus_year == today.year:
+        raise HTTPException(status_code=400, detail="Bu yılki doğum günü bonusunuzu zaten aldınız")
+    
+    birthday_config = LOYALTY_CONFIG.get("birthday_bonus", {})
+    bonus_points = birthday_config.get("points", 200)
+    
+    # Bonus ver ve yılı kaydet
+    await db.loyalty_members.update_one(
+        {"phone": clean_phone},
+        {
+            "$inc": {"total_points": bonus_points},
+            "$set": {"last_birthday_bonus_year": today.year}
+        }
+    )
+    
+    # Transaction kaydet
+    await db.loyalty_transactions.insert_one({
+        "member_id": member["id"],
+        "points": bonus_points,
+        "transaction_type": "birthday_bonus",
+        "description": f"🎂 Doğum günü bonusu {today.year}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    new_total = member.get("total_points", 0) + bonus_points
+    
+    return {
+        "status": "success",
+        "bonus_points": bonus_points,
+        "free_product_id": birthday_config.get("free_product_id"),
+        "free_product_name": birthday_config.get("free_product_name"),
+        "new_total_points": new_total,
+        "message": "🎂 Doğum Günün Kutlu Olsun! 200 puan + Ücretsiz Kasa Classic Burger kazandın!"
+    }
+
+
+@router.get("/loyalty/birthdays/today")
+async def get_todays_birthdays(current_user: dict = Depends(get_current_user)):
+    """Bugün doğum günü olan üyeleri getir (admin)"""
+    db = get_db()
+    if db is None:
+        return []
+    
+    today = datetime.now(timezone.utc)
+    today_mmdd = f"{today.month:02d}-{today.day:02d}"
+    
+    members = await db.loyalty_members.find(
+        {"birth_date": today_mmdd},
+        {"_id": 0, "phone": 1, "name": 1, "total_points": 1, "tier": 1, "last_birthday_bonus_year": 1}
+    ).to_list(100)
+    
+    # Bonus durumunu ekle
+    for member in members:
+        member["bonus_claimed"] = (member.get("last_birthday_bonus_year") == today.year)
+    
+    return {
+        "date": today_mmdd,
+        "count": len(members),
+        "members": members
+    }
