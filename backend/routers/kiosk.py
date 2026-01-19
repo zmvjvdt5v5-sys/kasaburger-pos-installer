@@ -132,6 +132,113 @@ class KioskPromotion(BaseModel):
     banner_color: str = "#FF6B00"
 
 
+# ==================== SADAKAT PROGRAMI MODELLERİ ====================
+
+class LoyaltyMember(BaseModel):
+    id: Optional[str] = None
+    phone: str  # Telefon numarası (benzersiz)
+    name: Optional[str] = None
+    total_points: int = 0
+    total_orders: int = 0
+    total_spent: float = 0
+    tier: str = "bronze"  # bronze, silver, gold, platinum
+    qr_code: Optional[str] = None
+    created_at: Optional[str] = None
+    last_order_at: Optional[str] = None
+
+
+class LoyaltyReward(BaseModel):
+    id: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    points_required: int
+    reward_type: str = "free_product"  # free_product, discount_percent, discount_fixed
+    reward_value: Optional[str] = None  # product_id veya indirim değeri
+    is_active: bool = True
+    image: Optional[str] = None
+
+
+class LoyaltyTransaction(BaseModel):
+    member_id: str
+    order_id: Optional[str] = None
+    points: int
+    transaction_type: str  # earn, redeem
+    description: str
+
+
+# Sadakat Programı Ayarları
+LOYALTY_CONFIG = {
+    "points_per_lira": 1,  # Her 1 TL = 1 puan
+    "tiers": {
+        "bronze": {"min_points": 0, "bonus_multiplier": 1.0, "name": "Bronz", "icon": "🥉"},
+        "silver": {"min_points": 500, "bonus_multiplier": 1.25, "name": "Gümüş", "icon": "🥈"},
+        "gold": {"min_points": 1500, "bonus_multiplier": 1.5, "name": "Altın", "icon": "🥇"},
+        "platinum": {"min_points": 5000, "bonus_multiplier": 2.0, "name": "Platin", "icon": "💎"}
+    }
+}
+
+DEFAULT_REWARDS = [
+    {
+        "id": "free-drink",
+        "name": "Ücretsiz İçecek",
+        "description": "Ayran, Su veya Pepsi",
+        "points_required": 100,
+        "reward_type": "free_product",
+        "reward_value": "pepsi",
+        "is_active": True,
+        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720380/kasaburger/products/zu98squbgxxa0hppmxwn.jpg"
+    },
+    {
+        "id": "free-fries",
+        "name": "Ücretsiz Patates",
+        "description": "Cheese Fries veya Cajun Fries",
+        "points_required": 200,
+        "reward_type": "free_product",
+        "reward_value": "cheese-fries",
+        "is_active": True,
+        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720240/kasaburger/products/dzxb0lv41xafeybynhri.jpg"
+    },
+    {
+        "id": "free-dessert",
+        "name": "Ücretsiz Tatlı",
+        "description": "Churros veya Oreo Dream",
+        "points_required": 300,
+        "reward_type": "free_product",
+        "reward_value": "churros",
+        "is_active": True,
+        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768686916/kasaburger/products/yveoyknzrq0w0kuwxxvq.jpg"
+    },
+    {
+        "id": "free-burger",
+        "name": "Ücretsiz Burger",
+        "description": "Kasa Classic Burger",
+        "points_required": 500,
+        "reward_type": "free_product",
+        "reward_value": "kasa-classic",
+        "is_active": True,
+        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719627/kasaburger/products/lxmwj2opjfgpn5wfyvni.jpg"
+    },
+    {
+        "id": "discount-10",
+        "name": "%10 İndirim",
+        "description": "Sonraki siparişte %10 indirim",
+        "points_required": 150,
+        "reward_type": "discount_percent",
+        "reward_value": "10",
+        "is_active": True
+    },
+    {
+        "id": "discount-50tl",
+        "name": "50₺ İndirim",
+        "description": "Sonraki siparişte 50₺ indirim",
+        "points_required": 400,
+        "reward_type": "discount_fixed",
+        "reward_value": "50",
+        "is_active": True
+    }
+]
+
+
 # ==================== KATEGORİ YÖNETİMİ ====================
 
 @router.get("/categories")
