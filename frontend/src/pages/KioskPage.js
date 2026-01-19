@@ -792,6 +792,25 @@ const KioskPage = () => {
           <span className="text-3xl font-bold text-orange-500 tracking-wide">KASA BURGER</span>
         </div>
         <div className="flex items-center gap-4">
+          {/* Sadakat Programı Butonu */}
+          <Button 
+            onClick={() => setShowLoyalty(true)} 
+            className={`px-6 py-4 text-lg gap-2 rounded-xl ${
+              loyaltyMember 
+                ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
+            }`}
+          >
+            {loyaltyMember ? (
+              <>
+                {loyaltyConfig?.tiers?.[loyaltyMember.member?.tier]?.icon || '🥉'} 
+                <span>{loyaltyMember.member?.total_points || 0} Puan</span>
+              </>
+            ) : (
+              <>⭐ Puan Kazan</>
+            )}
+          </Button>
+          
           {/* Combo Menü Butonu */}
           {combos.length > 0 && (
             <Button 
