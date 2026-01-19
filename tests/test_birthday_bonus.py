@@ -400,7 +400,8 @@ class TestBirthdayBonusVerification:
     
     def test_verify_bonus_points_added(self):
         """Verify bonus points were added to member"""
-        test_phone = "5552223333"  # Phone that claimed bonus
+        # Use the phone from claim test
+        test_phone = getattr(TestClaimBirthdayBonus, 'claimed_phone', "5552223333")
         
         response = requests.post(
             f"{BASE_URL}/api/kiosk/loyalty/member/lookup",
@@ -415,7 +416,8 @@ class TestBirthdayBonusVerification:
     
     def test_verify_birthday_status_after_claim(self):
         """Verify birthday status shows already claimed"""
-        test_phone = "5552223333"  # Phone that claimed bonus
+        # Use the phone from claim test
+        test_phone = getattr(TestClaimBirthdayBonus, 'claimed_phone', "5552223333")
         
         response = requests.get(
             f"{BASE_URL}/api/kiosk/loyalty/member/{test_phone}/birthday-status"
