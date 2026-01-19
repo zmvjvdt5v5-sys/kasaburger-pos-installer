@@ -1627,3 +1627,83 @@ Admin panelinden kiosk kategorilerini tam olarak yönetme özelliği eklendi.
 - **Bayi:** MEKGRUP / 1234
 - **Preview URL:** https://kbys-portal.preview.emergentagent.com
 
+
+---
+
+## Update: January 19, 2026 - Kiosk Combo Menü ve Kampanya Sistemi
+
+### ✅ Tamamlanan Özellikler
+
+#### 1. Combo Menü Sistemi
+Müşterilere indirimli ürün paketleri sunma özelliği.
+
+**Özellikler:**
+- 4 varsayılan combo menü (Klasik, Premium, Tavuk, Double XL)
+- Orijinal fiyat ve combo fiyatı gösterimi
+- Otomatik indirim yüzdesi hesaplama
+- Saat bazlı aktiflik (örn: Double XL sadece 11:00-15:00)
+- Ürün görselleri
+- Sepete eklenebilir combo'lar
+
+**Varsayılan Combo'lar:**
+| Combo | Orijinal | İndirimli | İndirim | Saatler |
+|-------|----------|-----------|---------|---------|
+| Klasik Menü | ₺655 | ₺550 | %16 | Her zaman |
+| Premium Menü | ₺690 | ₺590 | %15 | Her zaman |
+| Tavuk Menü | ₺575 | ₺480 | %17 | Her zaman |
+| Double XL Menü | ₺835 | ₺720 | %14 | 11:00-15:00 |
+
+#### 2. Promosyon/Kampanya Sistemi
+Kiosk ekranında banner olarak gösterilen kampanyalar.
+
+**Özellikler:**
+- Promosyon banner rotasyonu (5 saniyede bir)
+- Yüzde veya sabit tutar indirimi
+- Minimum sipariş tutarı şartı
+- Saat bazlı kampanyalar
+- Özelleştirilebilir banner rengi
+
+**Varsayılan Kampanyalar:**
+| Kampanya | İndirim | Şart | Saatler |
+|----------|---------|------|---------|
+| Happy Hour! 🎉 | %10 | Burgerler | 14:00-17:00 |
+| Hafta Sonu Fırsatı 🔥 | ₺30 | Min ₺200 | Her zaman |
+
+#### 3. Admin Yönetim Arayüzü
+`/kiosk-admin` sayfasına eklenen yeni tab'lar:
+- **Menüler tab:** Combo CRUD + saat ayarları
+- **Kampanyalar tab:** Promosyon CRUD + banner rengi
+
+### API Endpoints (Yeni)
+```
+# Public (auth gerektirmez)
+GET /api/kiosk/combos          - Aktif combo'lar (saat filtreli)
+GET /api/kiosk/promotions      - Aktif promosyonlar (saat filtreli)
+
+# Admin (auth gerektirir)
+GET /api/kiosk/combos/all      - Tüm combo'lar
+POST /api/kiosk/combos         - Combo oluştur
+PUT /api/kiosk/combos/{id}     - Combo güncelle
+DELETE /api/kiosk/combos/{id}  - Combo sil
+
+GET /api/kiosk/promotions/all     - Tüm promosyonlar
+POST /api/kiosk/promotions        - Promosyon oluştur
+PUT /api/kiosk/promotions/{id}    - Promosyon güncelle
+DELETE /api/kiosk/promotions/{id} - Promosyon sil
+```
+
+### Test Sonuçları
+- **Backend:** 18/18 test geçti (%100)
+- **Frontend:** Tüm UI akışları çalışıyor
+- **Test Dosyası:** `/app/tests/test_kiosk_combos_promotions.py`
+- **Test Raporu:** `/app/test_reports/iteration_9.json`
+
+### Düzeltilen Buglar
+1. **SelectItem Empty Value:** Saat seçim dropdown'larında boş string hatası - 'none' ile değiştirildi (testing agent tarafından düzeltildi)
+
+### MongoDB Collections (Yeni)
+- `kiosk_combos` - Combo menüler
+- `kiosk_promotions` - Promosyonlar
+
+
+
