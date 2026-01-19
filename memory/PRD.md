@@ -1838,3 +1838,50 @@ DELETE /api/kiosk/products/cleanup-test              - Test ürünlerini temizle
 
 - **Test Raporu:** `/app/test_reports/iteration_11.json`
 
+
+---
+
+## Update: January 19, 2026 - Doğum Günü Bonusu (Birthday Bonus)
+
+### ✅ Tamamlanan Özellikler
+
+#### Doğum Günü Bonusu Sistemi
+Sadakat programına entegre edilmiş doğum günü bonus sistemi.
+
+**Özellikler:**
+- Doğum günü kaydı (MM-DD formatında)
+- Doğum gününde 200 puan bonus
+- Doğum gününde ücretsiz Kasa Classic Burger
+- Yılda bir kez alınabilir (last_birthday_bonus_year kontrolü)
+- Admin panelinde bugün doğum günü olanları görme
+
+**API Endpoints:**
+| Endpoint | Açıklama |
+|----------|----------|
+| `POST /api/kiosk/loyalty/member/set-birthday` | Doğum günü kaydet (phone + birth_date) |
+| `GET /api/kiosk/loyalty/member/{phone}/birthday-status` | Doğum günü durumu kontrolü |
+| `POST /api/kiosk/loyalty/member/claim-birthday-bonus` | Bonus alma |
+| `GET /api/kiosk/loyalty/birthdays/today` | Bugün doğum günü olanlar (admin) |
+
+**Frontend UI Durumları:**
+1. **Doğum günü kayıtlı değil:** "Doğum Günümü Kaydet" butonu görünür
+2. **Doğum günü kayıtlı ama bugün değil:** Kayıtlı tarih gösterilir
+3. **Bugün doğum günü:** "🎂🎁 Hediyemi Al! 🎁🎂" butonu görünür
+4. **Bu yıl bonus alındı:** "✓ Bu yılki doğum günü hediyenizi aldınız" mesajı
+
+**Bonus Detayları:**
+- 200 puan bonus
+- Kasa Classic Burger hediye (sepete ₺0 ile eklenir)
+- Her yıl 1 kez alınabilir
+
+### Test Sonuçları
+- **Backend:** 24/24 test geçti (%100)
+- **Frontend:** %100 (tüm UI akışları çalışıyor)
+- **Test Dosyası:** `/app/tests/test_birthday_bonus.py`
+- **Test Raporu:** `/app/test_reports/iteration_13.json`
+
+### Dosyalar
+- `/app/backend/routers/kiosk.py` - Birthday endpoints (lines 1422-1585)
+- `/app/frontend/src/pages/KioskPage.js` - Birthday UI (lines 105-106, 327-338, 482-561, 1626-1703)
+
+
