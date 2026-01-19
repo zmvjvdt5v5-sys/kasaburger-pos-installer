@@ -63,7 +63,7 @@ const formatPrice = (amount) => `₺${amount.toFixed(0)}`;
 
 const KioskPage = () => {
   const [menuData, setMenuData] = useState(MENU_DATA);
-  const [selectedCategory, setSelectedCategory] = useState('et-burger');
+  const [selectedCategory, setSelectedCategory] = useState('Et Burger');
   const [cart, setCart] = useState([]);
   const [showCart, setShowCart] = useState(false);
   const [showServiceType, setShowServiceType] = useState(false);
