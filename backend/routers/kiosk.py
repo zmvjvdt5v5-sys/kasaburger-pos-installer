@@ -10,6 +10,40 @@ from utils.database import get_db
 
 router = APIRouter(prefix="/kiosk", tags=["Kiosk"])
 
+
+# ==================== PYDANTIC MODELS ====================
+
+class KioskCategory(BaseModel):
+    id: Optional[str] = None
+    name: str
+    icon: str = "📦"
+    order: int = 0
+    is_active: bool = True
+
+
+class KioskProduct(BaseModel):
+    id: Optional[str] = None
+    name: str
+    category: str
+    price: float
+    image: Optional[str] = None
+    description: Optional[str] = None
+    available: bool = True
+    is_premium: bool = False
+    order: int = 0
+
+
+# ==================== DEFAULT DATA ====================
+
+DEFAULT_KIOSK_CATEGORIES = [
+    {"id": "et-burger", "name": "Et Burger", "icon": "🍔", "order": 1, "is_active": True},
+    {"id": "premium", "name": "Premium", "icon": "👑", "order": 2, "is_active": True},
+    {"id": "tavuk", "name": "Tavuk", "icon": "🍗", "order": 3, "is_active": True},
+    {"id": "yan-urun", "name": "Yan Ürün", "icon": "🍟", "order": 4, "is_active": True},
+    {"id": "icecek", "name": "İçecek", "icon": "🥤", "order": 5, "is_active": True},
+    {"id": "tatli", "name": "Tatlı", "icon": "🍫", "order": 6, "is_active": True},
+]
+
 # Varsayılan Kiosk Ürünleri - Doğru fiyatlar ve Cloudinary görselleri
 DEFAULT_KIOSK_PRODUCTS = [
     # ET BURGER
