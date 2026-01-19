@@ -750,13 +750,13 @@ const KioskAdmin = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {DEFAULT_CATEGORIES.map(cat => {
-          const count = products.filter(p => p.category === cat.id).length;
+        {categories.map(cat => {
+          const count = products.filter(p => p.category === cat.name).length;
           return (
             <Card 
               key={cat.id} 
-              className={`cursor-pointer transition-colors ${selectedCategory === cat.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
-              onClick={() => setSelectedCategory(selectedCategory === cat.id ? 'all' : cat.id)}
+              className={`cursor-pointer transition-colors ${selectedCategory === cat.name ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+              onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'all' : cat.name)}
             >
               <CardContent className="p-4 text-center">
                 <span className="text-3xl">{cat.icon}</span>
