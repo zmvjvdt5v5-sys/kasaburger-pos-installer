@@ -325,7 +325,7 @@ async def update_kiosk_product(product_id: str, product: KioskProduct, current_u
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
-    update_data = product.model_dump()
+    update_data = product.model_dump(exclude={"id"})  # Exclude id to preserve original
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.kiosk_products.update_one({"id": product_id}, {"$set": update_data})
