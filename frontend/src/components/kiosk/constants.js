@@ -36,9 +36,9 @@ export const DEFAULT_PRODUCTS = [
   {id: "pepsi", name: "Pepsi", category: "İçecek", price: 45, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720380/kasaburger/products/zu98squbgxxa0hppmxwn.jpg"},
   {id: "milkshake", name: "Milkshake", category: "İçecek", price: 85, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720424/kasaburger/products/uitufnzpxr7fatrttobr.jpg"},
   // TATLI
-  {id: "choco-bomb", name: "Kasa Choco Bomb", category: "Tatlı", price: 200, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768687930/kasaburger/products/ohr3dgedrnaz53p8p26t.jpg"},
-  {id: "churros", name: "Churros", category: "Tatlı", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768686916/kasaburger/products/yveoyknzrq0w0kuwxxvq.jpg"},
-  {id: "oreo-dream", name: "Oreo Dream Cup", category: "Tatlı", price: 220, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768686685/kasaburger/products/ktej7vqaqnm2qt5fjnce.jpg"},
+  {id: "choco-bomb", name: "Kasa Choco Bomb", category: "Tatlı", price: 200, image: "https://images.unsplash.com/photo-1673551490243-f29547426841?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBsYXZhJTIwY2FrZSUyMGRlc3NlcnR8ZW58MHx8fHwxNzY4ODQzMzA2fDA&ixlib=rb-4.1.0&q=85"},
+  {id: "churros", name: "Churros", category: "Tatlı", price: 180, image: "https://images.pexels.com/photos/12035620/pexels-photo-12035620.jpeg"},
+  {id: "oreo-dream", name: "Oreo Dream Cup", category: "Tatlı", price: 220, image: "https://images.unsplash.com/photo-1588345739296-3d81a8b8f641?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwyfHxvcmVvJTIwbWlsa3NoYWtlJTIwY3VwJTIwZGVzc2VydHxlbnwwfHx8fDE3Njg4NDMzMTN8MA&ixlib=rb-4.1.0&q=85"},
 ];
 
 export const DEFAULT_CATEGORIES = [
