@@ -550,8 +550,10 @@ async def get_kiosk_combos():
     if not combos:
         # Varsayılan comboları yükle
         for combo in DEFAULT_COMBOS:
-            await db.kiosk_combos.insert_one(combo)
-        return DEFAULT_COMBOS
+            existing = await db.kiosk_combos.find_one({"id": combo["id"]})
+            if not existing:
+                await db.kiosk_combos.insert_one({**combo})
+        combos = await db.kiosk_combos.find({"is_active": True}, {"_id": 0}).to_list(50)
     
     # Saat filtresi uygula
     current_hour = datetime.now(timezone.utc).hour
@@ -576,7 +578,12 @@ async def get_all_kiosk_combos(current_user: dict = Depends(get_current_user)):
     
     combos = await db.kiosk_combos.find({}, {"_id": 0}).to_list(100)
     if not combos:
-        return DEFAULT_COMBOS
+        # Varsayılan comboları yükle
+        for combo in DEFAULT_COMBOS:
+            existing = await db.kiosk_combos.find_one({"id": combo["id"]})
+            if not existing:
+                await db.kiosk_combos.insert_one({**combo})
+        combos = await db.kiosk_combos.find({}, {"_id": 0}).to_list(100)
     return combos
 
 
