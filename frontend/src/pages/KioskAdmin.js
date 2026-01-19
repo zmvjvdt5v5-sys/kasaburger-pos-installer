@@ -1082,8 +1082,14 @@ const KioskAdmin = () => {
                         {combo.start_hour !== null && combo.end_hour !== null && (
                           <Badge variant="outline">🕐 {combo.start_hour}:00-{combo.end_hour}:00</Badge>
                         )}
+                        {combo.gift_product_id && (
+                          <Badge className="bg-pink-500">🎁 Hediye</Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">{combo.description}</p>
+                      {combo.gift_product_id && (
+                        <p className="text-sm text-pink-500 mt-1">+ {combo.gift_product_name}</p>
+                      )}
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-muted-foreground line-through">₺{combo.original_price}</span>
                         <span className="text-green-600 font-bold">₺{combo.combo_price}</span>
