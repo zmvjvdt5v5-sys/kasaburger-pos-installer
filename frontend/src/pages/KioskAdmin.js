@@ -852,6 +852,8 @@ const KioskAdmin = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
