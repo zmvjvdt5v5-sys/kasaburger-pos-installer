@@ -597,14 +597,50 @@ const KioskPage = () => {
           <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-16 w-16 object-contain" />
           <span className="text-3xl font-bold text-orange-500 tracking-wide">KASA BURGER</span>
         </div>
-        {cartCount > 0 && (
-          <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-4 text-lg gap-3 rounded-xl">
-            <ShoppingCart className="h-6 w-6" />
-            <span>{cartCount} Ürün</span>
-            <span className="font-bold">{formatPrice(cartTotal)}</span>
-          </Button>
-        )}
+        <div className="flex items-center gap-4">
+          {/* Combo Menü Butonu */}
+          {combos.length > 0 && (
+            <Button 
+              onClick={() => setShowCombos(true)} 
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-6 py-4 text-lg gap-2 rounded-xl"
+            >
+              🎁 Menüler
+              <span className="bg-white/20 px-2 py-0.5 rounded text-sm">%{Math.round(combos[0]?.discount_percent || 15)} İndirim</span>
+            </Button>
+          )}
+          {cartCount > 0 && (
+            <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-4 text-lg gap-3 rounded-xl">
+              <ShoppingCart className="h-6 w-6" />
+              <span>{cartCount} Ürün</span>
+              <span className="font-bold">{formatPrice(cartTotal)}</span>
+            </Button>
+          )}
+        </div>
       </header>
+
+      {/* Promosyon Banner */}
+      {promotions.length > 0 && (
+        <div 
+          className="px-8 py-3 flex items-center justify-center gap-4 transition-all duration-500"
+          style={{ backgroundColor: promotions[activePromoIndex]?.banner_color || '#FF6B00' }}
+        >
+          <span className="text-2xl">🔥</span>
+          <div className="text-center">
+            <span className="font-bold text-lg">{promotions[activePromoIndex]?.title}</span>
+            <span className="ml-3 text-white/90">{promotions[activePromoIndex]?.description}</span>
+          </div>
+          {promotions.length > 1 && (
+            <div className="flex gap-1 ml-4">
+              {promotions.map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className={`w-2 h-2 rounded-full transition-all ${idx === activePromoIndex ? 'bg-white w-4' : 'bg-white/40'}`} 
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
