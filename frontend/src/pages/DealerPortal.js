@@ -1503,6 +1503,230 @@ const DealerPortal = ({ initialTab = 'order' }) => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* ÜRÜN KATALOĞU TAB */}
+          <TabsContent value="products" className="space-y-6">
+            <Card className="bg-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/20">
+                    <Package className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle>Ürün Kataloğu</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Sipariş verebileceğiniz tüm ürünler
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {products.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Package className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Henüz ürün bulunmuyor</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {products.map((product) => (
+                      <div key={product.id} className="p-4 border rounded-lg hover:border-primary transition-colors">
+                        <div className="flex items-center gap-3">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-16 h-16 rounded object-cover" />
+                          ) : (
+                            <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
+                              <Package className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h4 className="font-medium">{product.name}</h4>
+                            <p className="text-sm text-muted-foreground">{product.category}</p>
+                            <p className="text-primary font-bold">{formatCurrency(product.price)}</p>
+                          </div>
+                        </div>
+                        {product.description && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{product.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* FATURALARIM TAB */}
+          <TabsContent value="invoices" className="space-y-6">
+            <Card className="bg-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-orange-500/20">
+                    <FileText className="h-6 w-6 text-orange-400" />
+                  </div>
+                  <div>
+                    <CardTitle>Faturalarım</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Tüm fatura ve borç dökümleri
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {invoices.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Henüz fatura bulunmuyor</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-3">Fatura No</th>
+                            <th className="text-left p-3">Tarih</th>
+                            <th className="text-right p-3">Tutar</th>
+                            <th className="text-right p-3">Ödenen</th>
+                            <th className="text-right p-3">Kalan</th>
+                            <th className="text-center p-3">Durum</th>
+                            <th className="text-center p-3">İşlem</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {invoices.map((invoice) => (
+                            <tr key={invoice.id} className="border-b hover:bg-muted/50">
+                              <td className="p-3 font-medium">{invoice.invoice_number}</td>
+                              <td className="p-3">{new Date(invoice.date).toLocaleDateString('tr-TR')}</td>
+                              <td className="p-3 text-right">{formatCurrency(invoice.total)}</td>
+                              <td className="p-3 text-right text-green-500">{formatCurrency(invoice.paid_amount || 0)}</td>
+                              <td className="p-3 text-right text-red-500">{formatCurrency(invoice.total - (invoice.paid_amount || 0))}</td>
+                              <td className="p-3 text-center">
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  invoice.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {invoice.status === 'paid' ? 'Ödendi' : 'Bekliyor'}
+                                </span>
+                              </td>
+                              <td className="p-3 text-center">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => downloadInvoicePdf(invoice.id)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  PDF
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* RAPORLARIM TAB */}
+          <TabsContent value="reports" className="space-y-6">
+            <Card className="bg-card">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-500/20">
+                    <BarChart className="h-6 w-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle>Raporlarım</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Sipariş ve ödeme raporları
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* Toplam Sipariş */}
+                  <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <div className="flex items-center gap-3">
+                      <ShoppingCart className="h-8 w-8 text-blue-400" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Toplam Sipariş</p>
+                        <p className="text-2xl font-bold text-blue-400">{orders.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Toplam Ödeme */}
+                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                    <div className="flex items-center gap-3">
+                      <Wallet className="h-8 w-8 text-green-400" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Toplam Ödeme</p>
+                        <p className="text-2xl font-bold text-green-400">
+                          {formatCurrency(payments.filter(p => p.status === 'approved').reduce((sum, p) => sum + p.amount, 0))}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Güncel Bakiye */}
+                  <div className={`p-4 rounded-lg ${dealerInfo?.balance >= 0 ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'} border`}>
+                    <div className="flex items-center gap-3">
+                      <Receipt className="h-8 w-8" style={{ color: dealerInfo?.balance >= 0 ? '#4ade80' : '#f87171' }} />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Güncel Bakiye</p>
+                        <p className={`text-2xl font-bold ${dealerInfo?.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {formatCurrency(Math.abs(dealerInfo?.balance || 0))}
+                          <span className="text-sm ml-1">{dealerInfo?.balance >= 0 ? '(Alacak)' : '(Borç)'}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Son Siparişler */}
+                <div className="mt-6">
+                  <h4 className="font-medium mb-4">Son 10 Sipariş</h4>
+                  {orders.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">Henüz sipariş yok</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-3">Sipariş No</th>
+                            <th className="text-left p-3">Tarih</th>
+                            <th className="text-right p-3">Tutar</th>
+                            <th className="text-center p-3">Durum</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orders.slice(0, 10).map((order) => (
+                            <tr key={order.id} className="border-b hover:bg-muted/50">
+                              <td className="p-3 font-medium">{order.order_number}</td>
+                              <td className="p-3">{new Date(order.created_at).toLocaleDateString('tr-TR')}</td>
+                              <td className="p-3 text-right">{formatCurrency(order.total)}</td>
+                              <td className="p-3 text-center">
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  order.status === 'delivered' ? 'bg-green-500/20 text-green-400' :
+                                  order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-blue-500/20 text-blue-400'
+                                }`}>
+                                  {order.status === 'delivered' ? 'Teslim Edildi' :
+                                   order.status === 'pending' ? 'Bekliyor' : order.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
     </div>
