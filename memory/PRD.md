@@ -1785,5 +1785,56 @@ Müşterilerin telefon numarasıyla puan biriktirip ödüller kazanması.
 ### Test Sonuçları
 - **Backend:** 17/17 test geçti (%100)
 - **Frontend:** %100 (tüm akışlar çalışıyor)
+
+
+---
+
+## Update: January 19, 2026 - Referans Sistemi ve Test Ürünleri Temizleme
+
+### ✅ Tamamlanan Özellikler
+
+#### 1. Referans Sistemi (Arkadaş Davet Et)
+Üyeler arkadaşlarını davet edip bonus puan kazanabiliyor.
+
+**Özellikler:**
+- Her referans = 100 puan (her iki tarafa)
+- Referans kodu formatı: KB + telefon son 4 hane + 4 rastgele karakter (örn: KB4567F8F4)
+- Validasyonlar: Kendi kodunu kullanamazlık, aynı kod iki kez kullanılamaz, geçersiz kod reddedilir
+- Referans sayacı (kaç arkadaş davet edilmiş)
+
+**Frontend:**
+- "🤝 Arkadaşını Davet Et" bölümü
+- "Referans Kodumu Göster" butonu
+- Referans kodu gösterimi (mor gradient box)
+- Referans kod girişi (başka birinin kodu için)
+- "Uygula" butonu
+
+#### 2. Test Ürünleri Temizleme
+Admin endpoint'i ile test ürünlerini temizleme.
+
+**Endpoint:** `DELETE /api/kiosk/products/cleanup-test`
+- TEST_ içeren ürünleri siler
+- id=null olan ürünleri siler
+- id alanı olmayan ürünleri siler
+- Auth gerektirir
+
+### API Endpoints (Yeni)
+```
+GET /api/kiosk/loyalty/member/{phone}/referral-code  - Referans kodunu getir
+POST /api/kiosk/loyalty/member/apply-referral        - Referans kodu uygula
+GET /api/kiosk/loyalty/referral-stats                - Referans istatistikleri (admin)
+DELETE /api/kiosk/products/cleanup-test              - Test ürünlerini temizle (admin)
+```
+
+### Test Sonuçları
+- **Backend:** 17/17 test geçti (%100)
+- **Frontend:** %100 (tüm UI çalışıyor)
+- **Test Dosyası:** `/app/tests/test_referral_system.py`
+- **Test Raporu:** `/app/test_reports/iteration_12.json`
+
+### Düzeltilen Buglar
+- Test ürünleri silme sorunu düzeltildi (id=null olan ürünler kiosk_products'tan silinmiyordu)
+
+
 - **Test Raporu:** `/app/test_reports/iteration_11.json`
 
