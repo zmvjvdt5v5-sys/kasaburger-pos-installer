@@ -753,10 +753,23 @@ const KioskPage = () => {
           <div className="flex-1 overflow-y-auto py-3 space-y-3">
             {cart.map((item, index) => (
               <div key={`${item.id}-${index}`} className="flex gap-4 bg-zinc-800/80 p-4 rounded-xl border border-zinc-700/50">
-                <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg flex-shrink-0" />
+                <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg flex-shrink-0" onError={(e) => { e.target.src = 'https://via.placeholder.com/96?text=Combo'; }} />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-base text-white mb-1">{item.name}</h4>
-                  {item.description && (
+                  <h4 className="font-bold text-base text-white mb-1">
+                    {item.isCombo && <span className="text-green-400 mr-1">🎁</span>}
+                    {item.name}
+                  </h4>
+                  {item.isCombo && item.comboProducts && (
+                    <p className="text-zinc-400 text-xs mb-1">
+                      İçerik: {item.comboProducts.join(', ')}
+                    </p>
+                  )}
+                  {item.giftProduct && (
+                    <div className="bg-pink-500/20 border border-pink-500/30 rounded px-2 py-1 mb-2 inline-flex items-center gap-1">
+                      <span className="text-pink-400 text-xs font-bold">+ {item.giftProduct.name} 🎁</span>
+                    </div>
+                  )}
+                  {item.description && !item.isCombo && (
                     <p className="text-zinc-400 text-sm leading-snug mb-2 line-clamp-2">{item.description}</p>
                   )}
                   {item.note && (
