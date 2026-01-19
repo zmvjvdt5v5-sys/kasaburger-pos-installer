@@ -25,8 +25,8 @@ export const DEFAULT_PRODUCTS = [
   // YAN ÜRÜN
   {id: "mac-cheese", name: "Mac and Cheese Topları", category: "Yan Ürün", price: 170, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720160/kasaburger/products/jnzrcojxzkdrgb5u2exk.jpg"},
   {id: "mozarella-sticks", name: "Mozarella Sticks", category: "Yan Ürün", price: 210, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720187/kasaburger/products/kvsrbiutiqdqhoolov8z.jpg"},
-  {id: "sogan-halkasi", name: "Soğan Halkası", category: "Yan Ürün", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720212/kasaburger/products/ujatmwdny3it8dzcikkn.jpg"},
-  {id: "cheese-fries", name: "Prison Cheese Lover Fries", category: "Yan Ürün", price: 150, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720240/kasaburger/products/dzxb0lv41xafeybynhri.jpg"},
+  {id: "sogan-halkasi", name: "Soğan Halkası", category: "Yan Ürün", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720240/kasaburger/products/dzxb0lv41xafeybynhri.jpg"},
+  {id: "cheese-fries", name: "Prison Cheese Lover Fries", category: "Yan Ürün", price: 150, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720212/kasaburger/products/ujatmwdny3it8dzcikkn.jpg"},
   {id: "truffle-fries", name: "Prison Truffle Fries", category: "Yan Ürün", price: 175, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720258/kasaburger/products/cj3px5epr92okzergc7c.jpg"},
   {id: "cajun-fries", name: "Prison Hot Lockdown Fries", category: "Yan Ürün", price: 160, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720282/kasaburger/products/csdwzqwozldfxxt7pkpr.jpg"},
   // İÇECEK
