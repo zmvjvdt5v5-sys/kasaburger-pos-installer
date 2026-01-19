@@ -1,0 +1,65 @@
+{
+  "name": "kasaburger-pos",
+  "version": "1.0.0",
+  "description": "KasaBurger Yönetim Sistemi - POS ve ERP Uygulaması",
+  "main": "main.js",
+  "author": "KasaBurger",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:win:portable": "electron-builder --win portable",
+    "build:win:installer": "electron-builder --win nsis",
+    "pack": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.kasaburger.pos",
+    "productName": "KasaBurger POS",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "build/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "publisherName": "KasaBurger"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KasaBurger POS",
+      "license": "LICENSE.txt"
+    },
+    "portable": {
+      "artifactName": "KasaBurger-POS-Portable-${version}.exe"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.7",
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}
