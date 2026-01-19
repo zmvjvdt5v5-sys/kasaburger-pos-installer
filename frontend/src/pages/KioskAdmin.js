@@ -437,7 +437,11 @@ const KioskAdmin = () => {
   };
 
   const getCategoryName = (id) => {
-    return DEFAULT_CATEGORIES.find(c => c.id === id)?.name || id;
+    return categories.find(c => c.id === id || c.name === id)?.name || id;
+  };
+  
+  const getCategoryIcon = (name) => {
+    return categories.find(c => c.name === name)?.icon || '📦';
   };
 
   return (
