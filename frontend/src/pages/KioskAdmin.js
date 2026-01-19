@@ -745,14 +745,15 @@ const KioskAdmin = () => {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {categories.map(cat => {
-          const count = products.filter(p => p.category === cat.name).length;
-          return (
-            <Card 
-              key={cat.id} 
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {categories.map(cat => {
+              const count = products.filter(p => p.category === cat.name).length;
+              return (
+                <Card 
+                  key={cat.id} 
               className={`cursor-pointer transition-colors ${selectedCategory === cat.name ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
               onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'all' : cat.name)}
             >
