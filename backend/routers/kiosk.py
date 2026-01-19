@@ -177,6 +177,12 @@ LOYALTY_CONFIG = {
         "silver": {"min_points": 500, "bonus_multiplier": 1.25, "name": "Gümüş", "icon": "🥈"},
         "gold": {"min_points": 1500, "bonus_multiplier": 1.5, "name": "Altın", "icon": "🥇"},
         "platinum": {"min_points": 5000, "bonus_multiplier": 2.0, "name": "Platin", "icon": "💎"}
+    },
+    "birthday_bonus": {
+        "points": 200,
+        "free_product_id": "kasa-classic",
+        "free_product_name": "Kasa Classic Burger",
+        "message": "🎂 Doğum Günün Kutlu Olsun! Sana özel hediyeler var!"
     }
 }
 
