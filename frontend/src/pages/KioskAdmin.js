@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Image, Save, Loader2, Monitor, ExternalLink, RefreshCw, Upload, GripVertical, Layers, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image, Save, Loader2, Monitor, ExternalLink, RefreshCw, Upload, GripVertical, Layers, Package, Gift, Percent } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
