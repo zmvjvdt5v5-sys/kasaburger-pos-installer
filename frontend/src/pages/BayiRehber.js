@@ -106,6 +106,24 @@ export default function BayiRehber() {
           <p className="text-muted-foreground text-lg">
             KasaBurger sistemini nasıl kullanacağınızı adım adım öğrenin
           </p>
+          
+          {/* PDF Download Button */}
+          <div className="flex justify-center gap-4 mt-4">
+            <Button 
+              onClick={() => window.open('/BAYI_KULLANIM_REHBERI.pdf', '_blank')}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              PDF Olarak İndir
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.print()}
+            >
+              <Printer className="h-5 w-5 mr-2" />
+              Yazdır
+            </Button>
+          </div>
         </div>
 
         {/* Quick Start Video Placeholder */}
