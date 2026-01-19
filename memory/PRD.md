@@ -1744,3 +1744,46 @@ Combo menülere hediye ürün tanımlama özelliği eklendi.
 - **Test Dosyası:** `/app/tests/test_gift_product_feature.py`
 - **Test Raporu:** `/app/test_reports/iteration_10.json`
 
+
+
+
+---
+
+## Update: January 19, 2026 - Sadakat Programı (Loyalty Program)
+
+### ✅ Tamamlanan Özellikler
+
+#### Sadakat Programı Sistemi
+Müşterilerin telefon numarasıyla puan biriktirip ödüller kazanması.
+
+**Tier Sistemi:**
+| Tier | Minimum Puan | Bonus Çarpanı | İkon |
+|------|-------------|---------------|------|
+| Bronz | 0 | 1.0x | 🥉 |
+| Gümüş | 500 | 1.25x | 🥈 |
+| Altın | 1500 | 1.5x | 🥇 |
+| Platin | 5000 | 2.0x | 💎 |
+
+**Varsayılan Ödüller:**
+| Ödül | Puan | Tip |
+|------|------|-----|
+| Ücretsiz İçecek | 100 | free_product |
+| %10 İndirim | 150 | discount_percent |
+| Ücretsiz Patates | 200 | free_product |
+| Ücretsiz Tatlı | 300 | free_product |
+| 50₺ İndirim | 400 | discount_fixed |
+| Ücretsiz Burger | 500 | free_product |
+
+**Frontend Özellikleri:**
+- "⭐ Puan Kazan" butonu (header'da)
+- Telefon numarası giriş dialog'u
+- Üye kartı (tier ikonu, puan, progress bar)
+- Ödüller listesi (kilitli/açık durumları, progress bar)
+- Sipariş sonrası puan gösterimi
+- Tier yükseltme bildirimi
+
+### Test Sonuçları
+- **Backend:** 17/17 test geçti (%100)
+- **Frontend:** %100 (tüm akışlar çalışıyor)
+- **Test Raporu:** `/app/test_reports/iteration_11.json`
+
