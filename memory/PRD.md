@@ -1440,3 +1440,21 @@ Her gün saat 00:00'da counter sıfırlanır:
 - ✅ Durum güncelleme (Hazırla/Hazır/Teslim) çalışıyor
 - ✅ Filtreleme (Bekleyen/Hazırlanıyor/Hazır/Tümü) çalışıyor
 - ✅ Sesli bildirimler çalışıyor
+- ✅ Backend: 14/14 test başarılı (iteration_7.json)
+- ✅ Frontend: Tüm UI akışları çalışıyor
+
+---
+
+## Backlog / Bekleyen Görevler
+
+### P0 - Kritik
+- [ ] PDF Bayi Kullanım Rehberi oluşturma
+
+### P1 - Yüksek Öncelik
+- [ ] Electron masaüstü uygulaması build (dağıtılabilir .exe)
+- [ ] WebSocket production fix (ws://localhost:443 hatası)
+
+### P2 - Orta Öncelik
+- [ ] E-fatura GIB entegrasyonu (API credentials bekleniyor)
+- [ ] InPOS yazıcı gerçek cihaz testi
+- [ ] Termal yazıcı gerçek cihaz entegrasyonu
