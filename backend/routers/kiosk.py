@@ -155,7 +155,56 @@ async def delete_kiosk_product(product_id: str, current_user: dict = Depends(get
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
     await db.kiosk_products.delete_one({"id": product_id})
+    
+    # Versiyon numarasını güncelle
+    await db.kiosk_settings.update_one(
+        {"key": "products_version"},
+        {"$set": {"value": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
     return {"status": "deleted"}
+
+
+@router.get("/products/version")
+async def get_kiosk_products_version():
+    """Kiosk ürünlerinin versiyon numarasını döndür (cache invalidation için)"""
+    db = get_db()
+    if db is None:
+        return {"version": "default"}
+    
+    version_doc = await db.kiosk_settings.find_one({"key": "products_version"}, {"_id": 0})
+    return {"version": version_doc.get("value") if version_doc else "default"}
+
+
+@router.post("/products/bulk-update")
+async def bulk_update_kiosk_products(products: List[KioskProduct], current_user: dict = Depends(get_current_user)):
+    """Tüm kiosk ürünlerini toplu güncelle"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Mevcut ürünleri sil
+    await db.kiosk_products.delete_many({})
+    
+    # Yeni ürünleri ekle
+    now = datetime.now(timezone.utc).isoformat()
+    for idx, product in enumerate(products):
+        product_doc = {
+            "id": f"kiosk-{idx+1}",
+            **product.model_dump(),
+            "created_at": now
+        }
+        await db.kiosk_products.insert_one(product_doc)
+    
+    # Versiyon güncelle
+    await db.kiosk_settings.update_one(
+        {"key": "products_version"},
+        {"$set": {"value": now}},
+        upsert=True
+    )
+    
+    return {"status": "success", "count": len(products), "version": now}
 
 @router.post("/orders")
 async def create_kiosk_order(order: KioskOrder):
