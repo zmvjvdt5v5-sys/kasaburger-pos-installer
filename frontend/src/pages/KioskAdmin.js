@@ -188,13 +188,17 @@ const KioskAdmin = () => {
         products: combo.products || [], original_price: combo.original_price || 0,
         combo_price: combo.combo_price || 0, discount_percent: combo.discount_percent || 0,
         image: combo.image || '', is_active: combo.is_active !== false,
-        start_hour: combo.start_hour, end_hour: combo.end_hour
+        start_hour: combo.start_hour, end_hour: combo.end_hour,
+        gift_product_id: combo.gift_product_id || null,
+        gift_product_name: combo.gift_product_name || '',
+        gift_message: combo.gift_message || ''
       });
     } else {
       setEditingCombo(null);
       setComboForm({
         name: '', description: '', products: [], original_price: 0, combo_price: 0,
-        discount_percent: 0, image: '', is_active: true, start_hour: null, end_hour: null
+        discount_percent: 0, image: '', is_active: true, start_hour: null, end_hour: null,
+        gift_product_id: null, gift_product_name: '', gift_message: ''
       });
     }
     setComboDialogOpen(true);
