@@ -184,6 +184,32 @@ const KioskPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Sadakat programı verilerini yükle
+  useEffect(() => {
+    const loadLoyaltyData = async () => {
+      try {
+        const [rewardsRes, configRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/kiosk/loyalty/rewards`),
+          fetch(`${BACKEND_URL}/api/kiosk/loyalty/config`)
+        ]);
+        
+        if (rewardsRes.ok) {
+          const rewardsData = await rewardsRes.json();
+          setLoyaltyRewards(rewardsData || []);
+        }
+        
+        if (configRes.ok) {
+          const configData = await configRes.json();
+          setLoyaltyConfig(configData);
+        }
+      } catch (e) {
+        console.log('Sadakat verileri yüklenemedi');
+      }
+    };
+    
+    loadLoyaltyData();
+  }, []);
+
   // Promosyon banner rotasyonu
   useEffect(() => {
     if (promotions.length > 1) {
