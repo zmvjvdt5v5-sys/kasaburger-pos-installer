@@ -105,12 +105,26 @@ const KioskPage = () => {
         if (response.ok) {
           const data = await response.json();
           if (data?.length > 0) {
-            // Kategori isimlerini normalize et
-            const normalizedProducts = data.map(p => ({
-              ...p,
-              category: normalizeCategory(p.category)
+            setMenuData(prev => ({ ...prev, products: data }));
+            
+            // Kategorileri ürünlerden çıkar
+            const uniqueCategories = [...new Set(data.map(p => p.category).filter(Boolean))];
+            const categoryIcons = {
+              'Et Burger': '🍔', 'Premium': '👑', 'Tavuk': '🍗',
+              'Yan Ürün': '🍟', 'İçecek': '🥤', 'Tatlı': '🍫'
+            };
+            const categories = uniqueCategories.map(cat => ({
+              id: cat,
+              name: cat,
+              icon: categoryIcons[cat] || '📦'
             }));
-            setMenuData(prev => ({ ...prev, products: normalizedProducts }));
+            if (categories.length > 0) {
+              setMenuData(prev => ({ ...prev, categories }));
+              // İlk kategoriyi seç
+              if (!uniqueCategories.includes(selectedCategory)) {
+                setSelectedCategory(uniqueCategories[0]);
+              }
+            }
           }
         }
       } catch (e) { 
@@ -125,40 +139,7 @@ const KioskPage = () => {
     const interval = setInterval(loadMenu, 10000);
     
     return () => clearInterval(interval);
-  }, []);
-
-  // Kategori isimlerini normalize et
-  const normalizeCategory = (category) => {
-    if (!category) return 'et-burger';
-    const normalized = category.toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace('ü', 'u')
-      .replace('ı', 'i')
-      .replace('ö', 'o')
-      .replace('ç', 'c')
-      .replace('ş', 's')
-      .replace('ğ', 'g');
-    
-    // Mapping
-    const categoryMap = {
-      'et-burger': 'et-burger',
-      'et': 'et-burger',
-      'burger': 'et-burger',
-      'premium': 'premium',
-      'premium-gourmet': 'premium',
-      'tavuk': 'tavuk',
-      'tavuk-burger': 'tavuk',
-      'yan-urun': 'atistirmalik',
-      'yan-ürün': 'atistirmalik',
-      'atistirmalik': 'atistirmalik',
-      'icecek': 'icecek',
-      'içecek': 'icecek',
-      'tatli': 'tatli',
-      'tatlı': 'tatli'
-    };
-    
-    return categoryMap[normalized] || normalized;
-  };
+  }, [selectedCategory]);
 
   const filteredProducts = menuData.products.filter(p => p.category === selectedCategory);
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
