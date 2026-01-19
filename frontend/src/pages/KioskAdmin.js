@@ -158,7 +158,172 @@ const KioskAdmin = () => {
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadCombos();
+    loadPromotions();
   }, []);
+
+  // ==================== COMBO FONKSİYONLARI ====================
+  
+  const loadCombos = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/combos/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCombos(data || []);
+      }
+    } catch (error) {
+      console.error('Combo yükleme hatası:', error);
+    }
+  };
+
+  const openComboDialog = (combo = null) => {
+    if (combo) {
+      setEditingCombo(combo);
+      setComboForm({
+        name: combo.name, description: combo.description || '',
+        products: combo.products || [], original_price: combo.original_price || 0,
+        combo_price: combo.combo_price || 0, discount_percent: combo.discount_percent || 0,
+        image: combo.image || '', is_active: combo.is_active !== false,
+        start_hour: combo.start_hour, end_hour: combo.end_hour
+      });
+    } else {
+      setEditingCombo(null);
+      setComboForm({
+        name: '', description: '', products: [], original_price: 0, combo_price: 0,
+        discount_percent: 0, image: '', is_active: true, start_hour: null, end_hour: null
+      });
+    }
+    setComboDialogOpen(true);
+  };
+
+  const saveCombo = async () => {
+    if (!comboForm.name.trim() || comboForm.products.length === 0) {
+      toast.error('Combo adı ve en az 1 ürün gerekli');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const url = editingCombo 
+        ? `${BACKEND_URL}/api/kiosk/combos/${editingCombo.id}`
+        : `${BACKEND_URL}/api/kiosk/combos`;
+      
+      const response = await fetch(url, {
+        method: editingCombo ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(comboForm)
+      });
+      
+      if (response.ok) {
+        toast.success(editingCombo ? 'Combo güncellendi!' : 'Combo oluşturuldu!');
+        loadCombos();
+        setComboDialogOpen(false);
+      } else {
+        toast.error('İşlem başarısız');
+      }
+    } catch (error) {
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  const deleteCombo = async (comboId) => {
+    if (!window.confirm('Bu combo menüyü silmek istediğinize emin misiniz?')) return;
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      await fetch(`${BACKEND_URL}/api/kiosk/combos/${comboId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Combo silindi!');
+      loadCombos();
+    } catch (error) {
+      toast.error('Silme başarısız');
+    }
+  };
+
+  // ==================== PROMOSYON FONKSİYONLARI ====================
+  
+  const loadPromotions = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/promotions/all`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPromotions(data || []);
+      }
+    } catch (error) {
+      console.error('Promosyon yükleme hatası:', error);
+    }
+  };
+
+  const openPromoDialog = (promo = null) => {
+    if (promo) {
+      setEditingPromo(promo);
+      setPromoForm({
+        title: promo.title, description: promo.description || '',
+        discount_type: promo.discount_type || 'percent', discount_value: promo.discount_value || 0,
+        min_order_amount: promo.min_order_amount, applicable_categories: promo.applicable_categories || [],
+        start_hour: promo.start_hour, end_hour: promo.end_hour,
+        is_active: promo.is_active !== false, banner_color: promo.banner_color || '#FF6B00'
+      });
+    } else {
+      setEditingPromo(null);
+      setPromoForm({
+        title: '', description: '', discount_type: 'percent', discount_value: 0,
+        min_order_amount: null, applicable_categories: [], start_hour: null, end_hour: null,
+        is_active: true, banner_color: '#FF6B00'
+      });
+    }
+    setPromoDialogOpen(true);
+  };
+
+  const savePromotion = async () => {
+    if (!promoForm.title.trim()) {
+      toast.error('Promosyon başlığı gerekli');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const url = editingPromo 
+        ? `${BACKEND_URL}/api/kiosk/promotions/${editingPromo.id}`
+        : `${BACKEND_URL}/api/kiosk/promotions`;
+      
+      const response = await fetch(url, {
+        method: editingPromo ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(promoForm)
+      });
+      
+      if (response.ok) {
+        toast.success(editingPromo ? 'Promosyon güncellendi!' : 'Promosyon oluşturuldu!');
+        loadPromotions();
+        setPromoDialogOpen(false);
+      } else {
+        toast.error('İşlem başarısız');
+      }
+    } catch (error) {
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  const deletePromotion = async (promoId) => {
+    if (!window.confirm('Bu promosyonu silmek istediğinize emin misiniz?')) return;
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      await fetch(`${BACKEND_URL}/api/kiosk/promotions/${promoId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Promosyon silindi!');
+      loadPromotions();
+    } catch (error) {
+      toast.error('Silme başarısız');
+    }
+  };
 
   // ==================== KATEGORİ FONKSİYONLARI ====================
   
