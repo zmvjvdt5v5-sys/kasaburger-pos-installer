@@ -23,7 +23,6 @@ export const DEFAULT_PRODUCTS = [
   {id: "milano-chicken", name: "Milano Chicken Burger", category: "Tavuk", price: 440, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720100/kasaburger/products/tfrehnmtr9juqankalhj.jpg"},
   {id: "viking-chicken", name: "Viking Chicken Burger", category: "Tavuk", price: 430, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720128/kasaburger/products/qwg6eqpyimd8dpn9nr1v.jpg"},
   // YAN ÜRÜN
-  {id: "mac-cheese", name: "Mac and Cheese Topları", category: "Yan Ürün", price: 170, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720009/kasaburger/products/lpmkvz6bhfewl5pgskic.jpg"},
   {id: "mozarella-sticks", name: "Mozarella Sticks", category: "Yan Ürün", price: 210, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720187/kasaburger/products/kvsrbiutiqdqhoolov8z.jpg"},
   {id: "sogan-halkasi", name: "Soğan Halkası", category: "Yan Ürün", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720240/kasaburger/products/dzxb0lv41xafeybynhri.jpg"},
   {id: "cheese-fries", name: "Prison Cheese Lover Fries", category: "Yan Ürün", price: 150, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720212/kasaburger/products/ujatmwdny3it8dzcikkn.jpg"},
