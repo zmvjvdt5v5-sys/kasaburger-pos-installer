@@ -94,6 +94,12 @@ const KioskPage = () => {
   const [loyaltyConfig, setLoyaltyConfig] = useState(null);
   const [showRewards, setShowRewards] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(null);
+  
+  // Referans Sistemi State'leri
+  const [referralCode, setReferralCode] = useState('');
+  const [referralInfo, setReferralInfo] = useState(null);
+  const [showReferral, setShowReferral] = useState(false);
+  const [referralInput, setReferralInput] = useState('');
 
   // Detect mobile
   useEffect(() => {
