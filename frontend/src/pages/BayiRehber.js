@@ -5,7 +5,8 @@ import { Badge } from '../components/ui/badge';
 import { 
   BookOpen, Monitor, ShoppingCart, CreditCard, Truck, Settings,
   HelpCircle, Phone, Mail, MessageCircle, ExternalLink, Play,
-  CheckCircle, AlertCircle, Smartphone, Printer, Users, Key
+  CheckCircle, AlertCircle, Smartphone, Printer, Users, Key,
+  Download, FileText
 } from 'lucide-react';
 
 export default function BayiRehber() {
