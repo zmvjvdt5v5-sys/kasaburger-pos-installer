@@ -17,7 +17,7 @@ export const DEFAULT_PRODUCTS = [
   // TAVUK
   {id: "crispy-chicken", name: "Crispy Chicken Burger", category: "Tavuk", price: 360, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719954/kasaburger/products/xobrshlgrwd4opojrmum.jpg"},
   {id: "double-crispy", name: "Double Crispy Chicken", category: "Tavuk", price: 410, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719978/kasaburger/products/ronl4qic10vbgjictclt.jpg"},
-  {id: "animal-chicken", name: "Animal Style Chicken", category: "Tavuk", price: 430, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720009/kasaburger/products/lpmkvz6bhfewl5pgskic.jpg"},
+  {id: "animal-chicken", name: "Animal Style Chicken", category: "Tavuk", price: 430, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720160/kasaburger/products/jnzrcojxzkdrgb5u2exk.jpg"},
   {id: "spicy-hirsiz", name: "(Spicy) Hırsız Burger", category: "Tavuk", price: 420, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720039/kasaburger/products/bvxcrizznvjaqjvxlucu.jpg"},
   {id: "sweet-polis", name: "(Sweet) Polis Burger", category: "Tavuk", price: 420, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720071/kasaburger/products/w50qmsz041zi7h4pjkwu.jpg"},
   {id: "milano-chicken", name: "Milano Chicken Burger", category: "Tavuk", price: 440, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720100/kasaburger/products/tfrehnmtr9juqankalhj.jpg"},
