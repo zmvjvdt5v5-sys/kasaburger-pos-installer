@@ -589,10 +589,18 @@ const DealerPortal = ({ initialTab = 'order' }) => {
       <main className="container mx-auto px-4 py-6">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-card border border-border">
+          <TabsList className="grid w-full grid-cols-8 bg-card border border-border">
             <TabsTrigger value="order" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <ShoppingCart className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Sipariş</span>
+            </TabsTrigger>
+            <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <Package className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Ürünler</span>
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <FileText className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Faturalar</span>
             </TabsTrigger>
             <TabsTrigger value="make-payment" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <CreditCard className="h-4 w-4 mr-2" />
@@ -605,6 +613,10 @@ const DealerPortal = ({ initialTab = 'order' }) => {
             <TabsTrigger value="ekstre" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               <Receipt className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Ekstre</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              <BarChart className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Raporlar</span>
             </TabsTrigger>
             <TabsTrigger value="platforms" className="data-[state=active]:bg-pink-500 data-[state=active]:text-white">
               <Bike className="h-4 w-4 mr-2" />
