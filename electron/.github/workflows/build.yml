@@ -9,6 +9,10 @@ jobs:
   build-windows:
     runs-on: windows-latest
     
+    defaults:
+      run:
+        working-directory: ./electron
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -17,7 +21,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
         
     - name: Install dependencies
       run: npm install
@@ -25,23 +28,33 @@ jobs:
     - name: Build Windows Installer
       run: npm run build:win
       
-    - name: Upload Installer
+    - name: Upload Installer Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: KasaBurger-POS-Windows-Installer
+        name: KasaBurger-POS-Windows
         path: |
-          dist/*.exe
+          electron/dist/*.exe
         retention-days: 30
         
     - name: Create Release
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v1.0.${{ github.run_number }}
         name: KasaBurger POS v1.0.${{ github.run_number }}
+        body: |
+          ## 🍔 KasaBurger POS Masaüstü Uygulaması
+          
+          ### İndirme
+          - **Setup (Kurulum):** `KasaBurger.POS.Setup.1.0.0.exe` - Bayilere bu gönderilecek
+          - **Portable:** `KasaBurger.POS.1.0.0.exe` - Kurulum gerektirmez
+          
+          ### Kurulum
+          1. Setup dosyasını indirin
+          2. Çift tıklayın ve kurulumu tamamlayın
+          3. Masaüstü kısayolundan açın
+          4. Bayi bilgilerinizle giriş yapın
         files: |
-          dist/KasaBurger POS Setup*.exe
-          dist/KasaBurger POS*.exe
+          electron/dist/*.exe
         draft: false
         prerelease: false
       env:
