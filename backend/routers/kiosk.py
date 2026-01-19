@@ -445,6 +445,27 @@ async def get_kiosk_products():
         return DEFAULT_KIOSK_PRODUCTS
     return products
 
+
+@router.delete("/products/cleanup-test")
+async def cleanup_test_products(current_user: dict = Depends(get_current_user)):
+    """Test ürünlerini temizle (TEST_ ile başlayan veya id=None olanlar)"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Test ürünlerini sil (TEST_ içeren veya id=None olanlar)
+    result1 = await db.kiosk_products.delete_many({"name": {"$regex": "TEST", "$options": "i"}})
+    result2 = await db.kiosk_products.delete_many({"id": None})
+    result3 = await db.kiosk_products.delete_many({"id": {"$exists": False}})
+    
+    total_deleted = result1.deleted_count + result2.deleted_count + result3.deleted_count
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return {"status": "cleaned", "deleted_count": total_deleted}
+
+
 @router.post("/products")
 async def create_kiosk_product(product: KioskProduct, current_user: dict = Depends(get_current_user)):
     db = get_db()
