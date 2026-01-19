@@ -1539,7 +1539,7 @@ const DealerPortal = ({ initialTab = 'order' }) => {
                           <div className="flex-1">
                             <h4 className="font-medium">{product.name}</h4>
                             <p className="text-sm text-muted-foreground">{product.category}</p>
-                            <p className="text-primary font-bold">{formatCurrency(product.price)}</p>
+                            <p className="text-primary font-bold">{formatCurrency(product.base_price || product.price || 0)}</p>
                           </div>
                         </div>
                         {product.description && (
