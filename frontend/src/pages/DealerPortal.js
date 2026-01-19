@@ -50,7 +50,10 @@ import {
   Bell,
   Sparkles,
   Plug,
-  Bike
+  Bike,
+  Package,
+  FileText,
+  BarChart
 } from 'lucide-react';
 import { Textarea } from '../components/ui/textarea';
 
