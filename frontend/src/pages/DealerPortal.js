@@ -1669,14 +1669,14 @@ const DealerPortal = ({ initialTab = 'order' }) => {
                   </div>
                   
                   {/* Güncel Bakiye */}
-                  <div className={`p-4 rounded-lg ${dealerInfo?.balance >= 0 ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'} border`}>
+                  <div className={`p-4 rounded-lg ${dealer?.balance >= 0 ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'} border`}>
                     <div className="flex items-center gap-3">
-                      <Receipt className="h-8 w-8" style={{ color: dealerInfo?.balance >= 0 ? '#4ade80' : '#f87171' }} />
+                      <Receipt className="h-8 w-8" style={{ color: dealer?.balance >= 0 ? '#4ade80' : '#f87171' }} />
                       <div>
                         <p className="text-sm text-muted-foreground">Güncel Bakiye</p>
-                        <p className={`text-2xl font-bold ${dealerInfo?.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {formatCurrency(Math.abs(dealerInfo?.balance || 0))}
-                          <span className="text-sm ml-1">{dealerInfo?.balance >= 0 ? '(Alacak)' : '(Borç)'}</span>
+                        <p className={`text-2xl font-bold ${dealer?.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {formatCurrency(Math.abs(dealer?.balance || 0))}
+                          <span className="text-sm ml-1">{dealer?.balance >= 0 ? '(Alacak)' : '(Borç)'}</span>
                         </p>
                       </div>
                     </div>
