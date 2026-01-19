@@ -145,7 +145,7 @@ def create_content(styles):
     
     elements.append(Paragraph("<b>Adım 1: Tarayıcıyı Açın</b>", styles['Heading3Custom']))
     elements.append(Paragraph("Chrome, Firefox, Safari veya Edge tarayıcısını açın ve adres çubuğuna aşağıdaki adresi yazın:", styles['BodyCustom']))
-    elements.append(Paragraph("https://franchise-pos.preview.emergentagent.com/dealer-login", styles['CodeCustom']))
+    elements.append(Paragraph("https://kbys-portal.preview.emergentagent.com/dealer-login", styles['CodeCustom']))
     
     elements.append(Paragraph("<b>Adım 2: Giriş Bilgilerini Girin</b>", styles['Heading3Custom']))
     elements.append(Paragraph("• <b>Bayi Kodu:</b> Merkez tarafından size verilen kod (örn: MEKGRUP, BY-001)", styles['ListItem']))

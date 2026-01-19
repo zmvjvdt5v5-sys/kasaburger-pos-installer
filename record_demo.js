@@ -5,7 +5,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 
-const BASE_URL = 'https://franchise-pos.preview.emergentagent.com';
+const BASE_URL = 'https://kbys-portal.preview.emergentagent.com';
 
 async function recordDemo() {
     console.log('🎬 Video kaydı başlıyor...');

@@ -711,7 +711,7 @@ POS sistemine kapsamlı ayarlar dialogu eklendi:
 ### Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / 1234
-- **Preview URL:** https://franchise-pos.preview.emergentagent.com
+- **Preview URL:** https://kbys-portal.preview.emergentagent.com
 
 ---
 
