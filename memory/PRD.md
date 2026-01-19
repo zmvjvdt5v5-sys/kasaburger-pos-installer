@@ -1540,3 +1540,90 @@ npm run build:win
 | WebSocket Fix | ✅ | URL API kullanıyor |
 | Electron Linux | ✅ | 262 MB unpacked |
 | Electron Windows | ⚠️ | Wine gerekli - kullanıcı build yapmalı |
+
+
+---
+
+## Update: January 19, 2026 - Kiosk Kategori Yönetimi
+
+### ✅ Tamamlanan Özellikler
+
+#### Kiosk Admin Kategori Yönetimi
+Admin panelinden kiosk kategorilerini tam olarak yönetme özelliği eklendi.
+
+**Frontend Değişiklikleri (`/app/frontend/src/pages/KioskAdmin.js`):**
+- Tab-based arayüz: Ürünler ve Kategoriler sekmeleri
+- Kategori listesi tablosu (İkon, Ad, Ürün Sayısı, İşlemler)
+- Sıralama okları (↑↓) ile kategori sırası değiştirme
+- Yeni Kategori dialog'u (Ad + Emoji seçici)
+- Kategori Düzenle dialog'u (mevcut verilerle dolu gelir)
+- Silme koruması (ürünü olan kategoriler silinemez)
+- Toast bildirimleri (sonner)
+
+**Backend Değişiklikleri (`/app/backend/routers/kiosk.py`):**
+- `CategoryReorderRequest` Pydantic model eklendi (path conflict çözümü)
+- `GET /api/kiosk/categories` - Kategorileri getir (sıralı)
+- `POST /api/kiosk/categories` - Yeni kategori oluştur
+- `PUT /api/kiosk/categories/reorder` - Kategorileri yeniden sırala
+- `PUT /api/kiosk/categories/{id}` - Kategori güncelle
+- `DELETE /api/kiosk/categories/{id}` - Kategori sil (ürün kontrolü ile)
+- Ürün id generation bug fix (testing agent tarafından bulundu)
+
+**Varsayılan Kategoriler:**
+1. 🍔 Et Burger
+2. 👑 Premium
+3. 🍗 Tavuk
+4. 🍟 Yan Ürün
+5. 🥤 İçecek
+6. 🍫 Tatlı
+
+### Test Sonuçları
+- **Backend:** 100% (12/12 test geçti)
+- **Frontend:** 100% (Tüm UI akışları çalışıyor)
+- **Test Dosyası:** `/app/tests/test_kiosk_categories.py`
+- **Test Raporu:** `/app/test_reports/iteration_8.json`
+
+### Düzeltilen Buglar
+1. **Reorder Endpoint Path Conflict:** `/categories/reorder` endpoint'i `/{category_id}` ile çakışıyordu. `CategoryReorderRequest` wrapper model ile çözüldü.
+2. **Ürün ID Generation:** POST/PUT ürün işlemlerinde `id: null` dönüyordu. `model_dump(exclude={'id'})` ile düzeltildi.
+
+### Dosyalar
+- `/app/frontend/src/pages/KioskAdmin.js` - Tam kategori yönetimi UI
+- `/app/backend/routers/kiosk.py` - Kategori CRUD ve reorder endpoints
+- `/app/tests/test_kiosk_categories.py` - Backend test dosyası
+
+---
+
+## Prioritized Backlog (Updated January 19, 2026)
+
+### P0 (Tamamlandı)
+- [x] Authentication (Admin + Bayi)
+- [x] Core CRUD operations
+- [x] Dashboard
+- [x] POS/Adisyon Sistemi
+- [x] Kiosk Yönetimi (Ürünler + Kategoriler)
+- [x] Birleşik Mutfak Sistemi
+- [x] Salon Display
+
+### P1 (Yüksek Öncelik)
+- [ ] E-fatura GİB gerçek entegrasyonu (API bilgileri bekleniyor)
+- [ ] InPOS yazıcı testi (fiziksel cihaz gerekli)
+- [ ] Delivery platform API testi (gerçek API key'ler gerekli)
+- [ ] Electron Windows build (kullanıcı Windows'ta build yapmalı)
+
+### P2 (Orta Öncelik)
+- [ ] Production WebSocket fix doğrulama
+- [ ] Ödeme gateway entegrasyonu (Stripe/Iyzico)
+
+### P3 (Düşük Öncelik)
+- [ ] Mobil uygulama
+- [ ] AI destekli talep tahmini
+- [ ] CRM modülü
+
+---
+
+## Test Bilgileri
+- **Admin:** admin@kasaburger.net.tr / admin123
+- **Bayi:** MEKGRUP / 1234
+- **Preview URL:** https://kbys-portal.preview.emergentagent.com
+
