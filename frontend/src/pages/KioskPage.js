@@ -147,9 +147,64 @@ const KioskPage = () => {
     return () => clearInterval(interval);
   }, [selectedCategory]);
 
+  // Combo ve Promosyon yükleme
+  useEffect(() => {
+    const loadCombosAndPromos = async () => {
+      try {
+        const [combosRes, promosRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/kiosk/combos`),
+          fetch(`${BACKEND_URL}/api/kiosk/promotions`)
+        ]);
+        
+        if (combosRes.ok) {
+          const combosData = await combosRes.json();
+          setCombos(combosData || []);
+        }
+        
+        if (promosRes.ok) {
+          const promosData = await promosRes.json();
+          setPromotions(promosData || []);
+        }
+      } catch (e) {
+        console.log('Combo/Promo yüklenemedi');
+      }
+    };
+    
+    loadCombosAndPromos();
+    const interval = setInterval(loadCombosAndPromos, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Promosyon banner rotasyonu
+  useEffect(() => {
+    if (promotions.length > 1) {
+      const interval = setInterval(() => {
+        setActivePromoIndex(prev => (prev + 1) % promotions.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [promotions.length]);
+
   const filteredProducts = menuData.products.filter(p => p.category === selectedCategory);
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Combo sepete ekleme
+  const addComboToCart = (combo) => {
+    const comboProducts = combo.products.map(pid => menuData.products.find(p => p.id === pid)).filter(Boolean);
+    const comboItem = {
+      id: `combo-${combo.id}-${Date.now()}`,
+      name: combo.name,
+      price: combo.combo_price,
+      quantity: 1,
+      isCombo: true,
+      comboProducts: comboProducts.map(p => p.name),
+      note: ''
+    };
+    setCart(prev => [...prev, comboItem]);
+    toast.success(`${combo.name} sepete eklendi! 🎉`);
+    setShowCombos(false);
+  };
 
   const addToCart = (product, note = '') => {
     setCart(prev => {
