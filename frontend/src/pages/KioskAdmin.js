@@ -77,12 +77,19 @@ const KioskAdmin = () => {
     name: '',
     description: '',
     price: '',
-    category: 'et-burger',
+    category: 'Et Burger',
     image: '',
     premium: false
   });
   const [selectedCategory, setSelectedCategory] = useState('all');
   const fileInputRef = useRef(null);
+  
+  // Kategori Yönetimi State'leri
+  const [categories, setCategories] = useState([]);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryForm, setCategoryForm] = useState({ name: '', icon: '📦', order: 0 });
+  const [activeTab, setActiveTab] = useState('products');
 
   // Cloudinary'ye dosya yükleme fonksiyonu
   const handleFileUpload = async (e) => {
