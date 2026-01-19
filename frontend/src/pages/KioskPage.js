@@ -419,16 +419,24 @@ const KioskPage = () => {
             quantity: item.quantity, 
             unit_price: item.price, 
             total: item.price * item.quantity,
-            note: item.note || ''
+            note: item.note || '',
+            isReward: item.isReward || false
           })),
           total: cartTotal,
           service_type: serviceType,
           table_number: serviceType === 'masa' ? tableNumber : null,
-          payment_method: method
+          payment_method: method,
+          loyalty_phone: loyaltyMember?.member?.phone || null
         })
       });
       const data = response.ok ? await response.json() : null;
-      setOrderNumber(data?.order_number || `${Date.now().toString().slice(-4)}`);
+      const newOrderNumber = data?.order_number || `${Date.now().toString().slice(-4)}`;
+      setOrderNumber(newOrderNumber);
+      
+      // Sadakat puanı kazan
+      if (loyaltyMember?.member) {
+        await earnLoyaltyPoints(data?.id || newOrderNumber);
+      }
     } catch (e) {
       setOrderNumber(`${Date.now().toString().slice(-4)}`);
     }
