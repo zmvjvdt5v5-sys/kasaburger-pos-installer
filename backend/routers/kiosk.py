@@ -85,20 +85,173 @@ DEFAULT_KIOSK_PRODUCTS = [
     {"id": "oreo-dream", "name": "Oreo Dream Cup", "category": "Tatlı", "price": 220, "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768686685/kasaburger/products/ktej7vqaqnm2qt5fjnce.jpg", "available": True},
 ]
 
-class KioskProduct(BaseModel):
-    name: str
-    description: Optional[str] = None
-    price: float
-    image: Optional[str] = None
-    category: Optional[str] = None
-    available: bool = True
-
 class KioskOrder(BaseModel):
     items: List[dict]
     total: float
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     notes: Optional[str] = None
+
+
+# ==================== KATEGORİ YÖNETİMİ ====================
+
+@router.get("/categories")
+async def get_kiosk_categories():
+    """Kiosk kategorilerini getir"""
+    db = get_db()
+    if db is None:
+        return DEFAULT_KIOSK_CATEGORIES
+    
+    categories = await db.kiosk_categories.find({}, {"_id": 0}).sort("order", 1).to_list(50)
+    if not categories:
+        # Varsayılan kategorileri yükle
+        for cat in DEFAULT_KIOSK_CATEGORIES:
+            await db.kiosk_categories.insert_one(cat)
+        return DEFAULT_KIOSK_CATEGORIES
+    
+    return categories
+
+
+@router.post("/categories")
+async def create_kiosk_category(category: KioskCategory, current_user: dict = Depends(get_current_user)):
+    """Yeni kategori oluştur"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # En yüksek order'ı bul
+    last_cat = await db.kiosk_categories.find_one(sort=[("order", -1)])
+    next_order = (last_cat.get("order", 0) + 1) if last_cat else 1
+    
+    cat_doc = {
+        "id": str(uuid.uuid4())[:8],
+        "name": category.name,
+        "icon": category.icon,
+        "order": category.order or next_order,
+        "is_active": category.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.kiosk_categories.insert_one(cat_doc)
+    cat_doc.pop("_id", None)
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return cat_doc
+
+
+@router.put("/categories/{category_id}")
+async def update_kiosk_category(category_id: str, category: KioskCategory, current_user: dict = Depends(get_current_user)):
+    """Kategori güncelle"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    update_data = {
+        "name": category.name,
+        "icon": category.icon,
+        "order": category.order,
+        "is_active": category.is_active,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Eski kategori adını bul
+    old_cat = await db.kiosk_categories.find_one({"id": category_id}, {"_id": 0})
+    old_name = old_cat.get("name") if old_cat else None
+    
+    await db.kiosk_categories.update_one({"id": category_id}, {"$set": update_data})
+    
+    # Eğer kategori adı değiştiyse, ürünlerin kategorisini de güncelle
+    if old_name and old_name != category.name:
+        await db.kiosk_products.update_many(
+            {"category": old_name},
+            {"$set": {"category": category.name}}
+        )
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return {"status": "success", "old_name": old_name, "new_name": category.name}
+
+
+@router.delete("/categories/{category_id}")
+async def delete_kiosk_category(category_id: str, current_user: dict = Depends(get_current_user)):
+    """Kategori sil"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Kategoriyi bul
+    cat = await db.kiosk_categories.find_one({"id": category_id}, {"_id": 0})
+    if not cat:
+        raise HTTPException(status_code=404, detail="Kategori bulunamadı")
+    
+    # Bu kategorideki ürünleri kontrol et
+    products_count = await db.kiosk_products.count_documents({"category": cat.get("name")})
+    if products_count > 0:
+        raise HTTPException(status_code=400, detail=f"Bu kategoride {products_count} ürün var. Önce ürünleri taşıyın.")
+    
+    await db.kiosk_categories.delete_one({"id": category_id})
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return {"status": "deleted"}
+
+
+@router.put("/categories/reorder")
+async def reorder_kiosk_categories(category_ids: List[str], current_user: dict = Depends(get_current_user)):
+    """Kategorileri yeniden sırala"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    for idx, cat_id in enumerate(category_ids):
+        await db.kiosk_categories.update_one(
+            {"id": cat_id},
+            {"$set": {"order": idx + 1}}
+        )
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return {"status": "success", "order": category_ids}
+
+
+# ==================== ÜRÜN SIRALAMA ====================
+
+@router.put("/products/reorder")
+async def reorder_kiosk_products(product_orders: List[dict], current_user: dict = Depends(get_current_user)):
+    """Ürünleri yeniden sırala. Format: [{"id": "xxx", "order": 1}, ...]"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    for item in product_orders:
+        await db.kiosk_products.update_one(
+            {"id": item.get("id")},
+            {"$set": {"order": item.get("order", 0)}}
+        )
+    
+    # Versiyon güncelle
+    await _update_kiosk_version(db)
+    
+    return {"status": "success"}
+
+
+# ==================== YARDIMCI FONKSİYONLAR ====================
+
+async def _update_kiosk_version(db):
+    """Kiosk versiyon numarasını güncelle"""
+    await db.kiosk_settings.update_one(
+        {"key": "products_version"},
+        {"$set": {"value": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+
+
+# ==================== ÜRÜN YÖNETİMİ ====================
 
 
 @router.post("/products/seed")
