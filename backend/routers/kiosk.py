@@ -21,6 +21,10 @@ class KioskCategory(BaseModel):
     is_active: bool = True
 
 
+class CategoryReorderRequest(BaseModel):
+    category_ids: List[str]
+
+
 class KioskProduct(BaseModel):
     id: Optional[str] = None
     name: str
