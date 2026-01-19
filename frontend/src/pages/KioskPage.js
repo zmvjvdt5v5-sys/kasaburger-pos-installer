@@ -1001,12 +1001,27 @@ const KioskPage = () => {
                       🕐 {combo.start_hour}:00-{combo.end_hour}:00
                     </div>
                   )}
+                  {combo.gift_product_id && (
+                    <div className="absolute top-3 left-3 bg-pink-500 text-white font-bold px-3 py-1 rounded-full text-sm animate-pulse">
+                      {combo.gift_message || '🎁 Hediye!'}
+                    </div>
+                  )}
                   <div className="absolute bottom-3 left-3 right-3">
                     <h3 className="font-bold text-xl text-white">{combo.name}</h3>
                     <p className="text-zinc-300 text-sm">{combo.description}</p>
                   </div>
                 </div>
                 <div className="p-4">
+                  {/* Hediye Ürün Banner */}
+                  {combo.gift_product_id && (
+                    <div className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-lg p-2 mb-3 flex items-center gap-2">
+                      <span className="text-2xl">🎁</span>
+                      <div>
+                        <p className="text-pink-400 font-bold text-sm">{combo.gift_message || 'Hediye Ürün!'}</p>
+                        <p className="text-zinc-400 text-xs">{combo.gift_product_name}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <span className="text-zinc-500 line-through text-lg">₺{combo.original_price}</span>
@@ -1020,7 +1035,7 @@ const KioskPage = () => {
                     onClick={() => addComboToCart(combo)}
                     className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg font-bold rounded-xl"
                   >
-                    Sepete Ekle 🛒
+                    {combo.gift_product_id ? 'Sepete Ekle + Hediye 🎁' : 'Sepete Ekle 🛒'}
                   </Button>
                 </div>
               </div>
