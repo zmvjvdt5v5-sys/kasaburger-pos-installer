@@ -1262,3 +1262,146 @@ async def get_loyalty_stats(current_user: dict = Depends(get_current_user)):
             "platinum": platinum
         }
     }
+
+
+
+# ==================== REFERANS SİSTEMİ ====================
+
+REFERRAL_BONUS = 100  # Her iki tarafa verilecek bonus puan
+
+@router.get("/loyalty/member/{phone}/referral-code")
+async def get_referral_code(phone: str):
+    """Üyenin referans kodunu getir"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    # Referans kodu yoksa oluştur
+    if not member.get("referral_code"):
+        referral_code = f"KB{clean_phone[-4:]}{str(uuid.uuid4())[:4].upper()}"
+        await db.loyalty_members.update_one(
+            {"phone": clean_phone},
+            {"$set": {"referral_code": referral_code}}
+        )
+        member["referral_code"] = referral_code
+    
+    # Kaç kişi davet edilmiş
+    referral_count = await db.loyalty_members.count_documents({"referred_by": member.get("referral_code")})
+    
+    return {
+        "referral_code": member.get("referral_code"),
+        "referral_count": referral_count,
+        "bonus_per_referral": REFERRAL_BONUS
+    }
+
+
+@router.post("/loyalty/member/apply-referral")
+async def apply_referral_code(phone: str = Body(...), referral_code: str = Body(...)):
+    """Referans kodu uygula - yeni üyeye ve referans sahibine bonus ver"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    
+    # Yeni üyeyi bul
+    new_member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    if not new_member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    # Zaten referans kullanmış mı?
+    if new_member.get("referred_by"):
+        raise HTTPException(status_code=400, detail="Bu hesap zaten bir referans kodu kullanmış")
+    
+    # Referans kodu geçerli mi?
+    referrer = await db.loyalty_members.find_one({"referral_code": referral_code.upper()}, {"_id": 0})
+    if not referrer:
+        raise HTTPException(status_code=404, detail="Geçersiz referans kodu")
+    
+    # Kendi kodunu kullanamaz
+    if referrer["phone"] == clean_phone:
+        raise HTTPException(status_code=400, detail="Kendi referans kodunuzu kullanamazsınız")
+    
+    # Yeni üyeye bonus ver ve referansı kaydet
+    await db.loyalty_members.update_one(
+        {"phone": clean_phone},
+        {
+            "$set": {"referred_by": referral_code.upper()},
+            "$inc": {"total_points": REFERRAL_BONUS}
+        }
+    )
+    
+    # Referans sahibine bonus ver
+    await db.loyalty_members.update_one(
+        {"referral_code": referral_code.upper()},
+        {"$inc": {"total_points": REFERRAL_BONUS, "referral_earned": REFERRAL_BONUS}}
+    )
+    
+    # Transaction kaydet - yeni üye
+    await db.loyalty_transactions.insert_one({
+        "member_id": new_member["id"],
+        "points": REFERRAL_BONUS,
+        "transaction_type": "referral_bonus",
+        "description": f"Referans bonusu ({referral_code.upper()})",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Transaction kaydet - referans sahibi
+    await db.loyalty_transactions.insert_one({
+        "member_id": referrer["id"],
+        "points": REFERRAL_BONUS,
+        "transaction_type": "referral_earn",
+        "description": f"Arkadaş daveti bonusu ({clean_phone[-4:]})",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "status": "success",
+        "bonus_earned": REFERRAL_BONUS,
+        "message": f"Tebrikler! {REFERRAL_BONUS} puan kazandınız!"
+    }
+
+
+@router.get("/loyalty/referral-stats")
+async def get_referral_stats(current_user: dict = Depends(get_current_user)):
+    """Referans programı istatistikleri (admin)"""
+    db = get_db()
+    if db is None:
+        return {"total_referrals": 0, "total_bonus_given": 0}
+    
+    total_referrals = await db.loyalty_members.count_documents({"referred_by": {"$exists": True, "$ne": None}})
+    
+    # En çok davet eden üyeler
+    pipeline = [
+        {"$match": {"referral_code": {"$exists": True}}},
+        {"$lookup": {
+            "from": "loyalty_members",
+            "localField": "referral_code",
+            "foreignField": "referred_by",
+            "as": "referrals"
+        }},
+        {"$project": {
+            "_id": 0,
+            "phone": 1,
+            "name": 1,
+            "referral_code": 1,
+            "referral_count": {"$size": "$referrals"}
+        }},
+        {"$match": {"referral_count": {"$gt": 0}}},
+        {"$sort": {"referral_count": -1}},
+        {"$limit": 10}
+    ]
+    top_referrers = await db.loyalty_members.aggregate(pipeline).to_list(10)
+    
+    return {
+        "total_referrals": total_referrals,
+        "total_bonus_given": total_referrals * REFERRAL_BONUS * 2,
+        "bonus_per_referral": REFERRAL_BONUS,
+        "top_referrers": top_referrers
+    }
