@@ -97,21 +97,68 @@ const KioskPage = () => {
     }
   }, [showReceipt]);
 
-  // Load menu from backend
+  // Load menu from backend with auto-refresh
   useEffect(() => {
     const loadMenu = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/kiosk/menu`);
+        const response = await fetch(`${BACKEND_URL}/api/kiosk/products`);
         if (response.ok) {
           const data = await response.json();
-          if (data.products?.length > 0) {
-            setMenuData(prev => ({ ...prev, products: data.products }));
+          if (data?.length > 0) {
+            // Kategori isimlerini normalize et
+            const normalizedProducts = data.map(p => ({
+              ...p,
+              category: normalizeCategory(p.category)
+            }));
+            setMenuData(prev => ({ ...prev, products: normalizedProducts }));
           }
         }
-      } catch (e) { /* use default */ }
+      } catch (e) { 
+        console.log('Using default menu');
+      }
     };
+    
+    // İlk yükleme
     loadMenu();
+    
+    // Her 10 saniyede kontrol et (anlık güncelleme için)
+    const interval = setInterval(loadMenu, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
+
+  // Kategori isimlerini normalize et
+  const normalizeCategory = (category) => {
+    if (!category) return 'et-burger';
+    const normalized = category.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace('ü', 'u')
+      .replace('ı', 'i')
+      .replace('ö', 'o')
+      .replace('ç', 'c')
+      .replace('ş', 's')
+      .replace('ğ', 'g');
+    
+    // Mapping
+    const categoryMap = {
+      'et-burger': 'et-burger',
+      'et': 'et-burger',
+      'burger': 'et-burger',
+      'premium': 'premium',
+      'premium-gourmet': 'premium',
+      'tavuk': 'tavuk',
+      'tavuk-burger': 'tavuk',
+      'yan-urun': 'atistirmalik',
+      'yan-ürün': 'atistirmalik',
+      'atistirmalik': 'atistirmalik',
+      'icecek': 'icecek',
+      'içecek': 'icecek',
+      'tatli': 'tatli',
+      'tatlı': 'tatli'
+    };
+    
+    return categoryMap[normalized] || normalized;
+  };
 
   const filteredProducts = menuData.products.filter(p => p.category === selectedCategory);
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
