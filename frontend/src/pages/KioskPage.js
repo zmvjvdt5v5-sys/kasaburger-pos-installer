@@ -321,6 +321,22 @@ const KioskPage = () => {
           toast.success(`Hoşgeldiniz! ${data.welcome_bonus || 50} bonus puan kazandınız! 🎉`, { duration: 4000 });
         } else {
           toast.success(`Tekrar hoşgeldiniz ${data.member.name || ''}! ${data.member.total_points} puanınız var.`);
+          
+          // Doğum günü durumunu kontrol et
+          try {
+            const bdRes = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/${data.member.phone}/birthday-status`);
+            if (bdRes.ok) {
+              const bdData = await bdRes.json();
+              setBirthdayStatus(bdData);
+              
+              // Bugün doğum günüyse ve bonus alınmamışsa bildirim göster
+              if (bdData.is_birthday_today && bdData.can_claim_bonus) {
+                toast.success('🎂 Bugün Doğum Günün! Özel hediyelerini almayı unutma!', { duration: 5000 });
+              }
+            }
+          } catch (e) {
+            console.log('Birthday check failed');
+          }
         }
       } else {
         toast.error('Üyelik bulunamadı');
