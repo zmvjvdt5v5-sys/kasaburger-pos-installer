@@ -31,10 +31,10 @@ export const DEFAULT_PRODUCTS = [
   {id: "cajun-fries", name: "Prison Hot Lockdown Fries", category: "Yan Ürün", price: 160, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720282/kasaburger/products/csdwzqwozldfxxt7pkpr.jpg"},
   // İÇECEK
   {id: "ayran", name: "Ayran", category: "İçecek", price: 35, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720311/kasaburger/products/xgrn8fvph9jaeh1bqwat.jpg"},
-  {id: "su", name: "Su", category: "İçecek", price: 20, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720333/kasaburger/products/jl2q8smtq7de6lh16uul.jpg"},
-  {id: "limonata", name: "Limonata", category: "İçecek", price: 55, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720355/kasaburger/products/exyjmazfyp4hyx2hbxsu.jpg"},
-  {id: "pepsi", name: "Pepsi", category: "İçecek", price: 45, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720380/kasaburger/products/zu98squbgxxa0hppmxwn.jpg"},
-  {id: "milkshake", name: "Milkshake", category: "İçecek", price: 85, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720424/kasaburger/products/uitufnzpxr7fatrttobr.jpg"},
+  {id: "su", name: "Su", category: "İçecek", price: 20, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720311/kasaburger/products/xgrn8fvph9jaeh1bqwat.jpg"},
+  {id: "limonata", name: "Limonata", category: "İçecek", price: 55, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720311/kasaburger/products/xgrn8fvph9jaeh1bqwat.jpg"},
+  {id: "pepsi", name: "Pepsi", category: "İçecek", price: 45, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720311/kasaburger/products/xgrn8fvph9jaeh1bqwat.jpg"},
+  {id: "milkshake", name: "Milkshake", category: "İçecek", price: 85, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720311/kasaburger/products/xgrn8fvph9jaeh1bqwat.jpg"},
   // TATLI
   {id: "choco-bomb", name: "Kasa Choco Bomb", category: "Tatlı", price: 200, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720355/kasaburger/products/exyjmazfyp4hyx2hbxsu.jpg"},
   {id: "churros", name: "Churros", category: "Tatlı", price: 180, image: "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768720380/kasaburger/products/zu98squbgxxa0hppmxwn.jpg"},
