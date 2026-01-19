@@ -1172,6 +1172,29 @@ const KioskPage = () => {
               <span>TOPLAM</span>
               <span>{formatPrice(cartTotal)}</span>
             </div>
+            
+            {/* Kazanılan Puanlar (Desktop) */}
+            {earnedPoints && (
+              <div className="mt-3 pt-3 border-t border-dashed bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg p-3">
+                <p className="text-sm font-bold text-orange-600 mb-1">🎉 Tebrikler! Puan Kazandınız</p>
+                <div className="flex justify-between text-sm">
+                  <span>Kazanılan Puan:</span>
+                  <span className="font-bold text-green-600">+{earnedPoints.total_earned}</span>
+                </div>
+                {earnedPoints.bonus_points > 0 && (
+                  <p className="text-xs text-orange-500">({earnedPoints.base_points} + {earnedPoints.bonus_points} bonus)</p>
+                )}
+                <div className="flex justify-between text-sm mt-1">
+                  <span>Toplam Puanınız:</span>
+                  <span className="font-bold">{earnedPoints.new_total}</span>
+                </div>
+                {earnedPoints.tier_upgraded && (
+                  <p className="text-sm font-bold text-purple-600 mt-2 animate-pulse">
+                    🎊 {earnedPoints.tier_info?.name} seviyesine yükseldiniz!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <Button className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-lg mt-2 animate-pulse" onClick={completeOrder}>
             ✓ TAMAM - Yeni Sipariş
