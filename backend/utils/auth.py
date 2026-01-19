@@ -5,6 +5,9 @@ import jwt
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from dotenv import load_dotenv
+
+load_dotenv()
 
 JWT_SECRET = os.environ.get("JWT_SECRET")
 if not JWT_SECRET:
