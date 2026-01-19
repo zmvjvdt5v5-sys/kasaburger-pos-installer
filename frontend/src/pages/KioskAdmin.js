@@ -664,8 +664,8 @@ const KioskAdmin = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {DEFAULT_CATEGORIES.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id}>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.name}>
                             {cat.icon} {cat.name}
                           </SelectItem>
                         ))}
