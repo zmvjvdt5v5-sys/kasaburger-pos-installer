@@ -514,7 +514,10 @@ DEFAULT_COMBOS = [
         "combo_price": 590,
         "discount_percent": 15,
         "is_active": True,
-        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719764/kasaburger/products/fojwkaq08bwngprupkgt.jpg"
+        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719764/kasaburger/products/fojwkaq08bwngprupkgt.jpg",
+        "gift_product_id": "mozarella-sticks",
+        "gift_product_name": "Mozarella Sticks",
+        "gift_message": "🎁 Mozzarella Sticks Hediye!"
     },
     {
         "id": "tavuk-menu",
@@ -538,7 +541,10 @@ DEFAULT_COMBOS = [
         "is_active": True,
         "start_hour": 11,
         "end_hour": 15,
-        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719837/kasaburger/products/e5erpcna8ufgyl4roxhh.jpg"
+        "image": "https://res.cloudinary.com/dgxiovaqv/image/upload/v1768719837/kasaburger/products/e5erpcna8ufgyl4roxhh.jpg",
+        "gift_product_id": "mac-cheese",
+        "gift_product_name": "Mac and Cheese Topları",
+        "gift_message": "🎁 Mac & Cheese Hediye!"
     }
 ]
 
