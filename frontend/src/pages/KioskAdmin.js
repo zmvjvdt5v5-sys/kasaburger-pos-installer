@@ -1297,20 +1297,20 @@ const KioskAdmin = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Başlangıç Saati</Label>
-                    <Select value={promoForm.start_hour?.toString() || ''} onValueChange={(v) => setPromoForm(prev => ({ ...prev, start_hour: v ? parseInt(v) : null }))}>
+                    <Select value={promoForm.start_hour?.toString() || 'none'} onValueChange={(v) => setPromoForm(prev => ({ ...prev, start_hour: v === 'none' ? null : parseInt(v) }))}>
                       <SelectTrigger><SelectValue placeholder="Her zaman" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Her zaman</SelectItem>
+                        <SelectItem value="none">Her zaman</SelectItem>
                         {[...Array(24)].map((_, i) => <SelectItem key={i} value={i.toString()}>{i}:00</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <Label>Bitiş Saati</Label>
-                    <Select value={promoForm.end_hour?.toString() || ''} onValueChange={(v) => setPromoForm(prev => ({ ...prev, end_hour: v ? parseInt(v) : null }))}>
+                    <Select value={promoForm.end_hour?.toString() || 'none'} onValueChange={(v) => setPromoForm(prev => ({ ...prev, end_hour: v === 'none' ? null : parseInt(v) }))}>
                       <SelectTrigger><SelectValue placeholder="Her zaman" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Her zaman</SelectItem>
+                        <SelectItem value="none">Her zaman</SelectItem>
                         {[...Array(24)].map((_, i) => <SelectItem key={i} value={i.toString()}>{i}:00</SelectItem>)}
                       </SelectContent>
                     </Select>
