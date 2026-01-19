@@ -109,6 +109,10 @@ class KioskCombo(BaseModel):
     is_active: bool = True
     start_hour: Optional[int] = None  # 0-23, None = her zaman
     end_hour: Optional[int] = None
+    # Hediye ürün özellikleri
+    gift_product_id: Optional[str] = None  # Hediye ürün ID'si
+    gift_product_name: Optional[str] = None  # Hediye ürün adı (cache)
+    gift_message: Optional[str] = None  # "Nugget Hediye!" gibi mesaj
 
 
 class KioskPromotion(BaseModel):
