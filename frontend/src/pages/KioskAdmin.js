@@ -91,6 +91,23 @@ const KioskAdmin = () => {
   const [categoryForm, setCategoryForm] = useState({ name: '', icon: '📦', order: 0 });
   const [activeTab, setActiveTab] = useState('products');
 
+  // Combo ve Promosyon State'leri
+  const [combos, setCombos] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+  const [comboDialogOpen, setComboDialogOpen] = useState(false);
+  const [promoDialogOpen, setPromoDialogOpen] = useState(false);
+  const [editingCombo, setEditingCombo] = useState(null);
+  const [editingPromo, setEditingPromo] = useState(null);
+  const [comboForm, setComboForm] = useState({
+    name: '', description: '', products: [], original_price: 0, combo_price: 0,
+    discount_percent: 0, image: '', is_active: true, start_hour: null, end_hour: null
+  });
+  const [promoForm, setPromoForm] = useState({
+    title: '', description: '', discount_type: 'percent', discount_value: 0,
+    min_order_amount: null, applicable_categories: [], start_hour: null, end_hour: null,
+    is_active: true, banner_color: '#FF6B00'
+  });
+
   // Cloudinary'ye dosya yükleme fonksiyonu
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
