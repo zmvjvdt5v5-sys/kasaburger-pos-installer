@@ -952,6 +952,70 @@ const KioskPage = () => {
           <p className="text-center text-xs text-zinc-500">Ekran 15 saniye sonra otomatik kapanacak</p>
         </DialogContent>
       </Dialog>
+
+      {/* Combo Menü Dialog */}
+      <Dialog open={showCombos} onOpenChange={setShowCombos}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-3">
+              🎁 Menü Fırsatları
+              <span className="text-sm font-normal text-zinc-400">Kombinasyon menülerde indirimli fiyatlar</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            {combos.map(combo => (
+              <div 
+                key={combo.id} 
+                className="bg-zinc-800 rounded-2xl overflow-hidden border border-zinc-700 hover:border-orange-500 transition-all group"
+              >
+                <div className="relative h-40 overflow-hidden">
+                  <img 
+                    src={combo.image} 
+                    alt={combo.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute top-3 right-3 bg-green-500 text-white font-bold px-3 py-1 rounded-full text-sm">
+                    %{combo.discount_percent} İNDİRİM
+                  </div>
+                  {combo.start_hour && combo.end_hour && (
+                    <div className="absolute top-3 left-3 bg-purple-500 text-white font-bold px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                      🕐 {combo.start_hour}:00-{combo.end_hour}:00
+                    </div>
+                  )}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <h3 className="font-bold text-xl text-white">{combo.name}</h3>
+                    <p className="text-zinc-300 text-sm">{combo.description}</p>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="text-zinc-500 line-through text-lg">₺{combo.original_price}</span>
+                      <span className="text-green-400 font-black text-2xl ml-2">₺{combo.combo_price}</span>
+                    </div>
+                    <span className="text-orange-400 font-bold">
+                      ₺{combo.original_price - combo.combo_price} Kazanç
+                    </span>
+                  </div>
+                  <Button 
+                    onClick={() => addComboToCart(combo)}
+                    className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-lg font-bold rounded-xl"
+                  >
+                    Sepete Ekle 🛒
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {combos.length === 0 && (
+            <div className="text-center py-10 text-zinc-400">
+              <span className="text-4xl block mb-3">🎁</span>
+              Şu anda aktif menü fırsatı bulunmuyor
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
