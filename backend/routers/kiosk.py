@@ -309,9 +309,10 @@ async def create_kiosk_product(product: KioskProduct, current_user: dict = Depen
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
+    product_data = product.model_dump(exclude={"id"})  # Exclude id from input
     product_doc = {
         "id": str(uuid.uuid4()),
-        **product.model_dump(),
+        **product_data,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.kiosk_products.insert_one(product_doc)
