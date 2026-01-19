@@ -6,7 +6,9 @@ from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "kasaburger-secret-key-2024")
+JWT_SECRET = os.environ.get("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required")
 security = HTTPBearer()
 
 def hash_password(password: str) -> str:
