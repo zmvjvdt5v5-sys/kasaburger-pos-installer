@@ -78,6 +78,12 @@ const KioskPage = () => {
   const [showProductNote, setShowProductNote] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productNote, setProductNote] = useState('');
+  
+  // Combo ve Promosyon State'leri
+  const [combos, setCombos] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+  const [showCombos, setShowCombos] = useState(false);
+  const [activePromoIndex, setActivePromoIndex] = useState(0);
 
   // Detect mobile
   useEffect(() => {
