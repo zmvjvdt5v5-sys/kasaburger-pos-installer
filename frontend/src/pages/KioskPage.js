@@ -403,6 +403,59 @@ const KioskPage = () => {
     }
   };
 
+  // Referans kodu getir
+  const loadReferralCode = async () => {
+    if (!loyaltyMember?.member?.phone) return;
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/${loyaltyMember.member.phone}/referral-code`);
+      if (response.ok) {
+        const data = await response.json();
+        setReferralInfo(data);
+      }
+    } catch (e) {
+      console.log('Referans kodu yüklenemedi');
+    }
+  };
+
+  // Referans kodu uygula
+  const applyReferralCode = async () => {
+    if (!loyaltyMember?.member?.phone || !referralInput.trim()) {
+      toast.error('Lütfen geçerli bir referans kodu girin');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/apply-referral`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: loyaltyMember.member.phone,
+          referral_code: referralInput.trim().toUpperCase()
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message || `🎉 ${data.bonus_earned} puan kazandınız!`, { duration: 4000 });
+        
+        // Üye bilgisini güncelle
+        setLoyaltyMember(prev => ({
+          ...prev,
+          member: { ...prev.member, total_points: prev.member.total_points + data.bonus_earned }
+        }));
+        
+        setReferralInput('');
+        setShowReferral(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Referans kodu uygulanamadı');
+      }
+    } catch (e) {
+      toast.error('Bağlantı hatası');
+    }
+  };
+
   const updateQuantity = (itemIndex, delta) => {
     setCart(prev => prev.map((item, idx) => {
       if (idx === itemIndex) {
