@@ -108,7 +108,7 @@ def create_styles():
     
     # Code style
     styles.add(ParagraphStyle(
-        name='Code',
+        name='CodeCustom',
         fontSize=9,
         fontName='Courier',
         textColor=colors.HexColor('#1f2937'),
