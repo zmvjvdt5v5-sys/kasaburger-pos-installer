@@ -1707,3 +1707,40 @@ DELETE /api/kiosk/promotions/{id} - Promosyon sil
 
 
 
+
+
+
+---
+
+## Update: January 19, 2026 - Hediye Ürün Özelliği
+
+### ✅ Tamamlanan Özellikler
+
+#### Combo Menülere Hediye Ürün
+Combo menülere hediye ürün tanımlama özelliği eklendi.
+
+**Yeni Alanlar (KioskCombo):**
+- `gift_product_id` - Hediye ürün ID'si
+- `gift_product_name` - Hediye ürün adı
+- `gift_message` - Özel hediye mesajı (örn: "🎁 Mozzarella Sticks Hediye!")
+
+**Varsayılan Hediyeler:**
+| Combo | Hediye Ürün | Mesaj |
+|-------|-------------|-------|
+| Premium Menü | Mozarella Sticks | 🎁 Mozzarella Sticks Hediye! |
+| Double XL Menü | Mac and Cheese Topları | 🎁 Mac & Cheese Hediye! |
+
+**Frontend Değişiklikleri:**
+- Kiosk combo dialog'da hediye badge'i (pembe, animasyonlu)
+- Hediye ürün detay kutusu (pembe gradient)
+- "Sepete Ekle + Hediye 🎁" butonu
+- Sepette hediye bilgisi gösterimi
+- Admin panelinde hediye seçimi dropdown'ı
+- Sadece Yan Ürün, Tatlı, İçecek kategorilerinden hediye seçilebilir
+
+### Test Sonuçları
+- **Backend:** 9/9 test geçti (%100)
+- **Frontend:** Tüm UI akışları çalışıyor
+- **Test Dosyası:** `/app/tests/test_gift_product_feature.py`
+- **Test Raporu:** `/app/test_reports/iteration_10.json`
+
