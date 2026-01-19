@@ -1042,6 +1042,299 @@ const KioskAdmin = () => {
         </CardContent>
       </Card>
     </TabsContent>
+
+        {/* ==================== COMBO MENÜ YÖNETİMİ TAB ==================== */}
+        <TabsContent value="combos" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                Combo Menüler
+              </CardTitle>
+              <Button onClick={() => openComboDialog()}>
+                <Plus className="mr-2 h-4 w-4" />
+                Yeni Combo
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Combo menüler ile müşterilerinize indirimli fırsatlar sunun. Saat bazlı kampanyalar oluşturabilirsiniz.
+              </p>
+              <div className="grid gap-4">
+                {combos.map(combo => (
+                  <div key={combo.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                    {combo.image && (
+                      <img src={combo.image} alt={combo.name} className="w-20 h-20 object-cover rounded-lg" />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{combo.name}</h4>
+                        {combo.is_active ? (
+                          <Badge className="bg-green-500">Aktif</Badge>
+                        ) : (
+                          <Badge variant="secondary">Pasif</Badge>
+                        )}
+                        {combo.start_hour !== null && combo.end_hour !== null && (
+                          <Badge variant="outline">🕐 {combo.start_hour}:00-{combo.end_hour}:00</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{combo.description}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-muted-foreground line-through">₺{combo.original_price}</span>
+                        <span className="text-green-600 font-bold">₺{combo.combo_price}</span>
+                        <Badge className="bg-orange-500">%{combo.discount_percent} İndirim</Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openComboDialog(combo)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteCombo(combo.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {combos.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Gift className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    Henüz combo menü yok. "Yeni Combo" butonuyla ekleyin.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Combo Dialog */}
+          <Dialog open={comboDialogOpen} onOpenChange={setComboDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingCombo ? 'Combo Düzenle' : 'Yeni Combo Menü'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                <div>
+                  <Label>Combo Adı *</Label>
+                  <Input value={comboForm.name} onChange={(e) => setComboForm(prev => ({ ...prev, name: e.target.value }))} placeholder="Örn: Klasik Menü" />
+                </div>
+                <div>
+                  <Label>Açıklama</Label>
+                  <Input value={comboForm.description} onChange={(e) => setComboForm(prev => ({ ...prev, description: e.target.value }))} placeholder="Örn: Burger + Patates + İçecek" />
+                </div>
+                <div>
+                  <Label>Ürünler (Seçin)</Label>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded p-2">
+                    {products.map(p => (
+                      <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted p-1 rounded">
+                        <input
+                          type="checkbox"
+                          checked={comboForm.products.includes(p.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setComboForm(prev => ({ ...prev, products: [...prev.products, p.id], original_price: prev.original_price + p.price }));
+                            } else {
+                              setComboForm(prev => ({ ...prev, products: prev.products.filter(id => id !== p.id), original_price: prev.original_price - p.price }));
+                            }
+                          }}
+                        />
+                        {p.name} (₺{p.price})
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Seçili: {comboForm.products.length} ürün, Toplam: ₺{comboForm.original_price}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Orijinal Fiyat</Label>
+                    <Input type="number" value={comboForm.original_price} onChange={(e) => setComboForm(prev => ({ ...prev, original_price: parseFloat(e.target.value) || 0 }))} />
+                  </div>
+                  <div>
+                    <Label>Combo Fiyatı *</Label>
+                    <Input type="number" value={comboForm.combo_price} onChange={(e) => {
+                      const price = parseFloat(e.target.value) || 0;
+                      const discount = comboForm.original_price > 0 ? Math.round((1 - price / comboForm.original_price) * 100) : 0;
+                      setComboForm(prev => ({ ...prev, combo_price: price, discount_percent: discount }));
+                    }} />
+                  </div>
+                </div>
+                <div>
+                  <Label>İndirim Oranı: %{comboForm.discount_percent}</Label>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Başlangıç Saati (opsiyonel)</Label>
+                    <Select value={comboForm.start_hour?.toString() || ''} onValueChange={(v) => setComboForm(prev => ({ ...prev, start_hour: v ? parseInt(v) : null }))}>
+                      <SelectTrigger><SelectValue placeholder="Her zaman" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Her zaman</SelectItem>
+                        {[...Array(24)].map((_, i) => <SelectItem key={i} value={i.toString()}>{i}:00</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Bitiş Saati</Label>
+                    <Select value={comboForm.end_hour?.toString() || ''} onValueChange={(v) => setComboForm(prev => ({ ...prev, end_hour: v ? parseInt(v) : null }))}>
+                      <SelectTrigger><SelectValue placeholder="Her zaman" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Her zaman</SelectItem>
+                        {[...Array(24)].map((_, i) => <SelectItem key={i} value={i.toString()}>{i}:00</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Görsel URL</Label>
+                  <Input value={comboForm.image} onChange={(e) => setComboForm(prev => ({ ...prev, image: e.target.value }))} placeholder="https://..." />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="combo-active" checked={comboForm.is_active} onChange={(e) => setComboForm(prev => ({ ...prev, is_active: e.target.checked }))} />
+                  <Label htmlFor="combo-active">Aktif</Label>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setComboDialogOpen(false)}>İptal</Button>
+                  <Button onClick={saveCombo}><Save className="mr-2 h-4 w-4" />Kaydet</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        {/* ==================== PROMOSYON YÖNETİMİ TAB ==================== */}
+        <TabsContent value="promotions" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Percent className="h-5 w-5" />
+                Kampanyalar & Promosyonlar
+              </CardTitle>
+              <Button onClick={() => openPromoDialog()}>
+                <Plus className="mr-2 h-4 w-4" />
+                Yeni Kampanya
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Kiosk ekranında üst banner olarak gösterilecek kampanyalar. Saat bazlı veya minimum sipariş tutarı ile aktif olabilir.
+              </p>
+              <div className="grid gap-4">
+                {promotions.map(promo => (
+                  <div key={promo.id} className="flex items-center gap-4 p-4 border rounded-lg" style={{ borderLeftWidth: 4, borderLeftColor: promo.banner_color }}>
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl" style={{ backgroundColor: promo.banner_color }}>
+                      {promo.discount_type === 'percent' ? '%' : '₺'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{promo.title}</h4>
+                        {promo.is_active ? (
+                          <Badge className="bg-green-500">Aktif</Badge>
+                        ) : (
+                          <Badge variant="secondary">Pasif</Badge>
+                        )}
+                        {promo.start_hour !== null && promo.end_hour !== null && (
+                          <Badge variant="outline">🕐 {promo.start_hour}:00-{promo.end_hour}:00</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{promo.description}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <Badge>{promo.discount_type === 'percent' ? `%${promo.discount_value} İndirim` : `₺${promo.discount_value} İndirim`}</Badge>
+                        {promo.min_order_amount && <span className="text-xs text-muted-foreground">Min: ₺{promo.min_order_amount}</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openPromoDialog(promo)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => deletePromotion(promo.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {promotions.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Percent className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    Henüz kampanya yok. "Yeni Kampanya" butonuyla ekleyin.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Promosyon Dialog */}
+          <Dialog open={promoDialogOpen} onOpenChange={setPromoDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingPromo ? 'Kampanya Düzenle' : 'Yeni Kampanya'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                <div>
+                  <Label>Kampanya Başlığı *</Label>
+                  <Input value={promoForm.title} onChange={(e) => setPromoForm(prev => ({ ...prev, title: e.target.value }))} placeholder="Örn: Happy Hour! 🎉" />
+                </div>
+                <div>
+                  <Label>Açıklama</Label>
+                  <Input value={promoForm.description} onChange={(e) => setPromoForm(prev => ({ ...prev, description: e.target.value }))} placeholder="Örn: 14:00-17:00 arası tüm burgerlerde %10 indirim" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>İndirim Tipi</Label>
+                    <Select value={promoForm.discount_type} onValueChange={(v) => setPromoForm(prev => ({ ...prev, discount_type: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percent">Yüzde (%)</SelectItem>
+                        <SelectItem value="fixed">Sabit (₺)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>İndirim Değeri</Label>
+                    <Input type="number" value={promoForm.discount_value} onChange={(e) => setPromoForm(prev => ({ ...prev, discount_value: parseFloat(e.target.value) || 0 }))} />
+                  </div>
+                </div>
+                <div>
+                  <Label>Minimum Sipariş Tutarı (opsiyonel)</Label>
+                  <Input type="number" value={promoForm.min_order_amount || ''} onChange={(e) => setPromoForm(prev => ({ ...prev, min_order_amount: e.target.value ? parseFloat(e.target.value) : null }))} placeholder="Örn: 200" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Başlangıç Saati</Label>
+                    <Select value={promoForm.start_hour?.toString() || ''} onValueChange={(v) => setPromoForm(prev => ({ ...prev, start_hour: v ? parseInt(v) : null }))}>
+                      <SelectTrigger><SelectValue placeholder="Her zaman" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Her zaman</SelectItem>
+                        {[...Array(24)].map((_, i) => <SelectItem key={i} value={i.toString()}>{i}:00</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Bitiş Saati</Label>
+                    <Select value={promoForm.end_hour?.toString() || ''} onValueChange={(v) => setPromoForm(prev => ({ ...prev, end_hour: v ? parseInt(v) : null }))}>
+                      <SelectTrigger><SelectValue placeholder="Her zaman" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Her zaman</SelectItem>
+                        {[...Array(24)].map((_, i) => <SelectItem key={i} value={i.toString()}>{i}:00</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Banner Rengi</Label>
+                  <div className="flex gap-2">
+                    <Input type="color" value={promoForm.banner_color} onChange={(e) => setPromoForm(prev => ({ ...prev, banner_color: e.target.value }))} className="w-20 h-10 p-1" />
+                    <Input value={promoForm.banner_color} onChange={(e) => setPromoForm(prev => ({ ...prev, banner_color: e.target.value }))} className="flex-1" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="promo-active" checked={promoForm.is_active} onChange={(e) => setPromoForm(prev => ({ ...prev, is_active: e.target.checked }))} />
+                  <Label htmlFor="promo-active">Aktif</Label>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setPromoDialogOpen(false)}>İptal</Button>
+                  <Button onClick={savePromotion}><Save className="mr-2 h-4 w-4" />Kaydet</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
   </Tabs>
 </div>
   );
