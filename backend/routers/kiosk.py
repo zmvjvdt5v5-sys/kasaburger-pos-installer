@@ -1,7 +1,7 @@
 """Kiosk Router - Self-Servis Kiosk"""
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from typing import List, Optional
 from pydantic import BaseModel
 
