@@ -85,6 +85,15 @@ const KioskPage = () => {
   const [showCombos, setShowCombos] = useState(false);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
 
+  // Sadakat Programı State'leri
+  const [showLoyalty, setShowLoyalty] = useState(false);
+  const [loyaltyPhone, setLoyaltyPhone] = useState('');
+  const [loyaltyMember, setLoyaltyMember] = useState(null);
+  const [loyaltyRewards, setLoyaltyRewards] = useState([]);
+  const [loyaltyConfig, setLoyaltyConfig] = useState(null);
+  const [showRewards, setShowRewards] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(null);
+
   // Detect mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
