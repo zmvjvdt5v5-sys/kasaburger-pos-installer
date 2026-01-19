@@ -201,7 +201,7 @@ async def delete_kiosk_category(category_id: str, current_user: dict = Depends(g
 
 
 @router.put("/categories/reorder")
-async def reorder_kiosk_categories(category_ids: List[str], current_user: dict = Depends(get_current_user)):
+async def reorder_kiosk_categories(category_ids: List[str] = Body(...), current_user: dict = Depends(get_current_user)):
     """Kategorileri yeniden sırala"""
     db = get_db()
     if db is None:
