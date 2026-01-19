@@ -164,8 +164,9 @@ class TestClaimBirthdayBonus:
     
     def test_claim_birthday_bonus_success(self):
         """Successfully claim birthday bonus when it's birthday"""
-        # First ensure birthday is set to today and bonus not claimed
-        test_phone = "5552223333"
+        # Use unique phone with timestamp to ensure fresh member
+        import time
+        test_phone = f"555{int(time.time()) % 10000000:07d}"
         
         # Create member
         requests.post(
@@ -193,10 +194,14 @@ class TestClaimBirthdayBonus:
         assert data["free_product_name"] == "Kasa Classic Burger"
         assert "Doğum Günün Kutlu Olsun" in data["message"]
         print(f"✓ Birthday bonus claimed: {data['bonus_points']} puan + {data['free_product_name']}")
+        
+        # Store phone for next test
+        TestClaimBirthdayBonus.claimed_phone = test_phone
     
     def test_claim_birthday_bonus_already_claimed(self):
         """Cannot claim bonus twice in same year"""
-        test_phone = "5552223333"  # Same phone that already claimed
+        # Use the phone from previous test
+        test_phone = getattr(TestClaimBirthdayBonus, 'claimed_phone', "5552223333")
         
         response = requests.post(
             f"{BASE_URL}/api/kiosk/loyalty/member/claim-birthday-bonus",
