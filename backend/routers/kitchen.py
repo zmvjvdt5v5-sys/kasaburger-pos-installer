@@ -237,7 +237,7 @@ async def get_salon_display_data():
     # POS ready siparişleri - ready_at varsa son 30dk, yoksa tüm ready'ler
     pos_ready = await db.pos_orders.find(
         {"status": "ready", "$or": [
-            {"ready_at": {"$gte": thirty_mins_ago}},
+            {"ready_at": {"$gte": one_day_ago}},
             {"ready_at": {"$exists": False}},
             {"ready_at": None}
         ]},
@@ -255,7 +255,7 @@ async def get_salon_display_data():
     # Kiosk ready siparişleri
     kiosk_ready = await db.kiosk_orders.find(
         {"status": {"$in": ["ready", "Hazır"]}, "$or": [
-            {"ready_at": {"$gte": thirty_mins_ago}},
+            {"ready_at": {"$gte": one_day_ago}},
             {"ready_at": {"$exists": False}},
             {"ready_at": None}
         ]},
