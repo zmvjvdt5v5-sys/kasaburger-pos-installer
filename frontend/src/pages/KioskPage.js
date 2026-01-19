@@ -192,6 +192,18 @@ const KioskPage = () => {
   // Combo sepete ekleme
   const addComboToCart = (combo) => {
     const comboProducts = combo.products.map(pid => menuData.products.find(p => p.id === pid)).filter(Boolean);
+    
+    // Hediye ürün varsa ekle
+    let giftInfo = null;
+    if (combo.gift_product_id) {
+      const giftProduct = menuData.products.find(p => p.id === combo.gift_product_id);
+      giftInfo = {
+        id: combo.gift_product_id,
+        name: combo.gift_product_name || giftProduct?.name || 'Hediye Ürün',
+        message: combo.gift_message || '🎁 Hediye!'
+      };
+    }
+    
     const comboItem = {
       id: `combo-${combo.id}-${Date.now()}`,
       name: combo.name,
@@ -199,10 +211,16 @@ const KioskPage = () => {
       quantity: 1,
       isCombo: true,
       comboProducts: comboProducts.map(p => p.name),
+      giftProduct: giftInfo,
       note: ''
     };
     setCart(prev => [...prev, comboItem]);
-    toast.success(`${combo.name} sepete eklendi! 🎉`);
+    
+    if (giftInfo) {
+      toast.success(`${combo.name} sepete eklendi! ${giftInfo.message}`, { duration: 3000 });
+    } else {
+      toast.success(`${combo.name} sepete eklendi! 🎉`);
+    }
     setShowCombos(false);
   };
 
