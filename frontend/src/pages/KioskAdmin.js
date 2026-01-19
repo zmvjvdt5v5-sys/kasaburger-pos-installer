@@ -257,7 +257,7 @@ const KioskAdmin = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(newCategories.map(c => c.id))
+        body: JSON.stringify({ category_ids: newCategories.map(c => c.id) })
       });
       toast.success('Sıralama güncellendi!');
     } catch (error) {
