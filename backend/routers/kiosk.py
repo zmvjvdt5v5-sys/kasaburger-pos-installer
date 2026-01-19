@@ -674,8 +674,10 @@ async def get_kiosk_promotions():
     if not promotions:
         # Varsayılan promosyonları yükle
         for promo in DEFAULT_PROMOTIONS:
-            await db.kiosk_promotions.insert_one(promo)
-        return DEFAULT_PROMOTIONS
+            existing = await db.kiosk_promotions.find_one({"id": promo["id"]})
+            if not existing:
+                await db.kiosk_promotions.insert_one({**promo})
+        promotions = await db.kiosk_promotions.find({"is_active": True}, {"_id": 0}).to_list(50)
     
     # Saat filtresi
     current_hour = datetime.now(timezone.utc).hour
@@ -700,7 +702,12 @@ async def get_all_kiosk_promotions(current_user: dict = Depends(get_current_user
     
     promotions = await db.kiosk_promotions.find({}, {"_id": 0}).to_list(100)
     if not promotions:
-        return DEFAULT_PROMOTIONS
+        # Varsayılan promosyonları yükle
+        for promo in DEFAULT_PROMOTIONS:
+            existing = await db.kiosk_promotions.find_one({"id": promo["id"]})
+            if not existing:
+                await db.kiosk_promotions.insert_one({**promo})
+        promotions = await db.kiosk_promotions.find({}, {"_id": 0}).to_list(100)
     return promotions
 
 
