@@ -133,8 +133,19 @@ async def update_kiosk_product(product_id: str, product: KioskProduct, current_u
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
-    await db.kiosk_products.update_one({"id": product_id}, {"$set": product.model_dump()})
+    update_data = product.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.kiosk_products.update_one({"id": product_id}, {"$set": update_data})
     updated = await db.kiosk_products.find_one({"id": product_id}, {"_id": 0})
+    
+    # Versiyon numarasını güncelle (cache invalidation için)
+    await db.kiosk_settings.update_one(
+        {"key": "products_version"},
+        {"$set": {"value": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
     return updated
 
 @router.delete("/products/{product_id}")
