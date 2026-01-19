@@ -1619,10 +1619,88 @@ const KioskPage = () => {
                   )}
                 </div>
                 
+                {/* Doğum Günü Bölümü */}
+                <div className="border-t border-zinc-700 pt-3">
+                  <p className="text-sm text-zinc-400 mb-2">🎂 Doğum Günü Hediyesi</p>
+                  
+                  {birthdayStatus?.is_birthday_today && birthdayStatus?.can_claim_bonus ? (
+                    // Bugün doğum günü ve bonus alınabilir
+                    <div className="bg-gradient-to-r from-pink-500/20 to-yellow-500/20 border border-pink-500/30 rounded-lg p-4 text-center animate-pulse">
+                      <span className="text-4xl block mb-2">🎂🎉🎁</span>
+                      <p className="font-bold text-lg text-pink-400">Doğum Günün Kutlu Olsun!</p>
+                      <p className="text-sm text-zinc-300 mt-1 mb-3">
+                        Sana özel <span className="text-yellow-400 font-bold">200 puan</span> + <span className="text-green-400 font-bold">Ücretsiz Burger</span>!
+                      </p>
+                      <Button 
+                        onClick={claimBirthdayBonus}
+                        className="bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-black font-bold"
+                      >
+                        🎁 Hediyemi Al!
+                      </Button>
+                    </div>
+                  ) : birthdayStatus?.already_claimed_this_year ? (
+                    // Bu yıl bonus alınmış
+                    <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                      <span className="text-2xl">✅</span>
+                      <p className="text-sm text-zinc-400 mt-1">Bu yılki doğum günü hediyenizi aldınız!</p>
+                      <p className="text-xs text-zinc-500">Gelecek yıl görüşmek üzere 🎂</p>
+                    </div>
+                  ) : birthdayStatus?.has_birthday ? (
+                    // Doğum günü kayıtlı ama bugün değil
+                    <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                      <p className="text-sm text-zinc-400">
+                        Doğum gününüz: <span className="text-pink-400 font-bold">{birthdayStatus.birth_date?.split('-').reverse().join('.')}</span>
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Doğum gününüzde 200 puan + ücretsiz burger hediye! 🎁
+                      </p>
+                    </div>
+                  ) : showBirthdayInput ? (
+                    // Doğum günü giriş formu
+                    <div className="bg-zinc-800 rounded-lg p-3 space-y-2">
+                      <p className="text-xs text-zinc-400">Doğum gününü kaydet, her yıl hediye kazan!</p>
+                      <div className="flex gap-2">
+                        <select
+                          value={birthMonth}
+                          onChange={(e) => setBirthMonth(e.target.value)}
+                          className="flex-1 bg-zinc-700 border-zinc-600 text-white rounded px-2 py-2"
+                        >
+                          <option value="">Ay</option>
+                          {['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'].map((m, i) => (
+                            <option key={i} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={birthDay}
+                          onChange={(e) => setBirthDay(e.target.value)}
+                          className="flex-1 bg-zinc-700 border-zinc-600 text-white rounded px-2 py-2"
+                        >
+                          <option value="">Gün</option>
+                          {[...Array(31)].map((_, i) => (
+                            <option key={i} value={String(i + 1).padStart(2, '0')}>{i + 1}</option>
+                          ))}
+                        </select>
+                        <Button onClick={saveBirthday} className="bg-pink-500 hover:bg-pink-600">
+                          Kaydet
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Doğum günü kayıtlı değil
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-pink-500/30 text-pink-400 hover:bg-pink-500/10"
+                      onClick={() => setShowBirthdayInput(true)}
+                    >
+                      🎂 Doğum Günümü Kaydet (200 puan + Burger hediye!)
+                    </Button>
+                  )}
+                </div>
+                
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => { setLoyaltyMember(null); setLoyaltyPhone(''); setReferralInfo(null); }}
+                  onClick={() => { setLoyaltyMember(null); setLoyaltyPhone(''); setReferralInfo(null); setBirthdayStatus(null); }}
                 >
                   Farklı Numara Gir
                 </Button>
