@@ -1451,10 +1451,62 @@ const KioskPage = () => {
                 >
                   🎁 Ödüllerimi Gör ({loyaltyRewards.filter(r => loyaltyMember.member.total_points >= r.points_required).length} kullanılabilir)
                 </Button>
+                
+                {/* Referans Sistemi */}
+                <div className="border-t border-zinc-700 pt-3">
+                  <p className="text-sm text-zinc-400 mb-2">🤝 Arkadaşını Davet Et</p>
+                  {!referralInfo ? (
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={loadReferralCode}
+                    >
+                      Referans Kodumu Göster
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg p-3">
+                        <p className="text-xs text-zinc-400 mb-1">Senin Referans Kodun:</p>
+                        <p className="text-2xl font-black text-purple-400 tracking-wider">{referralInfo.referral_code}</p>
+                        <p className="text-xs text-zinc-500 mt-1">
+                          Arkadaşın bu kodu girerse ikiniz de <span className="text-green-400">{referralInfo.bonus_per_referral} puan</span> kazanırsınız!
+                        </p>
+                        {referralInfo.referral_count > 0 && (
+                          <p className="text-xs text-purple-400 mt-2">
+                            ✨ {referralInfo.referral_count} arkadaş davet ettiniz!
+                          </p>
+                        )}
+                      </div>
+                      
+                      {!loyaltyMember.member.referred_by && (
+                        <div className="bg-zinc-800 rounded-lg p-3">
+                          <p className="text-xs text-zinc-400 mb-2">Referans kodun var mı?</p>
+                          <div className="flex gap-2">
+                            <Input
+                              value={referralInput}
+                              onChange={(e) => setReferralInput(e.target.value.toUpperCase())}
+                              placeholder="KBXXXX"
+                              className="bg-zinc-700 border-zinc-600 text-white"
+                              maxLength={10}
+                            />
+                            <Button 
+                              onClick={applyReferralCode}
+                              disabled={!referralInput.trim()}
+                              className="bg-purple-500 hover:bg-purple-600"
+                            >
+                              Uygula
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => { setLoyaltyMember(null); setLoyaltyPhone(''); }}
+                  onClick={() => { setLoyaltyMember(null); setLoyaltyPhone(''); setReferralInfo(null); }}
                 >
                   Farklı Numara Gir
                 </Button>
