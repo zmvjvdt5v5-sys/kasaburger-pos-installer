@@ -828,7 +828,7 @@ const KioskAdmin = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {DEFAULT_CATEGORIES.find(c => c.id === product.category)?.icon} {getCategoryName(product.category)}
+                        {getCategoryIcon(product.category)} {product.category}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-semibold">{formatCurrency(product.price)}</TableCell>
