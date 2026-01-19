@@ -100,7 +100,8 @@ const KioskAdmin = () => {
   const [editingPromo, setEditingPromo] = useState(null);
   const [comboForm, setComboForm] = useState({
     name: '', description: '', products: [], original_price: 0, combo_price: 0,
-    discount_percent: 0, image: '', is_active: true, start_hour: null, end_hour: null
+    discount_percent: 0, image: '', is_active: true, start_hour: null, end_hour: null,
+    gift_product_id: null, gift_product_name: '', gift_message: ''
   });
   const [promoForm, setPromoForm] = useState({
     title: '', description: '', discount_type: 'percent', discount_value: 0,
