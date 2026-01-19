@@ -97,6 +97,37 @@ class KioskOrder(BaseModel):
     notes: Optional[str] = None
 
 
+class KioskCombo(BaseModel):
+    id: Optional[str] = None
+    name: str
+    description: Optional[str] = None
+    products: List[str]  # product IDs
+    original_price: float = 0
+    combo_price: float
+    discount_percent: Optional[float] = None
+    image: Optional[str] = None
+    is_active: bool = True
+    start_hour: Optional[int] = None  # 0-23, None = her zaman
+    end_hour: Optional[int] = None
+
+
+class KioskPromotion(BaseModel):
+    id: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    discount_type: str = "percent"  # percent, fixed, combo
+    discount_value: float = 0
+    min_order_amount: Optional[float] = None
+    applicable_categories: Optional[List[str]] = None
+    applicable_products: Optional[List[str]] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    start_hour: Optional[int] = None  # 0-23
+    end_hour: Optional[int] = None
+    is_active: bool = True
+    banner_color: str = "#FF6B00"
+
+
 # ==================== KATEGORİ YÖNETİMİ ====================
 
 @router.get("/categories")
