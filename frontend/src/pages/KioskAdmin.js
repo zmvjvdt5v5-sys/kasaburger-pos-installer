@@ -140,7 +140,132 @@ const KioskAdmin = () => {
 
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
+
+  // ==================== KATEGORİ FONKSİYONLARI ====================
+  
+  const loadCategories = async () => {
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.sort((a, b) => a.order - b.order));
+      }
+    } catch (error) {
+      console.error('Kategori yükleme hatası:', error);
+    }
+  };
+
+  const openCategoryDialog = (category = null) => {
+    if (category) {
+      setEditingCategory(category);
+      setCategoryForm({ name: category.name, icon: category.icon, order: category.order || 0 });
+    } else {
+      setEditingCategory(null);
+      setCategoryForm({ name: '', icon: '📦', order: categories.length + 1 });
+    }
+    setCategoryDialogOpen(true);
+  };
+
+  const saveCategory = async () => {
+    if (!categoryForm.name.trim()) {
+      toast.error('Kategori adı gerekli');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const url = editingCategory 
+        ? `${BACKEND_URL}/api/kiosk/categories/${editingCategory.id}`
+        : `${BACKEND_URL}/api/kiosk/categories`;
+      
+      const response = await fetch(url, {
+        method: editingCategory ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: categoryForm.name,
+          icon: categoryForm.icon,
+          order: categoryForm.order,
+          is_active: true
+        })
+      });
+      
+      if (response.ok) {
+        toast.success(editingCategory ? 'Kategori güncellendi!' : 'Kategori oluşturuldu!');
+        loadCategories();
+        loadProducts(); // Ürünleri de yenile (kategori adı değişmiş olabilir)
+        setCategoryDialogOpen(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'İşlem başarısız');
+      }
+    } catch (error) {
+      toast.error('İşlem başarısız');
+    }
+  };
+
+  const deleteCategory = async (categoryId) => {
+    if (!window.confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return;
+    
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/categories/${categoryId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        toast.success('Kategori silindi!');
+        loadCategories();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Silme başarısız');
+      }
+    } catch (error) {
+      toast.error('Silme başarısız');
+    }
+  };
+
+  const moveCategoryUp = async (index) => {
+    if (index === 0) return;
+    const newCategories = [...categories];
+    [newCategories[index - 1], newCategories[index]] = [newCategories[index], newCategories[index - 1]];
+    await updateCategoryOrder(newCategories);
+  };
+
+  const moveCategoryDown = async (index) => {
+    if (index === categories.length - 1) return;
+    const newCategories = [...categories];
+    [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
+    await updateCategoryOrder(newCategories);
+  };
+
+  const updateCategoryOrder = async (newCategories) => {
+    setCategories(newCategories);
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      await fetch(`${BACKEND_URL}/api/kiosk/categories/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newCategories.map(c => c.id))
+      });
+      toast.success('Sıralama güncellendi!');
+    } catch (error) {
+      toast.error('Sıralama güncellenemedi');
+    }
+  };
+
+  // ==================== ÜRÜN FONKSİYONLARI ====================
 
   const seedProducts = async (forceReset = false) => {
     if (forceReset) {
