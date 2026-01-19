@@ -100,6 +100,12 @@ const KioskPage = () => {
   const [referralInfo, setReferralInfo] = useState(null);
   const [showReferral, setShowReferral] = useState(false);
   const [referralInput, setReferralInput] = useState('');
+  
+  // Doğum Günü State'leri
+  const [birthdayStatus, setBirthdayStatus] = useState(null);
+  const [showBirthdayInput, setShowBirthdayInput] = useState(false);
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
 
   // Detect mobile
   useEffect(() => {
