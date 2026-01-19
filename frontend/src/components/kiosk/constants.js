@@ -38,7 +38,7 @@ export const DEFAULT_PRODUCTS = [
   // TATLI
   {id: "choco-bomb", name: "Kasa Choco Bomb", category: "Tatlı", price: 200, image: "https://images.unsplash.com/photo-1541783245831-57d6fb0926d3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxjaG9jb2xhdGUlMjBib21iJTIwZGVzc2VydCUyMG1vbHRlbiUyMGNha2V8ZW58MHx8fHwxNzY4ODQ0MDU4fDA&ixlib=rb-4.1.0&q=85"},
   {id: "churros", name: "Churros", category: "Tatlı", price: 180, image: "https://images.pexels.com/photos/12035620/pexels-photo-12035620.jpeg"},
-  {id: "oreo-dream", name: "Oreo Dream Cup", category: "Tatlı", price: 220, image: "https://images.pexels.com/photos/16107674/pexels-photo-16107674.jpeg"},
+  {id: "oreo-dream", name: "Oreo Dream Cup", category: "Tatlı", price: 220, image: "https://images.unsplash.com/photo-1588345739296-3d81a8b8f641?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwyfHxvcmVvJTIwbWlsa3NoYWtlJTIwY3VwJTIwZGVzc2VydHxlbnwwfHx8fDE3Njg4NDMzMTN8MA&ixlib=rb-4.1.0&q=85"},
 ];
 
 export const DEFAULT_CATEGORIES = [
