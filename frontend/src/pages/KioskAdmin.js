@@ -1186,6 +1186,47 @@ const KioskAdmin = () => {
                     </Select>
                   </div>
                 </div>
+                
+                {/* Hediye Ürün Bölümü */}
+                <div className="border-t pt-4 mt-4">
+                  <Label className="text-base font-semibold mb-3 block">🎁 Hediye Ürün (Opsiyonel)</Label>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <Label>Hediye Ürün Seçin</Label>
+                      <Select 
+                        value={comboForm.gift_product_id || 'none'} 
+                        onValueChange={(v) => {
+                          const selectedProduct = products.find(p => p.id === v);
+                          setComboForm(prev => ({ 
+                            ...prev, 
+                            gift_product_id: v === 'none' ? null : v,
+                            gift_product_name: selectedProduct?.name || '',
+                            gift_message: selectedProduct ? `🎁 ${selectedProduct.name} Hediye!` : ''
+                          }));
+                        }}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Hediye yok" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Hediye yok</SelectItem>
+                          {products.filter(p => p.category === 'Yan Ürün' || p.category === 'Tatlı' || p.category === 'İçecek').map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name} (₺{p.price})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {comboForm.gift_product_id && (
+                      <div>
+                        <Label>Hediye Mesajı</Label>
+                        <Input 
+                          value={comboForm.gift_message} 
+                          onChange={(e) => setComboForm(prev => ({ ...prev, gift_message: e.target.value }))} 
+                          placeholder="🎁 Mozzarella Sticks Hediye!" 
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div>
                   <Label>Görsel URL</Label>
                   <Input value={comboForm.image} onChange={(e) => setComboForm(prev => ({ ...prev, image: e.target.value }))} placeholder="https://..." />
