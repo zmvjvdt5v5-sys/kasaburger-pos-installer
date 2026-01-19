@@ -51,8 +51,6 @@ import {
   Sparkles,
   Plug,
   Bike,
-  Package,
-  FileText,
   BarChart
 } from 'lucide-react';
 import { Textarea } from '../components/ui/textarea';
