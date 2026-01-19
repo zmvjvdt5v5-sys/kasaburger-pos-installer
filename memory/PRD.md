@@ -1870,6 +1870,35 @@ Monolitik `kiosk.py` (1588 satır) 3 küçük modüle bölündü:
 - ✅ /api/kiosk/loyalty/* - Çalışıyor (tüm endpointler)
 - ✅ Frontend Kiosk sayfası - Düzgün görüntüleniyor
 
+---
+
+## Update: January 19, 2026 - Frontend Kiosk Refactoring
+
+### ✅ Tamamlanan Refactoring
+
+Frontend kiosk component'leri modüler yapıya geçirildi.
+
+**Yeni Component Yapısı:**
+```
+/app/frontend/src/components/kiosk/
+├── index.js           # 7 satır - Export hub
+├── constants.js       # 60 satır - Sabit veriler & helpers
+├── LoyaltyDialog.jsx  # 387 satır - Sadakat programı dialog
+├── RewardsDialog.jsx  # 131 satır - Ödüller dialog
+├── ComboDialog.jsx    # 89 satır - Combo menü dialog
+├── CartDialog.jsx     # 114 satır - Sepet dialog
+└── ProductCard.jsx    # 46 satır - Ürün kartı
+```
+
+**Toplam:** 834 satır (modüler) vs 1791 satır (monolitik)
+
+**Avantajlar:**
+- Her component tek sorumluluğa odaklı
+- Kolay test edilebilirlik
+- Yeniden kullanılabilir component'ler
+- Hot-reload performansı artışı
+- Daha kolay bakım
+
 
 ---
 
