@@ -754,25 +754,25 @@ const KioskAdmin = () => {
               return (
                 <Card 
                   key={cat.id} 
-              className={`cursor-pointer transition-colors ${selectedCategory === cat.name ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
-              onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'all' : cat.name)}
-            >
-              <CardContent className="p-4 text-center">
-                <span className="text-3xl">{cat.icon}</span>
-                <p className="font-medium mt-1">{cat.name}</p>
-                <p className="text-2xl font-bold text-primary">{count}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  className={`cursor-pointer transition-colors ${selectedCategory === cat.name ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+                  onClick={() => setSelectedCategory(selectedCategory === cat.name ? 'all' : cat.name)}
+                >
+                  <CardContent className="p-4 text-center">
+                    <span className="text-3xl">{cat.icon}</span>
+                    <p className="font-medium mt-1">{cat.name}</p>
+                    <p className="text-2xl font-bold text-primary">{count}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-      {/* Products Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Ürünler {selectedCategory !== 'all' && `(${getCategoryName(selectedCategory)})`}</span>
-            {selectedCategory !== 'all' && (
+          {/* Products Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Ürünler {selectedCategory !== 'all' && `(${getCategoryName(selectedCategory)})`}</span>
+                {selectedCategory !== 'all' && (
               <Button variant="ghost" size="sm" onClick={() => setSelectedCategory('all')}>
                 Tümünü Göster
               </Button>
