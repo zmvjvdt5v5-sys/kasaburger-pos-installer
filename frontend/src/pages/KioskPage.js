@@ -286,6 +286,116 @@ const KioskPage = () => {
     }
   };
 
+  // Sadakat üye arama
+  const lookupLoyaltyMember = async () => {
+    if (loyaltyPhone.length < 10) {
+      toast.error('Geçerli bir telefon numarası girin');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/lookup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loyaltyPhone })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLoyaltyMember(data);
+        
+        if (data.is_new) {
+          toast.success(`Hoşgeldiniz! ${data.welcome_bonus || 50} bonus puan kazandınız! 🎉`, { duration: 4000 });
+        } else {
+          toast.success(`Tekrar hoşgeldiniz ${data.member.name || ''}! ${data.member.total_points} puanınız var.`);
+        }
+      } else {
+        toast.error('Üyelik bulunamadı');
+      }
+    } catch (e) {
+      toast.error('Bağlantı hatası');
+    }
+  };
+
+  // Ödül kullan
+  const redeemReward = async (reward) => {
+    if (!loyaltyMember?.member) {
+      toast.error('Önce telefon numaranızı girin');
+      return;
+    }
+    
+    if (loyaltyMember.member.total_points < reward.points_required) {
+      toast.error(`Bu ödül için ${reward.points_required - loyaltyMember.member.total_points} puan daha gerekli`);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/redeem`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          phone: loyaltyMember.member.phone, 
+          reward_id: reward.id 
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Ödülü sepete ekle (ücretsiz olarak)
+        if (reward.reward_type === 'free_product') {
+          const freeProduct = menuData.products.find(p => p.id === reward.reward_value);
+          if (freeProduct) {
+            setCart(prev => [...prev, { 
+              ...freeProduct, 
+              quantity: 1, 
+              price: 0, 
+              isReward: true,
+              note: `🎁 Sadakat Ödülü: ${reward.name}`
+            }]);
+          }
+        }
+        
+        // Üye bilgisini güncelle
+        setLoyaltyMember(prev => ({
+          ...prev,
+          member: { ...prev.member, total_points: data.new_total }
+        }));
+        
+        toast.success(`🎁 ${reward.name} ödülünüz sepete eklendi!`);
+        setShowRewards(false);
+      } else {
+        toast.error('Ödül kullanılamadı');
+      }
+    } catch (e) {
+      toast.error('Bağlantı hatası');
+    }
+  };
+
+  // Sipariş sonrası puan kazan
+  const earnLoyaltyPoints = async (orderId) => {
+    if (!loyaltyMember?.member) return;
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/earn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: loyaltyMember.member.phone,
+          order_total: cartTotal,
+          order_id: orderId
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setEarnedPoints(data);
+      }
+    } catch (e) {
+      console.log('Puan kazanma hatası');
+    }
+  };
+
   const updateQuantity = (itemIndex, delta) => {
     setCart(prev => prev.map((item, idx) => {
       if (idx === itemIndex) {
