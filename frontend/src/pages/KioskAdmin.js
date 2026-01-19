@@ -453,31 +453,191 @@ const KioskAdmin = () => {
             <Monitor className="h-8 w-8 text-primary" />
             Kiosk Yönetimi
           </h1>
-          <p className="text-muted-foreground">Self-servis kiosk ürünlerini ve görsellerini yönetin</p>
+          <p className="text-muted-foreground">Self-servis kiosk ürünlerini ve kategorilerini yönetin</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="destructive" onClick={() => seedProducts(true)} disabled={seeding} size="sm">
-            {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Ürünleri Sıfırla
-          </Button>
           <Button variant="outline" asChild>
-            <a href="https://erp.kasaburger.net.tr/kiosk" target="_blank" rel="noopener noreferrer">
+            <a href="/kiosk" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
               Kiosk'u Görüntüle
             </a>
           </Button>
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="products" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Ürünler
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="flex items-center gap-2">
+            <Layers className="h-4 w-4" />
+            Kategoriler
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ==================== KATEGORİ YÖNETİMİ TAB ==================== */}
+        <TabsContent value="categories" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5" />
+                Kategori Yönetimi
+              </CardTitle>
+              <Button onClick={() => openCategoryDialog()}>
                 <Plus className="mr-2 h-4 w-4" />
-                Yeni Ürün
+                Yeni Kategori
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Kategorilerin sırasını değiştirmek için ↑↓ oklarını kullanın. Kiosk ekranında bu sırayla görünecekler.
+              </p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">Sıra</TableHead>
+                    <TableHead className="w-16">İkon</TableHead>
+                    <TableHead>Kategori Adı</TableHead>
+                    <TableHead className="w-24">Ürün Sayısı</TableHead>
+                    <TableHead className="w-32 text-right">İşlemler</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((category, index) => {
+                    const productCount = products.filter(p => p.category === category.name).length;
+                    return (
+                      <TableRow key={category.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => moveCategoryUp(index)}
+                              disabled={index === 0}
+                            >
+                              ↑
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => moveCategoryDown(index)}
+                              disabled={index === categories.length - 1}
+                            >
+                              ↓
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-2xl">{category.icon}</span>
+                        </TableCell>
+                        <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{productCount} ürün</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openCategoryDialog(category)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-destructive"
+                              onClick={() => deleteCategory(category.id)}
+                              disabled={productCount > 0}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              
+              {categories.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  Henüz kategori yok. "Yeni Kategori" butonuyla ekleyin.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Kategori Dialog */}
+          <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+            <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingProduct ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}</DialogTitle>
+                <DialogTitle>{editingCategory ? 'Kategori Düzenle' : 'Yeni Kategori'}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
+                <div>
+                  <Label>Kategori Adı</Label>
+                  <Input
+                    value={categoryForm.name}
+                    onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Örn: Et Burger"
+                  />
+                </div>
+                <div>
+                  <Label>İkon (Emoji)</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      value={categoryForm.icon}
+                      onChange={(e) => setCategoryForm(prev => ({ ...prev, icon: e.target.value }))}
+                      className="w-20 text-center text-2xl"
+                    />
+                    <div className="flex gap-1 flex-wrap">
+                      {['🍔', '👑', '🍗', '🍟', '🥤', '🍫', '🌮', '🍕', '🥗', '🍰'].map(emoji => (
+                        <Button 
+                          key={emoji} 
+                          variant="outline" 
+                          size="sm"
+                          type="button"
+                          onClick={() => setCategoryForm(prev => ({ ...prev, icon: emoji }))}
+                        >
+                          {emoji}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setCategoryDialogOpen(false)}>İptal</Button>
+                  <Button onClick={saveCategory}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Kaydet
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+
+        {/* ==================== ÜRÜN YÖNETİMİ TAB ==================== */}
+        <TabsContent value="products" className="space-y-4">
+          <div className="flex gap-3 justify-end">
+            <Button variant="destructive" onClick={() => seedProducts(true)} disabled={seeding} size="sm">
+              {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              Ürünleri Sıfırla
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Yeni Ürün
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>{editingProduct ? 'Ürün Düzenle' : 'Yeni Ürün Ekle'}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <Label>Ürün Adı *</Label>
