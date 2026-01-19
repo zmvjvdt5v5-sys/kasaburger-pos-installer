@@ -874,3 +874,370 @@ async def delete_kiosk_promotion(promo_id: str, current_user: dict = Depends(get
     await _update_kiosk_version(db)
     
     return {"status": "deleted"}
+
+
+
+# ==================== SADAKAT PROGRAMI ====================
+
+def calculate_tier(total_points: int) -> str:
+    """Toplam puana göre üyelik seviyesini hesapla"""
+    if total_points >= LOYALTY_CONFIG["tiers"]["platinum"]["min_points"]:
+        return "platinum"
+    elif total_points >= LOYALTY_CONFIG["tiers"]["gold"]["min_points"]:
+        return "gold"
+    elif total_points >= LOYALTY_CONFIG["tiers"]["silver"]["min_points"]:
+        return "silver"
+    return "bronze"
+
+
+@router.get("/loyalty/config")
+async def get_loyalty_config():
+    """Sadakat programı ayarlarını getir"""
+    return {
+        "points_per_lira": LOYALTY_CONFIG["points_per_lira"],
+        "tiers": LOYALTY_CONFIG["tiers"]
+    }
+
+
+@router.get("/loyalty/rewards")
+async def get_loyalty_rewards():
+    """Mevcut ödülleri getir"""
+    db = get_db()
+    if db is None:
+        return DEFAULT_REWARDS
+    
+    rewards = await db.loyalty_rewards.find({"is_active": True}, {"_id": 0}).to_list(50)
+    if not rewards:
+        # Varsayılan ödülleri yükle
+        for reward in DEFAULT_REWARDS:
+            existing = await db.loyalty_rewards.find_one({"id": reward["id"]})
+            if not existing:
+                await db.loyalty_rewards.insert_one({**reward})
+        rewards = await db.loyalty_rewards.find({"is_active": True}, {"_id": 0}).to_list(50)
+    return rewards
+
+
+@router.get("/loyalty/rewards/all")
+async def get_all_loyalty_rewards(current_user: dict = Depends(get_current_user)):
+    """Tüm ödülleri getir (admin için)"""
+    db = get_db()
+    if db is None:
+        return DEFAULT_REWARDS
+    
+    rewards = await db.loyalty_rewards.find({}, {"_id": 0}).to_list(100)
+    if not rewards:
+        return DEFAULT_REWARDS
+    return rewards
+
+
+@router.post("/loyalty/rewards")
+async def create_loyalty_reward(reward: LoyaltyReward, current_user: dict = Depends(get_current_user)):
+    """Yeni ödül oluştur"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    reward_doc = {
+        "id": str(uuid.uuid4())[:8],
+        **reward.model_dump(exclude={"id"}),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.loyalty_rewards.insert_one(reward_doc)
+    reward_doc.pop("_id", None)
+    return reward_doc
+
+
+@router.put("/loyalty/rewards/{reward_id}")
+async def update_loyalty_reward(reward_id: str, reward: LoyaltyReward, current_user: dict = Depends(get_current_user)):
+    """Ödül güncelle"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    update_data = reward.model_dump(exclude={"id"})
+    await db.loyalty_rewards.update_one({"id": reward_id}, {"$set": update_data})
+    return {"status": "success"}
+
+
+@router.delete("/loyalty/rewards/{reward_id}")
+async def delete_loyalty_reward(reward_id: str, current_user: dict = Depends(get_current_user)):
+    """Ödül sil"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    await db.loyalty_rewards.delete_one({"id": reward_id})
+    return {"status": "deleted"}
+
+
+@router.post("/loyalty/member/lookup")
+async def lookup_loyalty_member(phone: str = Body(..., embed=True)):
+    """Telefon numarasına göre üye ara veya yeni üye oluştur"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Telefon numarasını temizle
+    clean_phone = "".join(filter(str.isdigit, phone))
+    if len(clean_phone) < 10:
+        raise HTTPException(status_code=400, detail="Geçersiz telefon numarası")
+    
+    # Üye ara
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if member:
+        # Mevcut üye - tier'ı güncelle
+        tier = calculate_tier(member.get("total_points", 0))
+        if tier != member.get("tier"):
+            await db.loyalty_members.update_one({"phone": clean_phone}, {"$set": {"tier": tier}})
+            member["tier"] = tier
+        
+        tier_info = LOYALTY_CONFIG["tiers"].get(tier, LOYALTY_CONFIG["tiers"]["bronze"])
+        return {
+            "is_new": False,
+            "member": member,
+            "tier_info": tier_info,
+            "next_tier": _get_next_tier(tier, member.get("total_points", 0))
+        }
+    
+    # Yeni üye oluştur
+    new_member = {
+        "id": str(uuid.uuid4())[:8],
+        "phone": clean_phone,
+        "name": None,
+        "total_points": 0,
+        "total_orders": 0,
+        "total_spent": 0,
+        "tier": "bronze",
+        "qr_code": f"KASA-{clean_phone[-4:]}",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_order_at": None
+    }
+    
+    await db.loyalty_members.insert_one(new_member)
+    new_member.pop("_id", None)
+    
+    tier_info = LOYALTY_CONFIG["tiers"]["bronze"]
+    return {
+        "is_new": True,
+        "member": new_member,
+        "tier_info": tier_info,
+        "next_tier": _get_next_tier("bronze", 0),
+        "welcome_bonus": 50  # Hoşgeldin bonusu
+    }
+
+
+def _get_next_tier(current_tier: str, current_points: int):
+    """Sonraki tier bilgisini hesapla"""
+    tiers = list(LOYALTY_CONFIG["tiers"].items())
+    current_idx = next((i for i, (k, v) in enumerate(tiers) if k == current_tier), 0)
+    
+    if current_idx < len(tiers) - 1:
+        next_tier_key, next_tier = tiers[current_idx + 1]
+        return {
+            "name": next_tier["name"],
+            "icon": next_tier["icon"],
+            "points_needed": next_tier["min_points"] - current_points
+        }
+    return None
+
+
+@router.post("/loyalty/member/update-name")
+async def update_member_name(phone: str = Body(...), name: str = Body(...)):
+    """Üye adını güncelle"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    await db.loyalty_members.update_one(
+        {"phone": clean_phone}, 
+        {"$set": {"name": name}}
+    )
+    return {"status": "success"}
+
+
+@router.post("/loyalty/earn")
+async def earn_loyalty_points(
+    phone: str = Body(...),
+    order_total: float = Body(...),
+    order_id: str = Body(None)
+):
+    """Sipariş sonrası puan kazan"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    # Tier bonus çarpanını al
+    tier = member.get("tier", "bronze")
+    tier_info = LOYALTY_CONFIG["tiers"].get(tier, LOYALTY_CONFIG["tiers"]["bronze"])
+    multiplier = tier_info.get("bonus_multiplier", 1.0)
+    
+    # Puan hesapla
+    base_points = int(order_total * LOYALTY_CONFIG["points_per_lira"])
+    bonus_points = int(base_points * (multiplier - 1))
+    total_earned = base_points + bonus_points
+    
+    # Üyeyi güncelle
+    new_total_points = member.get("total_points", 0) + total_earned
+    new_tier = calculate_tier(new_total_points)
+    
+    await db.loyalty_members.update_one(
+        {"phone": clean_phone},
+        {
+            "$set": {
+                "tier": new_tier,
+                "last_order_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$inc": {
+                "total_points": total_earned,
+                "total_orders": 1,
+                "total_spent": order_total
+            }
+        }
+    )
+    
+    # Transaction kaydet
+    await db.loyalty_transactions.insert_one({
+        "member_id": member["id"],
+        "order_id": order_id,
+        "points": total_earned,
+        "transaction_type": "earn",
+        "description": f"₺{order_total:.0f} sipariş - {base_points} + {bonus_points} bonus puan",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    tier_upgraded = new_tier != tier
+    
+    return {
+        "base_points": base_points,
+        "bonus_points": bonus_points,
+        "total_earned": total_earned,
+        "new_total": new_total_points,
+        "tier": new_tier,
+        "tier_upgraded": tier_upgraded,
+        "tier_info": LOYALTY_CONFIG["tiers"].get(new_tier)
+    }
+
+
+@router.post("/loyalty/redeem")
+async def redeem_loyalty_reward(
+    phone: str = Body(...),
+    reward_id: str = Body(...)
+):
+    """Ödül kullan"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    # Ödülü bul
+    reward = await db.loyalty_rewards.find_one({"id": reward_id, "is_active": True}, {"_id": 0})
+    if not reward:
+        reward = next((r for r in DEFAULT_REWARDS if r["id"] == reward_id and r["is_active"]), None)
+    
+    if not reward:
+        raise HTTPException(status_code=404, detail="Ödül bulunamadı")
+    
+    # Puan kontrolü
+    if member.get("total_points", 0) < reward["points_required"]:
+        raise HTTPException(status_code=400, detail="Yetersiz puan")
+    
+    # Puanları düş
+    new_total = member.get("total_points", 0) - reward["points_required"]
+    await db.loyalty_members.update_one(
+        {"phone": clean_phone},
+        {"$set": {"total_points": new_total}}
+    )
+    
+    # Transaction kaydet
+    await db.loyalty_transactions.insert_one({
+        "member_id": member["id"],
+        "reward_id": reward_id,
+        "points": -reward["points_required"],
+        "transaction_type": "redeem",
+        "description": f"Ödül: {reward['name']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "status": "success",
+        "reward": reward,
+        "points_used": reward["points_required"],
+        "new_total": new_total
+    }
+
+
+@router.get("/loyalty/member/{phone}/history")
+async def get_member_history(phone: str):
+    """Üye puan geçmişini getir"""
+    db = get_db()
+    if db is None:
+        return []
+    
+    clean_phone = "".join(filter(str.isdigit, phone))
+    member = await db.loyalty_members.find_one({"phone": clean_phone}, {"_id": 0})
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    
+    transactions = await db.loyalty_transactions.find(
+        {"member_id": member["id"]}, 
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return transactions
+
+
+@router.get("/loyalty/members")
+async def get_all_loyalty_members(current_user: dict = Depends(get_current_user)):
+    """Tüm sadakat üyelerini getir (admin için)"""
+    db = get_db()
+    if db is None:
+        return []
+    
+    members = await db.loyalty_members.find({}, {"_id": 0}).sort("total_points", -1).to_list(500)
+    return members
+
+
+@router.get("/loyalty/stats")
+async def get_loyalty_stats(current_user: dict = Depends(get_current_user)):
+    """Sadakat programı istatistikleri"""
+    db = get_db()
+    if db is None:
+        return {"total_members": 0, "total_points_earned": 0}
+    
+    total_members = await db.loyalty_members.count_documents({})
+    
+    # Tier dağılımı
+    bronze = await db.loyalty_members.count_documents({"tier": "bronze"})
+    silver = await db.loyalty_members.count_documents({"tier": "silver"})
+    gold = await db.loyalty_members.count_documents({"tier": "gold"})
+    platinum = await db.loyalty_members.count_documents({"tier": "platinum"})
+    
+    # Toplam harcama
+    pipeline = [{"$group": {"_id": None, "total": {"$sum": "$total_spent"}}}]
+    result = await db.loyalty_members.aggregate(pipeline).to_list(1)
+    total_spent = result[0]["total"] if result else 0
+    
+    return {
+        "total_members": total_members,
+        "total_spent": total_spent,
+        "tier_distribution": {
+            "bronze": bronze,
+            "silver": silver,
+            "gold": gold,
+            "platinum": platinum
+        }
+    }
