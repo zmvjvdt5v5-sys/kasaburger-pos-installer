@@ -462,6 +462,100 @@ const KioskPage = () => {
     }
   };
 
+  // Doğum günü durumunu kontrol et
+  const checkBirthdayStatus = async () => {
+    if (!loyaltyMember?.member?.phone) return;
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/${loyaltyMember.member.phone}/birthday-status`);
+      if (response.ok) {
+        const data = await response.json();
+        setBirthdayStatus(data);
+      }
+    } catch (e) {
+      console.log('Doğum günü durumu alınamadı');
+    }
+  };
+
+  // Doğum günü kaydet
+  const saveBirthday = async () => {
+    if (!birthMonth || !birthDay) {
+      toast.error('Lütfen ay ve gün seçin');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/set-birthday`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: loyaltyMember.member.phone,
+          birth_date: `${birthMonth}-${birthDay}`
+        })
+      });
+      
+      if (response.ok) {
+        toast.success('Doğum günü kaydedildi! 🎂');
+        setShowBirthdayInput(false);
+        checkBirthdayStatus();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Kayıt başarısız');
+      }
+    } catch (e) {
+      toast.error('Bağlantı hatası');
+    }
+  };
+
+  // Doğum günü bonusunu al
+  const claimBirthdayBonus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/kiosk/loyalty/member/claim-birthday-bonus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loyaltyMember.member.phone })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(data.message, { duration: 5000 });
+        
+        // Ücretsiz burger'ı sepete ekle
+        if (data.free_product_id) {
+          const freeProduct = menuData.products.find(p => p.id === data.free_product_id);
+          if (freeProduct) {
+            setCart(prev => [...prev, {
+              ...freeProduct,
+              quantity: 1,
+              price: 0,
+              isReward: true,
+              isBirthdayGift: true,
+              note: '🎂 Doğum Günü Hediyesi'
+            }]);
+          }
+        }
+        
+        // Puanları güncelle
+        setLoyaltyMember(prev => ({
+          ...prev,
+          member: { ...prev.member, total_points: data.new_total_points }
+        }));
+        
+        // Durumu güncelle
+        setBirthdayStatus(prev => ({
+          ...prev,
+          can_claim_bonus: false,
+          already_claimed_this_year: true
+        }));
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Bonus alınamadı');
+      }
+    } catch (e) {
+      toast.error('Bağlantı hatası');
+    }
+  };
+
   const updateQuantity = (itemIndex, delta) => {
     setCart(prev => prev.map((item, idx) => {
       if (idx === itemIndex) {
