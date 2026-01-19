@@ -229,16 +229,20 @@ async def get_salon_display_data():
     if db is None:
         return {"ready_orders": [], "calling_orders": []}
     
-    # Son 30 dakika içinde hazır olan siparişler
+    # Son 30 dakika içinde hazır olan siparişler veya ready_at olmayan ready siparişler
     thirty_mins_ago = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
     
     ready_orders = []
     
-    # POS ready siparişleri
+    # POS ready siparişleri - ready_at varsa son 30dk, yoksa tüm ready'ler
     pos_ready = await db.pos_orders.find(
-        {"status": "ready", "ready_at": {"$gte": thirty_mins_ago}},
+        {"status": "ready", "$or": [
+            {"ready_at": {"$gte": thirty_mins_ago}},
+            {"ready_at": {"$exists": False}},
+            {"ready_at": None}
+        ]},
         {"_id": 0, "id": 1, "queue_number": 1, "order_number": 1, "source": 1, "table_id": 1, "ready_at": 1}
-    ).sort("ready_at", -1).to_list(20)
+    ).sort("updated_at", -1).to_list(20)
     
     for order in pos_ready:
         display = order.get("queue_number") or order.get("order_number", "---")
@@ -250,9 +254,13 @@ async def get_salon_display_data():
     
     # Kiosk ready siparişleri
     kiosk_ready = await db.kiosk_orders.find(
-        {"status": {"$in": ["ready", "Hazır"]}, "ready_at": {"$gte": thirty_mins_ago}},
+        {"status": {"$in": ["ready", "Hazır"]}, "$or": [
+            {"ready_at": {"$gte": thirty_mins_ago}},
+            {"ready_at": {"$exists": False}},
+            {"ready_at": None}
+        ]},
         {"_id": 0, "id": 1, "queue_number": 1, "order_number": 1, "ready_at": 1}
-    ).sort("ready_at", -1).to_list(20)
+    ).sort("updated_at", -1).to_list(20)
     
     for order in kiosk_ready:
         display = order.get("queue_number") or order.get("order_number", "---")
