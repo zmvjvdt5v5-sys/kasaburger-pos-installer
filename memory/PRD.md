@@ -1946,3 +1946,70 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 - `/app/frontend/src/pages/KioskPage.js` - Birthday UI (lines 105-106, 327-338, 482-561, 1626-1703)
 
 
+---
+
+## Update: January 20, 2026 - Kritik Bug Düzeltmeleri
+
+### ✅ Hayalet Sipariş Sorunu (P0)
+
+**Sorun:** Her sabah 10 adet test siparişi görünüyordu.
+
+**Çözüm:**
+1. `server.py` lifespan fonksiyonunda startup cleanup mantığı güçlendirildi
+2. Artık şunlar temizleniyor:
+   - 24 saatten eski pending/ready/preparing siparişler
+   - 12 saatten eski "test" kaynağından gelen siparişler
+   - "TEST" ile başlayan sipariş numaraları
+   - Boş veya null sipariş numaralı kayıtlar
+
+**Yeni Endpoint:** `DELETE /api/admin/cleanup-orders`
+- Admin manuel olarak hayalet siparişleri temizleyebilir
+- Dashboard'da "Hayalet Siparişleri Temizle" butonu eklendi
+
+### ✅ WebSocket Bağlantısı İyileştirmesi (P1)
+
+**Sorun:** Production ortamında WebSocket bağlantısı kopuyordu.
+
+**Çözüm:** POSMain.js'de WebSocket reconnection mantığı güçlendirildi:
+- Maksimum 10 yeniden bağlanma denemesi
+- 3 saniye bekleme süresi
+- Manuel kapatma tespiti (cleanup sırasında gereksiz reconnect önleme)
+- Detaylı console loglaması
+
+### ⚠️ Cache Sorunu (P2) - BLOKE
+
+**Sorun:** "Failed to execute 'json' on 'Response': body stream already read" hatası.
+
+**Durum:** Bu bir tarayıcı cache sorunudur. Kullanıcının `Ctrl+Shift+R` ile hard refresh yapması gerekiyor.
+
+### Değişen Dosyalar
+- `/app/backend/server.py` - Cleanup endpoint ve startup cleanup güçlendirildi
+- `/app/frontend/src/pages/pos/POSMain.js` - WebSocket reconnection iyileştirildi
+- `/app/frontend/src/pages/Dashboard.js` - Cleanup butonu eklendi
+
+---
+
+## Backlog / Bekleyen Görevler (Updated January 20, 2026)
+
+### P0 (Kritik) - Doğrulama Bekliyor
+- [ ] Hayalet sipariş sorununun çözüldüğünü doğrulama (yarın sabah kontrol)
+
+### P1 (Yüksek Öncelik)
+- [ ] KioskAdmin.js refactoring (büyük dosyayı küçük bileşenlere ayırma)
+- [ ] E-fatura GİB gerçek entegrasyonu (API bilgileri bekleniyor)
+- [ ] WebSocket production fix doğrulama
+
+### P2 (Orta Öncelik)
+- [ ] InPOS yazıcı testi (fiziksel cihaz gerekli)
+- [ ] Delivery platform API testi (gerçek API key'ler gerekli)
+
+### P3 (Düşük Öncelik)
+- [ ] Ödeme gateway entegrasyonu (Stripe/Iyzico)
+- [ ] Mobil uygulama
+
+---
+
+## Test Bilgileri
+- **Admin:** admin@kasaburger.net.tr / admin123
+- **Bayi:** MEKGRUP / 1234
+- **Preview URL:** https://multi-branch-pos-7.preview.emergentagent.com
