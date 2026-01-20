@@ -664,7 +664,7 @@ const KioskPage = () => {
         {promotions.length > 0 && (
           <div className="bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-center">
             <p className="text-white text-xs font-semibold">
-              🔥 {promotions[currentPromoIndex]?.title} 🔥 {promotions[currentPromoIndex]?.description}
+              🔥 {promotions[activePromoIndex]?.title} 🔥 {promotions[activePromoIndex]?.description}
             </p>
           </div>
         )}
