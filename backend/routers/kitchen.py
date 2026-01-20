@@ -650,11 +650,32 @@ async def track_order_by_number(order_number: str):
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
+    # Normalize order number - KIOSK-0004 -> K-000004 dönüşümü
+    search_terms = [order_number]
+    
+    # KIOSK-XXXX formatını K-XXXXXX formatına çevir
+    if order_number.upper().startswith("KIOSK-"):
+        num_part = order_number[6:]  # "0004" kısmını al
+        try:
+            normalized = f"K-{int(num_part):06d}"  # K-000004 formatına çevir
+            search_terms.append(normalized)
+        except ValueError:
+            pass
+    
+    # K-XXXXXX formatını KIOSK-XXXX formatına çevir  
+    if order_number.upper().startswith("K-"):
+        num_part = order_number[2:]  # "000004" kısmını al
+        try:
+            kiosk_format = f"KIOSK-{int(num_part):04d}"  # KIOSK-0004 formatına çevir
+            search_terms.append(kiosk_format)
+        except ValueError:
+            pass
+    
     # Önce queue_number ile ara
     order = await db.kiosk_orders.find_one(
         {"$or": [
-            {"queue_number": order_number},
-            {"order_number": order_number},
+            {"queue_number": {"$in": search_terms}},
+            {"order_number": {"$in": search_terms}},
             {"id": order_number}
         ]},
         {"_id": 0}
@@ -664,8 +685,8 @@ async def track_order_by_number(order_number: str):
     if not order:
         order = await db.pos_orders.find_one(
             {"$or": [
-                {"queue_number": order_number},
-                {"order_number": order_number},
+                {"queue_number": {"$in": search_terms}},
+                {"order_number": {"$in": search_terms}},
                 {"id": order_number}
             ]},
             {"_id": 0}
@@ -675,7 +696,7 @@ async def track_order_by_number(order_number: str):
     if not order:
         order = await db.delivery_orders.find_one(
             {"$or": [
-                {"queue_number": order_number},
+                {"queue_number": {"$in": search_terms}},
                 {"external_id": order_number},
                 {"id": order_number}
             ]},
