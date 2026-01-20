@@ -236,6 +236,16 @@ function OrderTrack() {
     displayCode = formattedOrderNumber;
   }
 
+  // Test ses fonksiyonu
+  function testSound() {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(function(e) {
+        alert('Ses çalmak için ekrana bir kez dokunun');
+      });
+    }
+  }
+
   return (
     <div className={'min-h-screen flex flex-col ' + (isReady ? 'bg-gradient-to-b from-green-900 to-zinc-950' : 'bg-zinc-950')}>
       {/* Header */}
@@ -248,14 +258,24 @@ function OrderTrack() {
           />
           <span className="text-lg font-bold text-orange-500">KASA BURGER</span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={function() { setSoundEnabled(!soundEnabled); }}
-          className="text-zinc-400 hover:text-white"
-        >
-          {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={testSound}
+            className="text-zinc-400 hover:text-white text-xs"
+          >
+            🔔 Test
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={function() { setSoundEnabled(!soundEnabled); }}
+            className="text-zinc-400 hover:text-white"
+          >
+            {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          </Button>
+        </div>
       </header>
 
       {/* Main Content */}
