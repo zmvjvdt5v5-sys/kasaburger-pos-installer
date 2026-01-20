@@ -34,7 +34,7 @@ export default function BranchManagement() {
       const token = localStorage.getItem('kasaburger_token');
       
       // Şubeleri yükle
-      const branchesRes = await fetch(`${BACKEND_URL}/api/central/branches`, {
+      const branchesRes = await fetch(`${BACKEND_URL}/api/branches`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (branchesRes.ok) {
