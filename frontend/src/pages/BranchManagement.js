@@ -65,7 +65,7 @@ export default function BranchManagement() {
 
     try {
       const token = localStorage.getItem('kasaburger_token');
-      const response = await fetch(`${BACKEND_URL}/api/central/branches`, {
+      const response = await fetch(`${BACKEND_URL}/api/branches`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
