@@ -711,7 +711,7 @@ POS sistemine kapsamlı ayarlar dialogu eklendi:
 ### Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / 1234
-- **Preview URL:** https://multi-branch-pos-7.preview.emergentagent.com
+- **Preview URL:** https://burger-erp-1.preview.emergentagent.com
 
 ---
 
@@ -1625,7 +1625,7 @@ Admin panelinden kiosk kategorilerini tam olarak yönetme özelliği eklendi.
 ## Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / 1234
-- **Preview URL:** https://multi-branch-pos-7.preview.emergentagent.com
+- **Preview URL:** https://burger-erp-1.preview.emergentagent.com
 
 
 ---
@@ -2147,4 +2147,4 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 ## Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / 1234
-- **Preview URL:** https://multi-branch-pos-7.preview.emergentagent.com
+- **Preview URL:** https://burger-erp-1.preview.emergentagent.com

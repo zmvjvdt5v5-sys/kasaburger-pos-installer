@@ -113,7 +113,7 @@ Hayır, uygulama sunucuya bağlanması gerekir.
 
 ## 🔧 Teknik Bilgiler
 
-- **Sunucu URL:** https://multi-branch-pos-7.preview.emergentagent.com
+- **Sunucu URL:** https://burger-erp-1.preview.emergentagent.com
 - **Min. Windows:** Windows 10 64-bit
 - **Min. RAM:** 4 GB
 - **Disk Alanı:** 200 MB

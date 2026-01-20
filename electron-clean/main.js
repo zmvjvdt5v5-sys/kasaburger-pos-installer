@@ -6,7 +6,7 @@ const { autoUpdater } = require('electron-updater');
 // Store for app settings
 const store = new Store({
   defaults: {
-    serverUrl: 'https://multi-branch-pos-7.preview.emergentagent.com',
+    serverUrl: 'https://burger-erp-1.preview.emergentagent.com',
     windowBounds: { width: 1400, height: 900 },
     autoUpdate: true,
     startMinimized: false,

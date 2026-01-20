@@ -5,7 +5,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 
-const BASE_URL = 'https://multi-branch-pos-7.preview.emergentagent.com';
+const BASE_URL = 'https://burger-erp-1.preview.emergentagent.com';
 
 async function recordDemo() {
     console.log('🎬 Video kaydı başlıyor...');

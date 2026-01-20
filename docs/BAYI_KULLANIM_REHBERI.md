@@ -11,7 +11,7 @@
 - Adres çubuğuna şu adresi yazın:
 
 ```
-https://multi-branch-pos-7.preview.emergentagent.com/dealer-login
+https://burger-erp-1.preview.emergentagent.com/dealer-login
 ```
 
 ### Adım 2: Giriş Bilgilerini Girin
