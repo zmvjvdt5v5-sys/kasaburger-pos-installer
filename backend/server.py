@@ -69,16 +69,28 @@ async def lifespan(app: FastAPI):
             })
             logger.info("Test bayi oluşturuldu")
         
-        # Startup'ta test siparişlerini temizle (sadece "pending" veya "ready" olan eski siparişler)
+        # Startup'ta test ve eski siparişleri temizle
         # Bu sayede her sabah ekranlar temiz olur
         from datetime import timedelta
-        one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         
-        # 1 günden eski pending/ready siparişleri temizle
+        # 24 saatten eski tarih
+        one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        # 12 saatten eski tarih (daha agresif temizlik)
+        twelve_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()
+        
+        # Temizlik filtresi - daha kapsamlı
         cleanup_filter = {
             "$or": [
-                {"status": {"$in": ["pending", "ready"]}, "created_at": {"$lt": one_day_ago}},
-                {"order_number": {"$regex": "^TEST", "$options": "i"}}
+                # 24 saatten eski pending/ready siparişler
+                {"status": {"$in": ["pending", "ready", "preparing"]}, "created_at": {"$lt": one_day_ago}},
+                # TEST ile başlayan siparişler
+                {"order_number": {"$regex": "^TEST", "$options": "i"}},
+                # 12 saatten eski ve "test" içeren siparişler
+                {"created_at": {"$lt": twelve_hours_ago}, "source": "test"},
+                # Boş veya geçersiz sipariş numaraları
+                {"order_number": {"$in": [None, "", "null"]}},
+                # "kiosk_test" kaynağından gelen siparişler
+                {"source": {"$regex": "test", "$options": "i"}}
             ]
         }
         
@@ -88,7 +100,7 @@ async def lifespan(app: FastAPI):
         
         total_cleaned = pos_cleaned.deleted_count + kiosk_cleaned.deleted_count + delivery_cleaned.deleted_count
         if total_cleaned > 0:
-            logger.info(f"Eski test siparişleri temizlendi: {total_cleaned} sipariş")
+            logger.info(f"Eski/test siparişleri temizlendi: POS={pos_cleaned.deleted_count}, Kiosk={kiosk_cleaned.deleted_count}, Delivery={delivery_cleaned.deleted_count}")
     else:
         logger.warning("MongoDB bağlantısı yok - demo mod")
     
