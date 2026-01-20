@@ -52,7 +52,7 @@ npm run build:win
 ### Sunucu Adresi Değiştirme
 Eğer farklı bir sunucu kullanıyorsanız, `main.js` dosyasını açın ve şu satırı bulun:
 ```javascript
-serverUrl: 'https://pos-kasa.preview.emergentagent.com'
+serverUrl: 'https://multi-branch-pos-7.preview.emergentagent.com'
 ```
 Kendi adresinizle değiştirin.
 

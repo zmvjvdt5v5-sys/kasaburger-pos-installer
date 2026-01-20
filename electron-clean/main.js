@@ -6,7 +6,7 @@ const { autoUpdater } = require('electron-updater');
 // Store for app settings
 const store = new Store({
   defaults: {
-    serverUrl: 'https://pos-kasa.preview.emergentagent.com',
+    serverUrl: 'https://multi-branch-pos-7.preview.emergentagent.com',
     windowBounds: { width: 1400, height: 900 },
     autoUpdate: true,
     startMinimized: false,

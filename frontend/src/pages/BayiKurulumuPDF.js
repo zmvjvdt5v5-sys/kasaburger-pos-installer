@@ -59,7 +59,7 @@ export default function BayiKurulumuPDF() {
           
           <div className="bg-gray-100 p-4 rounded-lg mb-4">
             <p className="font-semibold">🌐 Giriş Adresi:</p>
-            <code className="text-lg text-orange-600">https://pos-kasa.preview.emergentagent.com/dealer-login</code>
+            <code className="text-lg text-orange-600">https://multi-branch-pos-7.preview.emergentagent.com/dealer-login</code>
           </div>
 
           <h3 className="text-lg font-semibold mt-4 mb-2">Adımlar:</h3>
