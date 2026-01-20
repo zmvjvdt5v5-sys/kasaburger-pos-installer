@@ -71,6 +71,9 @@ import UnifiedKitchen from './pages/kitchen/UnifiedKitchen';
 import SalonDisplay from './pages/kitchen/SalonDisplay';
 import ReceiptPage from './pages/kitchen/ReceiptViewer';
 
+// Order Tracking (Public)
+import OrderTrack from './pages/OrderTrack';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
