@@ -625,7 +625,9 @@ const KioskPage = () => {
         await earnLoyaltyPoints(data?.id || newOrderNumber);
       }
     } catch (e) {
-      setOrderNumber(`${Date.now().toString().slice(-4)}`);
+      // Hata durumunda KIOSK formatında geçici numara
+      const tempNum = Date.now().toString().slice(-4);
+      setOrderNumber(`KIOSK-${tempNum}`);
     }
     setProcessing(false);
     setShowPayment(false);
