@@ -168,7 +168,7 @@ function OrderTrack() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-zinc-400 text-lg">Sipariş yükleniyor...</p>
-          <p className="text-zinc-600 text-sm mt-2">{orderNumber}</p>
+          <p className="text-zinc-600 text-sm mt-2">{formattedOrderNumber}</p>
         </div>
       </div>
     );
