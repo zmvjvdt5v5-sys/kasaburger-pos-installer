@@ -22,11 +22,12 @@ class ProductResponse(BaseModel):
 
 class MaterialCreate(BaseModel):
     name: str
-    sku: str
+    sku: Optional[str] = None  # Otomatik oluşturulacak
     unit: str
     stock: float = 0
     min_stock: float = 0
     cost: float = 0
+    price: Optional[float] = None  # Satış fiyatı
     supplier: Optional[str] = None
 
 class MaterialResponse(BaseModel):
@@ -37,7 +38,9 @@ class MaterialResponse(BaseModel):
     stock: float
     min_stock: float
     cost: float
+    price: Optional[float] = None
     supplier: Optional[str] = None
+    created_at: Optional[str] = None
 
 class RecipeIngredient(BaseModel):
     material_id: str
