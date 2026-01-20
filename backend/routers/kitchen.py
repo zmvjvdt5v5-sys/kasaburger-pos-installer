@@ -110,7 +110,8 @@ async def get_all_kitchen_orders(
     if status:
         status_list = status.split(",")
     else:
-        status_list = ["pending", "preparing", "ready", "Yeni", "confirmed"]
+        # Hem İngilizce hem Türkçe durum isimleri
+        status_list = ["pending", "preparing", "ready", "Yeni", "confirmed", "Hazırlanıyor", "Hazır"]
     
     # 1. POS Siparişleri
     pos_query = {"status": {"$in": status_list}}
