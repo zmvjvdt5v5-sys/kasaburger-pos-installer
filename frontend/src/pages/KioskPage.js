@@ -660,8 +660,17 @@ const KioskPage = () => {
           </div>
         </header>
 
+        {/* Mobile Promotion Banner */}
+        {promotions.length > 0 && (
+          <div className="bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-center">
+            <p className="text-white text-xs font-semibold">
+              🔥 {promotions[currentPromoIndex]?.title} 🔥 {promotions[currentPromoIndex]?.description}
+            </p>
+          </div>
+        )}
+
         {/* Mobile Categories - Horizontal Scroll */}
-        <nav className="bg-zinc-900 px-3 py-2 overflow-x-auto flex gap-2 sticky top-14 z-40 border-b border-zinc-800">
+        <nav className="bg-zinc-900 px-3 py-2 overflow-x-auto flex gap-2 sticky top-[52px] z-40 border-b border-zinc-800">
           {menuData.categories.map(cat => (
             <button
               key={cat.id}
