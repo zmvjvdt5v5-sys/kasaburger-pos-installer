@@ -1192,27 +1192,32 @@ const KioskPage = () => {
 
   // Desktop Layout (Kiosk Screen)
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="bg-zinc-900 px-8 py-4 flex items-center justify-between border-b border-zinc-800">
-        <div className="flex items-center gap-4">
-          <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-16 w-16 object-contain" />
-          <span className="text-3xl font-bold text-orange-500 tracking-wide">KASA BURGER</span>
+    <div className="h-screen bg-zinc-950 text-white flex flex-col overflow-hidden">
+      {/* Header - Daha geniş ve temiz */}
+      <header className="bg-zinc-900/95 backdrop-blur-lg px-10 py-5 flex items-center justify-between border-b border-zinc-800/50">
+        <div className="flex items-center gap-5">
+          <img 
+            src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
+            alt="Logo" 
+            className="h-16 w-16 object-contain rounded-2xl shadow-xl"
+          />
+          <span className="text-4xl font-black text-orange-500 tracking-tight">KASA BURGER</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           {/* Sadakat Programı Butonu */}
           <Button 
             onClick={() => setShowLoyalty(true)} 
-            className={`px-6 py-4 text-lg gap-2 rounded-xl ${
+            data-testid="loyalty-btn"
+            className={`px-8 py-5 text-lg gap-3 rounded-2xl shadow-xl transition-all active:scale-95 ${
               loyaltyMember 
-                ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700' 
-                : 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
+                ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 shadow-yellow-500/30' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 shadow-purple-500/30'
             }`}
           >
             {loyaltyMember ? (
               <>
                 {loyaltyConfig?.tiers?.[loyaltyMember.member?.tier]?.icon || '🥉'} 
-                <span>{loyaltyMember.member?.total_points || 0} Puan</span>
+                <span className="font-bold">{loyaltyMember.member?.total_points || 0} Puan</span>
               </>
             ) : (
               <>⭐ Puan Kazan</>
@@ -1223,17 +1228,24 @@ const KioskPage = () => {
           {combos.length > 0 && (
             <Button 
               onClick={() => setShowCombos(true)} 
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-6 py-4 text-lg gap-2 rounded-xl"
+              data-testid="combos-btn"
+              className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 px-8 py-5 text-lg gap-3 rounded-2xl shadow-xl shadow-green-500/30 active:scale-95 transition-all"
             >
               🎁 Menüler
-              <span className="bg-white/20 px-2 py-0.5 rounded text-sm">%{Math.round(combos[0]?.discount_percent || 15)} İndirim</span>
+              <span className="bg-white/20 px-3 py-1 rounded-lg text-sm font-semibold">%{Math.round(combos[0]?.discount_percent || 15)}</span>
             </Button>
           )}
+          
+          {/* Sepet Butonu */}
           {cartCount > 0 && (
-            <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-4 text-lg gap-3 rounded-xl">
-              <ShoppingCart className="h-6 w-6" />
+            <Button 
+              onClick={() => setShowCart(true)} 
+              data-testid="cart-btn"
+              className="bg-orange-500 hover:bg-orange-600 px-8 py-5 text-lg gap-4 rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all"
+            >
+              <ShoppingCart className="h-7 w-7" />
               <span>{cartCount} Ürün</span>
-              <span className="font-bold">{formatPrice(cartTotal)}</span>
+              <span className="font-black text-xl">{formatPrice(cartTotal)}</span>
             </Button>
           )}
         </div>
@@ -1242,20 +1254,20 @@ const KioskPage = () => {
       {/* Promosyon Banner */}
       {promotions.length > 0 && (
         <div 
-          className="px-8 py-3 flex items-center justify-center gap-4 transition-all duration-500"
+          className="px-10 py-4 flex items-center justify-center gap-6 transition-all duration-500"
           style={{ backgroundColor: promotions[activePromoIndex]?.banner_color || '#FF6B00' }}
         >
-          <span className="text-2xl">🔥</span>
+          <span className="text-3xl">🔥</span>
           <div className="text-center">
-            <span className="font-bold text-lg">{promotions[activePromoIndex]?.title}</span>
-            <span className="ml-3 text-white/90">{promotions[activePromoIndex]?.description}</span>
+            <span className="font-black text-xl">{promotions[activePromoIndex]?.title}</span>
+            <span className="ml-4 text-white/90 text-lg">{promotions[activePromoIndex]?.description}</span>
           </div>
           {promotions.length > 1 && (
-            <div className="flex gap-1 ml-4">
+            <div className="flex gap-2 ml-6">
               {promotions.map((_, idx) => (
                 <div 
                   key={idx} 
-                  className={`w-2 h-2 rounded-full transition-all ${idx === activePromoIndex ? 'bg-white w-4' : 'bg-white/40'}`} 
+                  className={`w-3 h-3 rounded-full transition-all ${idx === activePromoIndex ? 'bg-white w-6' : 'bg-white/40'}`} 
                 />
               ))}
             </div>
@@ -1265,59 +1277,78 @@ const KioskPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Categories Sidebar */}
-        <nav className="w-40 bg-zinc-900 flex flex-col border-r border-zinc-800">
-          <div className="px-4 py-3 border-b border-zinc-800">
-            <span className="text-sm font-bold text-white">Kategoriler</span>
+        {/* Categories Sidebar - Daha geniş ve okunabilir */}
+        <nav className="w-56 bg-zinc-900/80 flex flex-col border-r border-zinc-800/50">
+          <div className="px-6 py-5 border-b border-zinc-800/50">
+            <span className="text-base font-bold text-zinc-400 uppercase tracking-wider">Kategoriler</span>
           </div>
-          {menuData.categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-3 py-3 px-4 transition-all text-left ${
-                selectedCategory === cat.id 
-                  ? 'bg-orange-500 text-white' 
-                  : 'text-zinc-300 hover:bg-zinc-800'
-              }`}
-            >
-              <span className="text-lg">{cat.icon}</span>
-              <span className="text-sm font-medium">{cat.name}</span>
-            </button>
-          ))}
+          <div className="flex-1 py-2">
+            {menuData.categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                data-testid={`desktop-category-${cat.id}`}
+                className={`flex items-center gap-4 py-5 px-6 transition-all text-left w-full active:scale-[0.98] ${
+                  selectedCategory === cat.id 
+                    ? 'bg-orange-500 text-white shadow-xl shadow-orange-500/20' 
+                    : 'text-zinc-300 hover:bg-zinc-800/80'
+                }`}
+              >
+                <span className="text-2xl">{cat.icon}</span>
+                <span className="text-lg font-semibold">{cat.name}</span>
+              </button>
+            ))}
+          </div>
         </nav>
 
-        {/* Products Grid */}
-        <main className="flex-1 p-6 overflow-y-auto bg-zinc-950">
-          <h2 className="text-2xl font-bold text-orange-500 mb-6">{menuData.categories.find(c => c.id === selectedCategory)?.name || 'Ürünler'}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5">
+        {/* Products Grid - Daha geniş kartlar ve spacing */}
+        <main className="flex-1 p-8 overflow-y-auto">
+          {/* Kategori Başlığı */}
+          <div className="mb-8">
+            <h2 className="text-4xl font-black text-white tracking-tight">
+              {menuData.categories.find(c => c.id === selectedCategory)?.icon} {menuData.categories.find(c => c.id === selectedCategory)?.name || 'Ürünler'}
+            </h2>
+            <p className="text-zinc-500 text-lg mt-2">{filteredProducts.length} ürün</p>
+          </div>
+          
+          {/* Ürün Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
                 onClick={() => openProductWithNote(product)}
-                className="group bg-zinc-900 rounded-2xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500 active:scale-[0.98] shadow-lg flex flex-col h-full"
+                data-testid={`desktop-product-${product.id}`}
+                className="group bg-zinc-900 rounded-3xl overflow-hidden text-left transition-all hover:ring-2 hover:ring-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 active:scale-[0.97] shadow-xl flex flex-col h-full"
               >
-                {/* Görsel Alanı - Sabit oran */}
+                {/* Görsel Alanı */}
                 <div className="relative w-full aspect-square overflow-hidden bg-zinc-800">
                   <img 
                     src={product.image} 
                     alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    loading="lazy"
                   />
                   {product.is_premium && (
-                    <span className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-amber-400 text-black text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="absolute top-4 left-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-xs font-black px-4 py-2 rounded-full shadow-lg uppercase tracking-wide">
                       👑 Premium
                     </span>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-70" />
+                  
+                  {/* Fiyat Badge */}
+                  <div className="absolute bottom-4 right-4 bg-orange-500 text-white font-black text-xl px-4 py-2 rounded-xl shadow-lg">
+                    ₺{product.price.toLocaleString('tr-TR')}
+                  </div>
                 </div>
+                
                 {/* İçerik Alanı */}
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="font-bold text-base text-white leading-tight mb-2 line-clamp-2">{product.name}</h3>
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="font-bold text-lg text-white leading-tight mb-2 line-clamp-2">{product.name}</h3>
                   {product.description && (
-                    <p className="text-zinc-400 text-sm leading-snug mb-3 line-clamp-2 flex-1">{product.description}</p>
+                    <p className="text-zinc-500 text-sm leading-relaxed mb-3 line-clamp-2 flex-1">{product.description}</p>
                   )}
-                  <div className="flex items-center justify-between mt-auto pt-2">
-                    <p className="text-orange-500 font-black text-xl">₺{product.price.toLocaleString('tr-TR')}</p>
+                </div>
+              </button>
                     <span className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:bg-orange-400 transition-colors">+</span>
                   </div>
                 </div>
