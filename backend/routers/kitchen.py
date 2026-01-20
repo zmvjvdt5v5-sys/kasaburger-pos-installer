@@ -610,3 +610,233 @@ async def get_kitchen_stats(current_user: dict = Depends(get_current_user)):
             "delivery": {"pending": delivery_pending, "preparing": delivery_preparing, "ready": delivery_ready}
         }
     }
+
+
+# ==================== SİPARİŞ TAKİP (Müşteri İçin - Auth Gerektirmez) ====================
+
+@router.get("/track/{order_number}")
+async def track_order_by_number(order_number: str):
+    """Sipariş numarası ile sipariş durumunu takip et (Müşteri için - Auth gerektirmez)"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    # Önce queue_number ile ara
+    order = await db.kiosk_orders.find_one(
+        {"$or": [
+            {"queue_number": order_number},
+            {"order_number": order_number},
+            {"id": order_number}
+        ]},
+        {"_id": 0}
+    )
+    source = "kiosk"
+    
+    if not order:
+        order = await db.pos_orders.find_one(
+            {"$or": [
+                {"queue_number": order_number},
+                {"order_number": order_number},
+                {"id": order_number}
+            ]},
+            {"_id": 0}
+        )
+        source = "pos"
+    
+    if not order:
+        order = await db.delivery_orders.find_one(
+            {"$or": [
+                {"queue_number": order_number},
+                {"external_id": order_number},
+                {"id": order_number}
+            ]},
+            {"_id": 0}
+        )
+        source = "delivery"
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+    
+    return {
+        "id": order.get("id"),
+        "order_number": order.get("order_number"),
+        "queue_number": order.get("queue_number"),
+        "display_code": order.get("queue_number") or order.get("order_number"),
+        "status": order.get("status"),
+        "source": source,
+        "created_at": order.get("created_at"),
+        "preparing_at": order.get("preparing_at"),
+        "ready_at": order.get("ready_at"),
+        "delivered_at": order.get("delivered_at"),
+        "items": order.get("items", []),
+        "total": order.get("total", 0)
+    }
+
+
+# ==================== TESLİM EDİLDİ & LOGLAMA ====================
+
+@router.put("/orders/{order_id}/delivered")
+async def mark_order_delivered(order_id: str, current_user: dict = Depends(get_current_user)):
+    """Siparişi teslim edildi olarak işaretle ve logla"""
+    db = get_db()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Siparişi bul
+    order = await db.kiosk_orders.find_one({"id": order_id}, {"_id": 0})
+    source = "kiosk"
+    collection = db.kiosk_orders
+    
+    if not order:
+        order = await db.pos_orders.find_one({"id": order_id}, {"_id": 0})
+        source = "pos"
+        collection = db.pos_orders
+    
+    if not order:
+        order = await db.delivery_orders.find_one({"id": order_id}, {"_id": 0})
+        source = "delivery"
+        collection = db.delivery_orders
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+    
+    # Kiosk için Türkçe durum
+    if source == "kiosk":
+        new_status = "Teslim Edildi"
+    else:
+        new_status = "delivered"
+    
+    # Siparişi güncelle
+    await collection.update_one(
+        {"id": order_id},
+        {"$set": {
+            "status": new_status,
+            "delivered_at": now,
+            "delivered_by": current_user.get("name") or current_user.get("email"),
+            "updated_at": now
+        }}
+    )
+    
+    # Teslim loguna kaydet
+    delivery_log = {
+        "id": str(uuid.uuid4()),
+        "order_id": order_id,
+        "order_number": order.get("order_number"),
+        "queue_number": order.get("queue_number"),
+        "source": source,
+        "items": order.get("items", []),
+        "total": order.get("total", 0),
+        "customer_phone": order.get("customer_phone"),
+        "delivered_at": now,
+        "delivered_by": current_user.get("name") or current_user.get("email"),
+        "created_at": order.get("created_at"),
+        "preparing_at": order.get("preparing_at"),
+        "ready_at": order.get("ready_at"),
+        "preparation_time_seconds": None,
+        "total_time_seconds": None
+    }
+    
+    # Süre hesapla
+    if order.get("created_at") and order.get("ready_at"):
+        try:
+            created = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
+            ready = datetime.fromisoformat(order["ready_at"].replace("Z", "+00:00"))
+            delivery_log["preparation_time_seconds"] = (ready - created).total_seconds()
+        except:
+            pass
+    
+    if order.get("created_at"):
+        try:
+            created = datetime.fromisoformat(order["created_at"].replace("Z", "+00:00"))
+            delivered = datetime.fromisoformat(now.replace("Z", "+00:00"))
+            delivery_log["total_time_seconds"] = (delivered - created).total_seconds()
+        except:
+            pass
+    
+    # Log koleksiyonuna kaydet
+    await db.delivered_orders_log.insert_one(delivery_log)
+    
+    return {
+        "status": "success",
+        "message": "Sipariş teslim edildi olarak işaretlendi",
+        "order_id": order_id,
+        "delivered_at": now
+    }
+
+
+@router.get("/delivered-log")
+async def get_delivered_orders_log(
+    date: Optional[str] = None,
+    limit: int = Query(default=50, le=500),
+    current_user: dict = Depends(get_current_user)
+):
+    """Teslim edilen siparişlerin logunu getir"""
+    db = get_db()
+    if db is None:
+        return []
+    
+    query = {}
+    
+    # Tarih filtresi
+    if date:
+        # Belirli bir gün için filtrele
+        start = f"{date}T00:00:00"
+        end = f"{date}T23:59:59"
+        query["delivered_at"] = {"$gte": start, "$lte": end}
+    
+    logs = await db.delivered_orders_log.find(
+        query,
+        {"_id": 0}
+    ).sort("delivered_at", -1).limit(limit).to_list(limit)
+    
+    return logs
+
+
+@router.get("/delivered-stats")
+async def get_delivered_stats(
+    date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Teslim edilen siparişlerin istatistiklerini getir"""
+    db = get_db()
+    if db is None:
+        return {"total_orders": 0, "total_revenue": 0}
+    
+    # Bugünün tarihi
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    start = f"{date}T00:00:00"
+    end = f"{date}T23:59:59"
+    
+    query = {"delivered_at": {"$gte": start, "$lte": end}}
+    
+    # Toplam sipariş sayısı
+    total_orders = await db.delivered_orders_log.count_documents(query)
+    
+    # Toplam ciro
+    pipeline = [
+        {"$match": query},
+        {"$group": {"_id": None, "total": {"$sum": "$total"}}}
+    ]
+    revenue_result = await db.delivered_orders_log.aggregate(pipeline).to_list(1)
+    total_revenue = revenue_result[0]["total"] if revenue_result else 0
+    
+    # Ortalama hazırlık süresi
+    avg_pipeline = [
+        {"$match": {**query, "preparation_time_seconds": {"$ne": None}}},
+        {"$group": {"_id": None, "avg_prep": {"$avg": "$preparation_time_seconds"}}}
+    ]
+    avg_result = await db.delivered_orders_log.aggregate(avg_pipeline).to_list(1)
+    avg_prep_time = avg_result[0]["avg_prep"] if avg_result else 0
+    
+    return {
+        "date": date,
+        "total_orders": total_orders,
+        "total_revenue": total_revenue,
+        "avg_preparation_time_seconds": round(avg_prep_time, 0) if avg_prep_time else 0,
+        "avg_preparation_time_minutes": round(avg_prep_time / 60, 1) if avg_prep_time else 0
+    }
+
