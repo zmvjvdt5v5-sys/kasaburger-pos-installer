@@ -3,7 +3,13 @@ import { useParams } from 'react-router-dom';
 import { Clock, ChefHat, Check, Package, Bell, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// Backend URL - fallback ile
+var BACKEND_URL = '';
+try {
+  BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+} catch (e) {
+  console.warn('BACKEND_URL not available');
+}
 
 // Sipariş durumları
 const ORDER_STAGES = [
