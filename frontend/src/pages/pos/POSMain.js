@@ -314,17 +314,28 @@ export default function POSMain() {
     }
   };
 
-  // WebSocket bağlantısı
+  // WebSocket bağlantısı (geliştirilmiş reconnection)
   useEffect(() => {
-    if (!WS_URL) return;
+    if (!WS_URL) {
+      console.warn('WebSocket URL oluşturulamadı');
+      return;
+    }
+    
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 10;
+    const reconnectInterval = 3000;
+    let isManualClose = false;
     
     const connectWebSocket = () => {
       try {
-        const ws = new WebSocket(`${WS_URL}/ws/kitchen`);
+        const wsUrl = `${WS_URL}/ws/kitchen`;
+        console.log('WebSocket bağlanıyor:', wsUrl);
+        const ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
           console.log('WebSocket bağlandı');
           setWsConnected(true);
+          reconnectAttempts = 0; // Başarılı bağlantıda sıfırla
         };
         
         ws.onmessage = (event) => {
@@ -335,8 +346,9 @@ export default function POSMain() {
               if (data.action === 'new_order') {
                 setNewOrderAlert(data);
                 // Ses çal
-                const audio = new Audio('/notification.mp3');
-                audio.play().catch(() => {});
+                if (soundEnabled) {
+                  playNotificationSound();
+                }
                 toast.info('🔔 Yeni sipariş geldi!', { duration: 5000 });
                 loadData(); // Verileri yenile
               } else if (data.action === 'status_change') {
@@ -348,10 +360,21 @@ export default function POSMain() {
           }
         };
         
-        ws.onclose = () => {
-          console.log('WebSocket kapandı, yeniden bağlanıyor...');
+        ws.onclose = (event) => {
           setWsConnected(false);
-          setTimeout(connectWebSocket, 3000);
+          
+          if (isManualClose) {
+            console.log('WebSocket manuel olarak kapatıldı');
+            return;
+          }
+          
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`WebSocket kapandı, yeniden bağlanıyor... (Deneme ${reconnectAttempts}/${maxReconnectAttempts})`);
+            setTimeout(connectWebSocket, reconnectInterval);
+          } else {
+            console.error('WebSocket maksimum yeniden bağlanma denemesine ulaştı');
+          }
         };
         
         ws.onerror = (error) => {
@@ -361,17 +384,22 @@ export default function POSMain() {
         wsRef.current = ws;
       } catch (error) {
         console.error('WebSocket bağlantı hatası:', error);
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          setTimeout(connectWebSocket, reconnectInterval);
+        }
       }
     };
     
     connectWebSocket();
     
     return () => {
-      if (wsRef.current) {
+      isManualClose = true;
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.close();
       }
     };
-  }, [loadData]);
+  }, [loadData, soundEnabled]);
 
   // Drag-drop fonksiyonları
   const handleDragStart = (e, table) => {
