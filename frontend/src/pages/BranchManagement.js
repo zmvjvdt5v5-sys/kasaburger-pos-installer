@@ -17,6 +17,10 @@ export default function BranchManagement() {
   const [centralStats, setCentralStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [branchReport, setBranchReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
   const [newBranch, setNewBranch] = useState({
     name: '',
     address: '',
