@@ -1082,7 +1082,7 @@ const KioskPage = () => {
               <DialogTitle className="text-xl">🎁 Ödüller</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 py-2">
-              {rewards.map(reward => {
+              {loyaltyRewards.map(reward => {
                 const canRedeem = loyaltyMember && loyaltyMember.points >= reward.points_required;
                 return (
                   <div key={reward.id} className={`rounded-lg p-3 border ${canRedeem ? 'border-green-500 bg-green-500/10' : 'border-zinc-700 bg-zinc-800/50'}`}>
