@@ -421,7 +421,7 @@ export default function UnifiedKitchen() {
                             Hazır
                           </Button>
                         )}
-                        {['ready', 'Hazır'].includes(order.status) && (
+                        {['ready', 'Hazır', 'hazır', 'HAZIR'].includes(order.status) && (
                           <Button 
                             size="lg"
                             className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-lg px-6 py-3 h-auto animate-pulse shadow-lg shadow-green-500/30"
@@ -438,11 +438,16 @@ export default function UnifiedKitchen() {
                                 if (response.ok) {
                                   toast.success('✅ Sipariş teslim edildi ve loglandı!');
                                   loadOrders();
+                                } else {
+                                  const errData = await response.json();
+                                  toast.error(`Hata: ${errData.detail || 'Bilinmeyen hata'}`);
                                 }
                               } catch (error) {
-                                toast.error('Hata oluştu!');
+                                console.error('Delivered error:', error);
+                                toast.error('Bağlantı hatası!');
                               }
                             }}
+                            data-testid={`deliver-btn-${order.id}`}
                           >
                             <Check className="h-6 w-6 mr-2" />
                             TESLİM EDİLDİ
