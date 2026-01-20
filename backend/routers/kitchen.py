@@ -254,9 +254,9 @@ async def get_salon_display_data():
             "ready_at": order.get("ready_at")
         })
     
-    # POS preparing siparişleri
+    # POS preparing siparişleri (pending dahil - yeni siparişler de hazırlanıyor olarak göster)
     pos_preparing = await db.pos_orders.find(
-        {"status": "preparing"},
+        {"status": {"$in": ["preparing", "pending"]}},
         {"_id": 0, "id": 1, "queue_number": 1, "order_number": 1, "source": 1}
     ).sort("preparing_at", -1).to_list(20)
     
