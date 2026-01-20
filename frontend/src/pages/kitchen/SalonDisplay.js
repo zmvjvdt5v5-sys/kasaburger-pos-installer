@@ -5,6 +5,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function SalonDisplay() {
   const [readyOrders, setReadyOrders] = useState([]);
+  const [preparingOrders, setPreparingOrders] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [soundEnabled, setSoundEnabled] = useState(true);
   const audioRef = useRef(null);
