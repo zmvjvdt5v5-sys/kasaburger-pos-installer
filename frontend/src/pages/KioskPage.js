@@ -768,13 +768,6 @@ const KioskPage = () => {
             </Button>
           </div>
         )}
-              <p className="text-lg font-bold text-orange-500">{formatPrice(cartTotal)}</p>
-            </div>
-            <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-3 text-base rounded-xl">
-              Sepete Git
-            </Button>
-          </div>
-        )}
 
         {/* Cart Dialog */}
         <Dialog open={showCart} onOpenChange={setShowCart}>
