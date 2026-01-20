@@ -398,3 +398,42 @@ async def update_kiosk_order_status(order_id: str, status: str, current_user: di
     
     await db.kiosk_orders.update_one({"id": order_id}, {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}})
     return {"status": "updated"}
+
+
+# ==================== QR KOD ====================
+
+@router.get("/qr-code")
+async def generate_kiosk_qr_code():
+    """Kiosk için QR kod oluştur"""
+    import qrcode
+    import io
+    import base64
+    import os
+    
+    # Frontend URL'ini al
+    frontend_url = os.environ.get("FRONTEND_URL", "https://erp.kasaburger.net.tr")
+    kiosk_url = f"{frontend_url}/kiosk"
+    
+    # QR kod oluştur
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(kiosk_url)
+    qr.make(fit=True)
+    
+    # PNG olarak oluştur
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Base64'e çevir
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    return {
+        "url": kiosk_url,
+        "qr_code": f"data:image/png;base64,{qr_base64}"
+    }
