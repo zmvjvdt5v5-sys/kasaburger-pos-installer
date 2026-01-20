@@ -25,9 +25,25 @@ const STATUS_MAP = {
   'delivered': 'delivered'
 };
 
+// K-XXXXXX formatını KIOSK-XXXX formatına çevir
+function formatDisplayCode(orderNum) {
+  if (!orderNum) return '';
+  var upper = orderNum.toUpperCase();
+  if (upper.startsWith('K-')) {
+    try {
+      var num = parseInt(upper.substring(2), 10);
+      if (!isNaN(num)) {
+        return 'KIOSK-' + String(num).padStart(4, '0');
+      }
+    } catch (e) {}
+  }
+  return orderNum;
+}
+
 function OrderTrack() {
   const params = useParams();
   const orderNumber = params.orderNumber || '';
+  const formattedOrderNumber = formatDisplayCode(orderNumber);
   
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
