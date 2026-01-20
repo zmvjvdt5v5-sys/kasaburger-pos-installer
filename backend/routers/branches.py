@@ -112,14 +112,67 @@ async def delete_branch(branch_id: str, current_user: dict = Depends(get_current
 async def get_branch_summary(branch_id: str, current_user: dict = Depends(get_current_user)):
     db = get_db()
     if db is None:
-        return {"totalSales": 0, "totalOrders": 0, "avgOrder": 0}
+        return {"today_orders": 0, "today_revenue": 0}
     
-    # Basit özet
-    orders = await db.pos_orders.find({"branch_id": branch_id}, {"_id": 0}).to_list(1000)
-    total_sales = sum(o.get("total", 0) for o in orders)
+    from datetime import datetime, timezone, timedelta
+    
+    # Bugünün başlangıcı
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_str = today_start.isoformat()
+    
+    # Bu ayın başlangıcı
+    month_start = today_start.replace(day=1)
+    month_str = month_start.isoformat()
+    
+    # Tüm siparişleri topla (kiosk, pos, delivery)
+    all_orders = []
+    
+    # Kiosk siparişleri
+    kiosk_orders = await db.kiosk_orders.find({"branch_id": branch_id}, {"_id": 0}).to_list(500)
+    all_orders.extend([{**o, "source": "kiosk"} for o in kiosk_orders])
+    
+    # POS siparişleri
+    pos_orders = await db.pos_orders.find({"branch_id": branch_id}, {"_id": 0}).to_list(500)
+    all_orders.extend([{**o, "source": "pos"} for o in pos_orders])
+    
+    # Delivery siparişleri
+    delivery_orders = await db.delivery_orders.find({"branch_id": branch_id}, {"_id": 0}).to_list(500)
+    all_orders.extend([{**o, "source": "delivery"} for o in delivery_orders])
+    
+    # Bugünkü siparişler
+    today_orders = [o for o in all_orders if o.get("created_at", "") >= today_str]
+    today_revenue = sum(o.get("total", 0) for o in today_orders)
+    
+    # Bu ayki siparişler
+    month_orders = [o for o in all_orders if o.get("created_at", "") >= month_str]
+    month_revenue = sum(o.get("total", 0) for o in month_orders)
+    
+    # Kaynak bazlı sayılar
+    kiosk_count = len([o for o in all_orders if o.get("source") == "kiosk"])
+    pos_count = len([o for o in all_orders if o.get("source") == "pos"])
+    online_count = len([o for o in all_orders if o.get("source") == "delivery"])
+    
+    # Ortalama sipariş tutarı
+    avg_order = month_revenue / len(month_orders) if month_orders else 0
+    
+    # Son 5 sipariş
+    recent = sorted(all_orders, key=lambda x: x.get("created_at", ""), reverse=True)[:5]
+    recent_orders = [{
+        "order_number": o.get("order_number", o.get("queue_number", "---")),
+        "source": o.get("source", "---"),
+        "total": o.get("total", 0)
+    } for o in recent]
     
     return {
-        "totalSales": total_sales,
-        "totalOrders": len(orders),
-        "avgOrder": total_sales / len(orders) if orders else 0
+        "today_orders": len(today_orders),
+        "today_revenue": today_revenue,
+        "month_orders": len(month_orders),
+        "month_revenue": month_revenue,
+        "kiosk_orders": kiosk_count,
+        "pos_orders": pos_count,
+        "online_orders": online_count,
+        "avg_order_value": round(avg_order, 2),
+        "total_customers": len(set(o.get("customer_phone", o.get("customer_id", "")) for o in all_orders if o.get("customer_phone") or o.get("customer_id"))),
+        "active_products": 0,  # TODO: Şube bazlı ürün sayısı
+        "recent_orders": recent_orders
     }
