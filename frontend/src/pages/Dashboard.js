@@ -420,6 +420,33 @@ const Dashboard = () => {
                 Bildirim yok - Her şey yolunda! ✓
               </p>
             )}
+            
+            {/* Sipariş Temizleme Butonu */}
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-amber-400 border-amber-400/30 hover:bg-amber-400/10"
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('kasaburger_token');
+                    const res = await fetch(`${API_URL}/api/admin/cleanup-orders`, {
+                      method: 'DELETE',
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                      alert(`Temizlendi! POS: ${data.cleaned.pos}, Kiosk: ${data.cleaned.kiosk}, Delivery: ${data.cleaned.delivery}`);
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Hayalet Siparişleri Temizle
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
