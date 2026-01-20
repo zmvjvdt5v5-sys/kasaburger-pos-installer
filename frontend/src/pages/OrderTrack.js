@@ -183,7 +183,7 @@ function OrderTrack() {
           <h1 className="text-2xl font-bold text-white mb-2">{error}</h1>
           <p className="text-zinc-400 mb-4">Sipariş numaranızı kontrol edin</p>
           <div className="bg-zinc-800 px-4 py-2 rounded-lg mb-4">
-            <p className="text-zinc-300 font-mono text-sm break-all">{orderNumber || 'Numara yok'}</p>
+            <p className="text-zinc-300 font-mono text-sm break-all">{formattedOrderNumber || 'Numara yok'}</p>
           </div>
           <Button 
             onClick={function() { 
