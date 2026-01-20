@@ -73,7 +73,7 @@
     "electron-pack": "electron-builder --dir"
   },
   "main": "public/electron.js",
-  "homepage": "./",
+  "homepage": "/",
   "build": {
     "appId": "com.kasaburger.kbys",
     "productName": "KBYS",
