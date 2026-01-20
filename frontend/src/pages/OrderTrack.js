@@ -96,15 +96,34 @@ export default function OrderTrack() {
 
   // Sipariş durumunu çek
   const fetchOrderStatus = useCallback(function() {
-    if (!orderNumber) return;
+    if (!orderNumber) {
+      setError('Sipariş numarası bulunamadı');
+      setLoading(false);
+      return;
+    }
     
-    fetch(BACKEND_URL + '/api/order-track/' + orderNumber)
+    if (!BACKEND_URL) {
+      setError('Sunucu bağlantısı yapılamadı');
+      setLoading(false);
+      return;
+    }
+    
+    var url = BACKEND_URL + '/api/order-track/' + encodeURIComponent(orderNumber);
+    
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-cache'
+    })
       .then(function(response) {
         if (!response.ok) {
           if (response.status === 404) {
             setError('Sipariş bulunamadı');
           } else {
-            setError('Bir hata oluştu');
+            setError('Bir hata oluştu (Kod: ' + response.status + ')');
           }
           setLoading(false);
           return null;
@@ -136,7 +155,7 @@ export default function OrderTrack() {
       })
       .catch(function(err) {
         console.error('Fetch error:', err);
-        setError('Bağlantı hatası');
+        setError('Bağlantı hatası: ' + (err.message || 'Bilinmeyen hata'));
         setLoading(false);
       });
   }, [orderNumber, playReadySound, sendNotification]);
