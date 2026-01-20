@@ -250,24 +250,24 @@ export default function EInvoice() {
 
       {/* Filtreler */}
       <div className="flex gap-4 mb-6">
-        <Select value={filter.status} onValueChange={(v) => setFilter(prev => ({ ...prev, status: v }))}>
+        <Select value={filter.status || "all"} onValueChange={(v) => setFilter(prev => ({ ...prev, status: v === "all" ? "" : v }))}>
           <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700">
             <SelectValue placeholder="Durum" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tümü</SelectItem>
+            <SelectItem value="all">Tümü</SelectItem>
             <SelectItem value="draft">Taslak</SelectItem>
             <SelectItem value="sent">Gönderildi</SelectItem>
             <SelectItem value="approved">Onaylandı</SelectItem>
             <SelectItem value="cancelled">İptal</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={filter.type} onValueChange={(v) => setFilter(prev => ({ ...prev, type: v }))}>
+        <Select value={filter.type || "all"} onValueChange={(v) => setFilter(prev => ({ ...prev, type: v === "all" ? "" : v }))}>
           <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700">
             <SelectValue placeholder="Tür" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tümü</SelectItem>
+            <SelectItem value="all">Tümü</SelectItem>
             <SelectItem value="E_FATURA">e-Fatura</SelectItem>
             <SelectItem value="E_ARSIV">e-Arşiv</SelectItem>
           </SelectContent>
