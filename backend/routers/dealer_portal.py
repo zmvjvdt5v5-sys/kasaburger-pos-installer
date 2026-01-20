@@ -1,14 +1,16 @@
 """Dealer Portal Router - Bayi Portal Endpoint'leri"""
 import uuid
 import io
+import asyncio
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from pydantic import BaseModel
 
 from utils.auth import get_current_dealer
 from utils.database import get_db
+from utils.email_service import send_dealer_order_notification
 
 router = APIRouter(prefix="/dealer-portal", tags=["Dealer Portal"])
 
