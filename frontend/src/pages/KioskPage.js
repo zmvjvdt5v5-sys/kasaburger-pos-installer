@@ -606,7 +606,18 @@ const KioskPage = () => {
         })
       });
       const data = response.ok ? await response.json() : null;
-      const newOrderNumber = data?.order_number || `${Date.now().toString().slice(-4)}`;
+      // KIOSK formatında display code kullan
+      let displayCode = data?.display_code;
+      if (!displayCode && data?.order_number) {
+        const orderNum = data.order_number;
+        if (orderNum.startsWith('K-')) {
+          const num = parseInt(orderNum.substring(2), 10);
+          if (!isNaN(num)) {
+            displayCode = `KIOSK-${String(num).padStart(4, '0')}`;
+          }
+        }
+      }
+      const newOrderNumber = displayCode || data?.order_number || `${Date.now().toString().slice(-4)}`;
       setOrderNumber(newOrderNumber);
       
       // Sadakat puanı kazan
