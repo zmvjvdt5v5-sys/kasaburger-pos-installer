@@ -16,9 +16,19 @@ async def create_material(material: MaterialCreate, current_user: dict = Depends
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
+    # SKU yoksa otomatik oluştur
+    sku = material.sku
+    if not sku:
+        count = await db.materials.count_documents({})
+        name_prefix = material.name[:3].upper().replace(" ", "")
+        sku = f"HMD-{name_prefix}-{count+1:04d}"
+    
+    material_data = material.model_dump()
+    material_data["sku"] = sku
+    
     material_doc = {
         "id": str(uuid.uuid4()),
-        **material.model_dump(),
+        **material_data,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.materials.insert_one(material_doc)
