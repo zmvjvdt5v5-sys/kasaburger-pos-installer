@@ -37,6 +37,7 @@ export default function SalonDisplay() {
         lastReadyCountRef.current = data.ready_orders.length;
         
         setReadyOrders(data.ready_orders || []);
+        setPreparingOrders(data.preparing_orders || []);
       }
     } catch (error) {
       console.error('Load error:', error);
