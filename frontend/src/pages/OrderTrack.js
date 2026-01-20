@@ -36,18 +36,22 @@ export default function OrderTrack() {
 
   // Bildirim sesi - sipariş hazır olunca
   useEffect(() => {
-    audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
-    audioRef.current.volume = 1.0;
+    try {
+      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+      audioRef.current.volume = 1.0;
+    } catch (e) {
+      console.warn('Audio initialization failed:', e);
+    }
   }, []);
 
-  // Browser notification izni iste
+  // Browser notification izni iste (Safari uyumlu)
   useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationPermission(Notification.permission);
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          setNotificationPermission(permission);
-        });
+    // Safari ve iOS'ta Notification API farklı çalışabilir
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        setNotificationPermission(Notification.permission);
+      } catch (e) {
+        console.warn('Notification permission check failed:', e);
       }
     }
   }, []);
@@ -55,72 +59,100 @@ export default function OrderTrack() {
   // Bildirim sesi çal
   const playReadySound = useCallback(() => {
     if (soundEnabled && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
+      try {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(function(err) {
+          console.warn('Audio play failed:', err);
+        });
+      } catch (e) {
+        console.warn('Audio error:', e);
+      }
     }
   }, [soundEnabled]);
 
-  // Browser notification gönder
-  const sendNotification = useCallback((title, body) => {
-    if (notificationPermission === 'granted') {
-      new Notification(title, {
-        body,
-        icon: 'https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg',
-        vibrate: [200, 100, 200],
-        tag: 'order-ready'
-      });
+  // Browser notification gönder (Safari uyumlu)
+  const sendNotification = useCallback(function(title, body) {
+    if (typeof window === 'undefined') return;
+    if (!('Notification' in window)) return;
+    
+    try {
+      if (Notification.permission === 'granted') {
+        new Notification(title, {
+          body: body,
+          icon: 'https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg',
+          tag: 'order-ready'
+        });
+      }
+    } catch (e) {
+      console.warn('Notification failed:', e);
     }
-  }, [notificationPermission]);
+  }, []);
 
   // Sipariş durumunu çek
-  const fetchOrderStatus = useCallback(async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/order-track/${orderNumber}`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          setError('Sipariş bulunamadı');
-        } else {
-          setError('Bir hata oluştu');
+  const fetchOrderStatus = useCallback(function() {
+    if (!orderNumber) return;
+    
+    fetch(BACKEND_URL + '/api/order-track/' + orderNumber)
+      .then(function(response) {
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Sipariş bulunamadı');
+          } else {
+            setError('Bir hata oluştu');
+          }
+          setLoading(false);
+          return null;
         }
-        return;
-      }
-      
-      const data = await response.json();
-      setOrder(data);
-      setError(null);
+        return response.json();
+      })
+      .then(function(data) {
+        if (!data) return;
+        
+        setOrder(data);
+        setError(null);
+        setLoading(false);
 
-      // Durum değişti mi kontrol et
-      const normalizedStatus = STATUS_MAP[data.status] || data.status;
-      if (lastStatusRef.current && lastStatusRef.current !== normalizedStatus) {
-        // Hazır olduysa bildirim gönder
-        if (normalizedStatus === 'ready') {
-          playReadySound();
-          sendNotification(
-            '🎉 Siparişiniz Hazır!',
-            `${orderNumber} numaralı siparişiniz teslim almaya hazır.`
-          );
+        // Durum değişti mi kontrol et
+        var status = data.status || '';
+        var normalizedStatus = STATUS_MAP[status] || status;
+        
+        if (lastStatusRef.current && lastStatusRef.current !== normalizedStatus) {
+          // Hazır olduysa bildirim gönder
+          if (normalizedStatus === 'ready') {
+            playReadySound();
+            sendNotification(
+              'Siparişiniz Hazır!',
+              orderNumber + ' numaralı siparişiniz teslim almaya hazır.'
+            );
+          }
         }
-      }
-      lastStatusRef.current = normalizedStatus;
-      
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('Bağlantı hatası');
-    } finally {
-      setLoading(false);
-    }
+        lastStatusRef.current = normalizedStatus;
+      })
+      .catch(function(err) {
+        console.error('Fetch error:', err);
+        setError('Bağlantı hatası');
+        setLoading(false);
+      });
   }, [orderNumber, playReadySound, sendNotification]);
 
   // İlk yükleme ve polling
-  useEffect(() => {
+  useEffect(function() {
     fetchOrderStatus();
-    const interval = setInterval(fetchOrderStatus, 3000); // Her 3 saniyede kontrol
-    return () => clearInterval(interval);
+    var interval = setInterval(fetchOrderStatus, 3000);
+    return function() {
+      clearInterval(interval);
+    };
   }, [fetchOrderStatus]);
 
   // Normalize edilmiş durum
-  const normalizedStatus = order ? (STATUS_MAP[order.status] || order.status) : 'pending';
-  const currentStageIndex = ORDER_STAGES.findIndex(s => s.id === normalizedStatus);
+  var normalizedStatus = 'pending';
+  if (order && order.status) {
+    normalizedStatus = STATUS_MAP[order.status] || order.status;
+  }
+  var currentStageIndex = ORDER_STAGES.findIndex(function(s) {
+    return s.id === normalizedStatus;
+  });
+  if (currentStageIndex < 0) currentStageIndex = 0;
 
   if (loading) {
     return (
@@ -146,11 +178,12 @@ export default function OrderTrack() {
     );
   }
 
-  const isReady = normalizedStatus === 'ready';
-  const isDelivered = normalizedStatus === 'delivered';
+  var isReady = normalizedStatus === 'ready';
+  var isDelivered = normalizedStatus === 'delivered';
+  var displayCode = (order && (order.display_code || order.queue_number || order.order_number)) || orderNumber;
 
   return (
-    <div className={`min-h-screen flex flex-col ${isReady ? 'bg-gradient-to-b from-green-900 to-zinc-950' : 'bg-zinc-950'}`}>
+    <div className={'min-h-screen flex flex-col ' + (isReady ? 'bg-gradient-to-b from-green-900 to-zinc-950' : 'bg-zinc-950')}>
       {/* Header */}
       <header className="bg-zinc-900/80 backdrop-blur-lg px-5 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -164,7 +197,7 @@ export default function OrderTrack() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setSoundEnabled(!soundEnabled)}
+          onClick={function() { setSoundEnabled(!soundEnabled); }}
           className="text-zinc-400 hover:text-white"
         >
           {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
@@ -175,10 +208,10 @@ export default function OrderTrack() {
       <main className="flex-1 flex flex-col items-center justify-center p-6">
         
         {/* Sipariş Numarası */}
-        <div className={`mb-8 text-center ${isReady ? 'animate-pulse' : ''}`}>
+        <div className={'mb-8 text-center ' + (isReady ? 'animate-pulse' : '')}>
           <p className="text-zinc-400 text-sm mb-2">Sipariş Numaranız</p>
-          <div className={`text-5xl md:text-7xl font-black ${isReady ? 'text-green-400' : 'text-orange-500'}`}>
-            {order?.display_code || orderNumber}
+          <div className={'text-5xl md:text-7xl font-black ' + (isReady ? 'text-green-400' : 'text-orange-500')}>
+            {displayCode}
           </div>
         </div>
 
@@ -204,25 +237,25 @@ export default function OrderTrack() {
           /* Progress Bar */
           <div className="w-full max-w-md mb-8">
             <div className="flex justify-between mb-4">
-              {ORDER_STAGES.map((stage, index) => {
-                const Icon = stage.icon;
-                const isActive = index <= currentStageIndex;
-                const isCurrent = index === currentStageIndex;
+              {ORDER_STAGES.map(function(stage, index) {
+                var Icon = stage.icon;
+                var isActive = index <= currentStageIndex;
+                var isCurrent = index === currentStageIndex;
                 
                 return (
                   <div key={stage.id} className="flex flex-col items-center flex-1">
                     <div 
-                      className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${
+                      className={'w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ' + (
                         isActive 
-                          ? isCurrent 
+                          ? (isCurrent 
                             ? 'bg-orange-500 ring-4 ring-orange-500/30 scale-110' 
-                            : 'bg-green-500'
+                            : 'bg-green-500')
                           : 'bg-zinc-800'
-                      }`}
+                      )}
                     >
-                      <Icon className={`h-7 w-7 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
+                      <Icon className={'h-7 w-7 ' + (isActive ? 'text-white' : 'text-zinc-500')} />
                     </div>
-                    <p className={`text-xs mt-2 text-center ${isActive ? 'text-white font-semibold' : 'text-zinc-500'}`}>
+                    <p className={'text-xs mt-2 text-center ' + (isActive ? 'text-white font-semibold' : 'text-zinc-500')}>
                       {stage.label}
                     </p>
                   </div>
@@ -234,7 +267,7 @@ export default function OrderTrack() {
             <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
               <div 
                 className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-orange-500 transition-all duration-500 rounded-full"
-                style={{ width: `${((currentStageIndex + 1) / ORDER_STAGES.length) * 100}%` }}
+                style={{ width: ((currentStageIndex + 1) / ORDER_STAGES.length * 100) + '%' }}
               />
             </div>
           </div>
@@ -254,7 +287,7 @@ export default function OrderTrack() {
         )}
 
         {/* Bildirim İzni */}
-        {notificationPermission === 'default' && (
+        {notificationPermission === 'default' && typeof window !== 'undefined' && 'Notification' in window && (
           <div className="mt-8 bg-zinc-900 rounded-2xl p-4 max-w-md">
             <div className="flex items-center gap-3">
               <Bell className="h-6 w-6 text-orange-500" />
@@ -263,7 +296,13 @@ export default function OrderTrack() {
                 <p className="text-zinc-400 text-sm">Siparişiniz hazır olunca hemen haber verelim</p>
               </div>
               <Button
-                onClick={() => Notification.requestPermission()}
+                onClick={function() {
+                  if ('Notification' in window) {
+                    Notification.requestPermission().then(function(perm) {
+                      setNotificationPermission(perm);
+                    });
+                  }
+                }}
                 className="bg-orange-500 hover:bg-orange-600"
               >
                 İzin Ver
