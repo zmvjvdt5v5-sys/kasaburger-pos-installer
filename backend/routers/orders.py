@@ -87,11 +87,58 @@ async def update_order_status(order_id: str, status: str, current_user: dict = D
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
+    # Mevcut siparişi al
+    order = await db.orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+    
+    update_data = {
+        "status": status, 
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Sipariş onaylandığında (pending_approval -> confirmed)
+    if status == "confirmed" and order.get("status") == "pending_approval":
+        update_data["approved_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["approved_by"] = current_user.get("email") or current_user.get("name")
+        
+        # Bayi siparişi ise fatura oluştur
+        if order.get("source") == "dealer_portal" and order.get("dealer_id"):
+            invoice_id = str(uuid.uuid4())
+            invoice_number = f"FTR-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{invoice_id[:6].upper()}"
+            
+            invoice_doc = {
+                "id": invoice_id,
+                "invoice_number": invoice_number,
+                "order_id": order_id,
+                "order_number": order.get("order_number"),
+                "dealer_id": order.get("dealer_id"),
+                "dealer_name": order.get("dealer_name"),
+                "items": order.get("items", []),
+                "subtotal": order.get("subtotal", 0),
+                "tax_amount": order.get("tax_amount", 0),
+                "total": order.get("total", 0),
+                "status": "pending",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "due_date": order.get("delivery_date")
+            }
+            await db.invoices.insert_one(invoice_doc)
+            
+            # Bayi bakiyesini güncelle
+            await db.dealers.update_one(
+                {"id": order.get("dealer_id")},
+                {"$inc": {"balance": order.get("total", 0), "current_balance": order.get("total", 0)}}
+            )
+            
+            update_data["invoice_id"] = invoice_id
+            update_data["invoice_number"] = invoice_number
+    
     await db.orders.update_one(
         {"id": order_id},
-        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": update_data}
     )
-    return {"status": "updated"}
+    
+    return {"status": "updated", "new_status": status}
 
 @router.delete("/{order_id}")
 async def delete_order(order_id: str, current_user: dict = Depends(get_current_user)):
