@@ -234,7 +234,7 @@ export default function BranchManagement() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(centralStats?.branches || branches).map((branch) => (
+              {(centralStats?.branches?.length > 0 ? centralStats.branches : branches).map((branch) => (
                 <div 
                   key={branch.id || branch.branch_id} 
                   className="bg-zinc-800/50 rounded-xl p-5 border border-zinc-700/50 hover:border-orange-500/50 transition-colors"
