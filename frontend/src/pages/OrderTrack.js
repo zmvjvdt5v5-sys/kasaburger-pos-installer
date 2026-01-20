@@ -193,11 +193,22 @@ export default function OrderTrack() {
   if (error) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-white mb-2">{error}</h1>
-          <p className="text-zinc-400">Sipariş numaranızı kontrol edin</p>
-          <p className="text-zinc-500 mt-2 font-mono">{orderNumber}</p>
+          <p className="text-zinc-400 mb-2">Sipariş numaranızı kontrol edin</p>
+          <p className="text-zinc-500 font-mono bg-zinc-800 px-3 py-2 rounded-lg inline-block">{orderNumber || 'Numara yok'}</p>
+          <div className="mt-6">
+            <Button 
+              onClick={function() { window.location.reload(); }}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              Tekrar Dene
+            </Button>
+          </div>
+          <p className="text-zinc-600 text-xs mt-4">
+            Sorun devam ederse sayfayı yenileyip önbelleği temizleyin
+          </p>
         </div>
       </div>
     );
