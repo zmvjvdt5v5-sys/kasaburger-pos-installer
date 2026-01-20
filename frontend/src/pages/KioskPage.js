@@ -646,7 +646,7 @@ const KioskPage = () => {
             </Button>
             {/* Menüler Butonu - Mobil */}
             <Button 
-              onClick={() => setShowCombo(true)} 
+              onClick={() => setShowCombos(true)} 
               className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 text-xs font-bold rounded-full"
             >
               🎁 Menü
