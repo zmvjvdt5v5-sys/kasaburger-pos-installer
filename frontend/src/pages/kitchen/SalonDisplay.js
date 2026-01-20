@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Clock, ChefHat, Check, Volume2, VolumeX } from 'lucide-react';
+import { Bell, Clock, ChefHat, Check, Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
