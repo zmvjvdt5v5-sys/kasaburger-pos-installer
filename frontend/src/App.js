@@ -154,6 +154,10 @@ function AppRoutes() {
       {/* Bayi Rehberi - Herkes erişebilir */}
       <Route path="/bayi-rehber" element={<BayiRehber />} />
       
+      {/* Sipariş Takip - Müşteri için (Auth gerektirmez) */}
+      <Route path="/siparis-takip/:orderNumber" element={<OrderTrack />} />
+      <Route path="/order-track/:orderNumber" element={<OrderTrack />} />
+      
       {/* Dealer Portal Routes */}
       <Route path="/dealer-login" element={<DealerLogin />} />
       <Route path="/dealer" element={<DealerPortal />} />
