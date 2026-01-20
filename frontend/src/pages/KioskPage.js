@@ -1015,6 +1015,22 @@ const KioskPage = () => {
                   )}
                 </div>
               )}
+              
+              {/* Sipariş Takip Linki */}
+              <div className="mt-3 pt-3 border-t border-dashed bg-gradient-to-r from-blue-500/10 to-purple-500/10 -mx-4 px-4 py-3">
+                <p className="text-xs text-zinc-500 mb-2">Siparişinizi takip edin:</p>
+                <a 
+                  href={`/siparis-takip/${orderNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gradient-to-r from-blue-500 to-purple-500 text-white text-center py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition"
+                >
+                  📱 Siparişimi Takip Et
+                </a>
+                <p className="text-[10px] text-zinc-400 mt-2 text-center">
+                  Bu sayfayı telefonunuzda açık tutun, siparişiniz hazır olunca bildirim alın!
+                </p>
+              </div>
             </div>
             <Button className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-lg mt-2 animate-pulse" onClick={completeOrder}>
               ✓ TAMAM - Yeni Sipariş
