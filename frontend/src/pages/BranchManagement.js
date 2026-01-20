@@ -118,6 +118,32 @@ export default function BranchManagement() {
     }
   };
 
+  const openBranchReport = async (branch) => {
+    setSelectedBranch(branch);
+    setShowReportDialog(true);
+    setReportLoading(true);
+    setBranchReport(null);
+    
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const branchId = branch.id || branch.branch_id;
+      const response = await fetch(`${BACKEND_URL}/api/branches/${branchId}/reports/summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBranchReport(data);
+      } else {
+        toast.error('Rapor yüklenemedi');
+      }
+    } catch (error) {
+      toast.error('Rapor yüklenirken hata oluştu');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount || 0);
   };
