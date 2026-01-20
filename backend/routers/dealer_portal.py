@@ -162,9 +162,13 @@ async def dealer_portal_create_order(order: DealerOrderCreate, dealer: dict = De
     credit_limit = current_dealer.get("credit_limit", 0)
     new_balance = current_balance + total
     
-    requires_approval = False
+    # TÜM bayi siparişleri admin onayı gerektirir (depo sipariş sistemi)
+    requires_approval = True
+    approval_reason = "Bayi siparişi - Admin onayı gerekli"
+    
+    # Kredi limiti aşımı ek bilgisi
     if credit_limit > 0 and new_balance > credit_limit:
-        requires_approval = True
+        approval_reason = f"Kredi limiti aşımı. Limit: {credit_limit:.2f} TL, Mevcut Borç: {current_balance:.2f} TL"
     
     order_doc = {
         "id": order_id,
@@ -177,9 +181,9 @@ async def dealer_portal_create_order(order: DealerOrderCreate, dealer: dict = De
         "total": total,
         "delivery_date": order.delivery_date,
         "notes": order.notes or "",
-        "status": "pending_approval" if requires_approval else "pending",
+        "status": "pending_approval",
         "requires_approval": requires_approval,
-        "approval_reason": f"Kredi limiti aşımı. Limit: {credit_limit:.2f} TL, Mevcut Borç: {current_balance:.2f} TL" if requires_approval else None,
+        "approval_reason": approval_reason,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "source": "dealer_portal"
     }
@@ -188,21 +192,18 @@ async def dealer_portal_create_order(order: DealerOrderCreate, dealer: dict = De
     # Response hazırla
     response_data = {k: v for k, v in order_doc.items() if k not in ["_id", "requires_approval", "approval_reason"]}
     
-    if requires_approval:
-        return {
-            "order": response_data,
-            "warning": "Kredi limitinizi aştığınız için siparişiniz onay bekliyor.",
-            "status": "pending_approval",
-            "credit_info": {
-                "credit_limit": credit_limit,
-                "current_balance": current_balance,
-                "order_total": total,
-                "new_balance": new_balance,
-                "over_limit": new_balance - credit_limit
-            }
+    return {
+        "order": response_data,
+        "warning": "Siparişiniz admin onayı bekliyor. Onaylandıktan sonra faturanız oluşturulacaktır.",
+        "status": "pending_approval",
+        "credit_info": {
+            "credit_limit": credit_limit,
+            "current_balance": current_balance,
+            "order_total": total,
+            "new_balance": new_balance,
+            "over_limit": max(0, new_balance - credit_limit) if credit_limit > 0 else 0
         }
-    
-    return response_data
+    }
 
 
 @router.get("/invoices")
