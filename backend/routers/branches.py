@@ -12,11 +12,12 @@ router = APIRouter(prefix="/branches", tags=["Branches"])
 
 class BranchCreate(BaseModel):
     name: str
-    code: str
+    code: Optional[str] = None  # Opsiyonel - otomatik oluşturulacak
     address: str
     phone: Optional[str] = None
     manager_name: Optional[str] = None
     manager_email: Optional[str] = None
+    api_url: Optional[str] = None
 
 class BranchResponse(BaseModel):
     id: str
@@ -26,6 +27,7 @@ class BranchResponse(BaseModel):
     phone: Optional[str] = None
     manager_name: Optional[str] = None
     manager_email: Optional[str] = None
+    api_url: Optional[str] = None
     status: str = "active"
     created_at: Optional[str] = None
 
@@ -35,13 +37,30 @@ async def create_branch(branch: BranchCreate, current_user: dict = Depends(get_c
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
     
-    existing = await db.branches.find_one({"code": branch.code})
+    # Şube kodu yoksa otomatik oluştur
+    branch_code = branch.code
+    if not branch_code:
+        # İsimden kod oluştur (örn: "Ankara Kızılay" -> "ANK-001")
+        name_parts = branch.name.upper().split()
+        prefix = name_parts[0][:3] if name_parts else "SUB"
+        
+        # Mevcut şube sayısını al
+        count = await db.branches.count_documents({})
+        branch_code = f"{prefix}-{count+1:03d}"
+    
+    existing = await db.branches.find_one({"code": branch_code})
     if existing:
         raise HTTPException(status_code=400, detail="Bu şube kodu zaten mevcut")
     
     branch_doc = {
         "id": str(uuid.uuid4()),
-        **branch.model_dump(),
+        "name": branch.name,
+        "code": branch_code,
+        "address": branch.address,
+        "phone": branch.phone,
+        "manager_name": branch.manager_name,
+        "manager_email": branch.manager_email,
+        "api_url": branch.api_url,
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
