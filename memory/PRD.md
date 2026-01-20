@@ -1976,6 +1976,18 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 - Manuel kapatma tespiti (cleanup sırasında gereksiz reconnect önleme)
 - Detaylı console loglaması
 
+### ✅ Mobil Sadakat Programı Düzeltmesi
+
+**Sorun:** Kiosk mobil görünümünde "Puan Kazan" ve "Menüler" butonları görünmüyordu.
+
+**Çözüm:**
+1. Mobil header'a "⭐ Puan" ve "🎁 Menü" butonları eklendi
+2. Mobil için özel Loyalty Dialog, Rewards Dialog ve Combos Dialog eklendi
+3. Promosyon banner'ı mobil görünüme eklendi
+
+**Değişen Dosyalar:**
+- `/app/frontend/src/pages/KioskPage.js` - Mobil header ve dialog'lar
+
 ### ⚠️ Cache Sorunu (P2) - BLOKE
 
 **Sorun:** "Failed to execute 'json' on 'Response': body stream already read" hatası.
@@ -1986,6 +1998,7 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 - `/app/backend/server.py` - Cleanup endpoint ve startup cleanup güçlendirildi
 - `/app/frontend/src/pages/pos/POSMain.js` - WebSocket reconnection iyileştirildi
 - `/app/frontend/src/pages/Dashboard.js` - Cleanup butonu eklendi
+- `/app/frontend/src/pages/KioskPage.js` - Mobil sadakat programı eklendi
 
 ---
 
