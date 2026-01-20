@@ -294,9 +294,9 @@ async def get_salon_display_data():
             "ready_at": order.get("ready_at")
         })
     
-    # Kiosk preparing siparişleri
+    # Kiosk preparing siparişleri (pending/Yeni dahil - yeni siparişler de hazırlanıyor olarak göster)
     kiosk_preparing = await db.kiosk_orders.find(
-        {"status": {"$in": ["preparing", "Hazırlanıyor"]}},
+        {"status": {"$in": ["preparing", "Hazırlanıyor", "pending", "Yeni"]}},
         {"_id": 0, "id": 1, "queue_number": 1, "order_number": 1}
     ).sort("preparing_at", -1).to_list(20)
     
