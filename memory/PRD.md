@@ -2047,6 +2047,67 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 
 ---
 
+## Update: January 20, 2026 - Sipariş Takip & Teslim Sistemi
+
+### ✅ Müşteri Sipariş Takip Sayfası
+
+**Yeni Özellik:** Müşteriler siparişlerini telefonlarından takip edebilir.
+
+**Akış:**
+1. Müşteri sipariş verdi → Fiş ekranında "Siparişimi Takip Et" butonu
+2. `/siparis-takip/SIPARIS-NO` sayfası açılır
+3. Sayfa her 3 saniyede otomatik güncellenir
+4. "Hazır" olunca → Ses çalar + Browser bildirimi gönderilir
+
+**Özellikler:**
+- Progress bar (Sipariş Alındı → Hazırlanıyor → Hazır)
+- Browser Notification desteği
+- Ses bildirimi
+- Mobil dostu tasarım
+
+**Endpoint:** `GET /api/order-track/{order_number}` (Auth gerektirmez)
+
+### ✅ Salon TV Ekranı İyileştirmesi
+
+**Güncelleme:** Artık hem "Hazırlanan" hem "Hazır" siparişleri gösteriyor.
+
+**Layout:**
+- Sol: Hazırlanıyor (mavi)
+- Sağ: Hazır - Teslim Alın (yeşil, daha büyük)
+
+### ✅ "Teslim Edildi" Butonu ve Loglama
+
+**Yeni Özellik:** Mutfak ekranında "TESLİM EDİLDİ" butonu.
+
+**Akış:**
+1. Aşçı "Hazır" siparişte "TESLİM EDİLDİ" butonuna basar
+2. Sipariş ekranlardan kaybolur
+3. `delivered_orders_log` collection'ına kaydedilir
+
+**Log İçeriği:**
+- Sipariş detayları
+- Teslim zamanı ve kim teslim etti
+- Hazırlık süresi (saniye)
+- Toplam süre (saniye)
+
+**Endpoint'ler:**
+- `PUT /api/kitchen/orders/{id}/delivered` - Teslim et
+- `GET /api/kitchen/delivered-log` - Logları getir
+- `GET /api/kitchen/delivered-stats` - İstatistikler
+
+### Yeni Dosyalar
+- `/app/frontend/src/pages/OrderTrack.js` - Sipariş takip sayfası
+- `/app/backend/routers/kitchen.py` - Yeni endpoint'ler eklendi
+
+### Değiştirilen Dosyalar
+- `/app/frontend/src/App.js` - OrderTrack route eklendi
+- `/app/frontend/src/pages/KioskPage.js` - Fiş ekranına "Siparişimi Takip Et" butonu
+- `/app/frontend/src/pages/kitchen/UnifiedKitchen.js` - "TESLİM EDİLDİ" butonu
+- `/app/frontend/src/pages/kitchen/SalonDisplay.js` - Hazırlanan siparişler eklendi
+- `/app/backend/server.py` - order-track route eklendi
+
+---
+
 ## Test Bilgileri
 - **Admin:** admin@kasaburger.net.tr / admin123
 - **Bayi:** MEKGRUP / 1234
