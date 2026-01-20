@@ -137,7 +137,11 @@ async def dealer_portal_orders(dealer: dict = Depends(get_current_dealer)):
 
 
 @router.post("/orders")
-async def dealer_portal_create_order(order: DealerOrderCreate, dealer: dict = Depends(get_current_dealer)):
+async def dealer_portal_create_order(
+    order: DealerOrderCreate, 
+    background_tasks: BackgroundTasks,
+    dealer: dict = Depends(get_current_dealer)
+):
     """Bayi sipariş oluştur"""
     db = get_db()
     if db is None:
