@@ -2047,6 +2047,42 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 
 ---
 
+## Update: January 20, 2026 - KioskAdmin.js Refactoring (P1)
+
+### ✅ KioskAdmin Refactoring Tamamlandı
+
+**Önceki Durum:** 1395 satırlık monolitik tek dosya
+
+**Sonraki Durum:** Modüler component yapısı:
+
+```
+/app/frontend/src/components/kiosk-admin/
+├── index.js              (5 satır) - Export dosyası
+├── constants.js          (52 satır) - Sabitler ve varsayılan veriler
+├── CategoryManager.jsx   (280 satır) - Kategori yönetimi
+├── ProductManager.jsx    (371 satır) - Ürün yönetimi
+├── ComboManager.jsx      (335 satır) - Combo menü yönetimi
+└── PromotionManager.jsx  (317 satır) - Kampanya yönetimi
+
+/app/frontend/src/pages/
+├── KioskAdmin.js         (155 satır) - Ana sayfa (sadece state ve routing)
+└── KioskAdmin_old.js     (1395 satır) - Yedek (silinilebilir)
+```
+
+**Avantajlar:**
+- Her component ~300 satır (daha okunabilir)
+- Bağımsız test edilebilir
+- Daha kolay bakım
+- Daha hızlı geliştirme
+
+**Fonksiyonlar:**
+- CategoryManager: Kategori CRUD, sıralama (↑↓), ikon seçimi
+- ProductManager: Ürün CRUD, görsel yükleme, kategori filtresi
+- ComboManager: Combo CRUD, ürün seçimi, saat bazlı kampanya, hediye ürün
+- PromotionManager: Kampanya CRUD, banner rengi, indirim tipi
+
+---
+
 ## Update: January 20, 2026 - Sipariş Takip & Teslim Sistemi
 
 ### ✅ Müşteri Sipariş Takip Sayfası
