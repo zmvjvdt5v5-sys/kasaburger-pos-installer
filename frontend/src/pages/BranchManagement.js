@@ -312,7 +312,12 @@ export default function BranchManagement() {
                   )}
 
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => openBranchReport(branch)}
+                    >
                       <BarChart3 className="h-4 w-4 mr-1" /> Raporlar
                     </Button>
                     {branch.api_url && (
@@ -337,6 +342,104 @@ export default function BranchManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Şube Rapor Dialog */}
+      <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-orange-500 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              {selectedBranch?.name} - Şube Raporu
+            </DialogTitle>
+          </DialogHeader>
+          
+          {reportLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin text-orange-500" />
+            </div>
+          ) : branchReport ? (
+            <div className="space-y-4">
+              {/* Özet Kartları */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                  <p className="text-zinc-500 text-xs">Bugün Sipariş</p>
+                  <p className="text-2xl font-bold text-white">{branchReport.today_orders || 0}</p>
+                </div>
+                <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                  <p className="text-zinc-500 text-xs">Bugün Gelir</p>
+                  <p className="text-2xl font-bold text-green-400">{formatCurrency(branchReport.today_revenue || 0)}</p>
+                </div>
+                <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                  <p className="text-zinc-500 text-xs">Bu Ay Sipariş</p>
+                  <p className="text-2xl font-bold text-white">{branchReport.month_orders || 0}</p>
+                </div>
+                <div className="bg-zinc-800 rounded-lg p-3 text-center">
+                  <p className="text-zinc-500 text-xs">Bu Ay Gelir</p>
+                  <p className="text-2xl font-bold text-green-400">{formatCurrency(branchReport.month_revenue || 0)}</p>
+                </div>
+              </div>
+
+              {/* Detaylı İstatistikler */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <h4 className="text-zinc-400 text-sm mb-2">Sipariş Kaynakları</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Kiosk</span>
+                      <span className="text-white">{branchReport.kiosk_orders || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">POS</span>
+                      <span className="text-white">{branchReport.pos_orders || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Online</span>
+                      <span className="text-white">{branchReport.online_orders || 0}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <h4 className="text-zinc-400 text-sm mb-2">Performans</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Ort. Sipariş Tutarı</span>
+                      <span className="text-white">{formatCurrency(branchReport.avg_order_value || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Toplam Müşteri</span>
+                      <span className="text-white">{branchReport.total_customers || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Aktif Ürün</span>
+                      <span className="text-white">{branchReport.active_products || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Son Siparişler */}
+              {branchReport.recent_orders?.length > 0 && (
+                <div className="bg-zinc-800 rounded-lg p-4">
+                  <h4 className="text-zinc-400 text-sm mb-2">Son 5 Sipariş</h4>
+                  <div className="space-y-2">
+                    {branchReport.recent_orders.map((order, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-sm">
+                        <span className="text-white">{order.order_number}</span>
+                        <span className="text-zinc-500">{order.source}</span>
+                        <span className="text-green-400">{formatCurrency(order.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-zinc-500">
+              Rapor verisi bulunamadı
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Yeni Şube Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
