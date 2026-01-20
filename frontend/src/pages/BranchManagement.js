@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { 
   Building2, MapPin, Phone, Globe, Plus, RefreshCw, 
   TrendingUp, ShoppingCart, DollarSign, Activity,
-  CheckCircle, XCircle, Clock, BarChart3
+  CheckCircle, XCircle, Clock, BarChart3, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
