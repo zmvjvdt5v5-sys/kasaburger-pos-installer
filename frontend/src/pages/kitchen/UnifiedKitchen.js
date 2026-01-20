@@ -424,11 +424,28 @@ export default function UnifiedKitchen() {
                         {['ready', 'Hazır'].includes(order.status) && (
                           <Button 
                             size="lg"
-                            className="bg-purple-600 hover:bg-purple-700 text-lg px-6 py-3 h-auto"
-                            onClick={() => updateOrderStatus(order, 'served')}
+                            className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-lg px-6 py-3 h-auto animate-pulse shadow-lg shadow-green-500/30"
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('kasaburger_token');
+                                const response = await fetch(`${BACKEND_URL}/api/kitchen/orders/${order.id}/delivered`, {
+                                  method: 'PUT',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${token}`
+                                  }
+                                });
+                                if (response.ok) {
+                                  toast.success('✅ Sipariş teslim edildi ve loglandı!');
+                                  loadOrders();
+                                }
+                              } catch (error) {
+                                toast.error('Hata oluştu!');
+                              }
+                            }}
                           >
-                            <UtensilsCrossed className="h-6 w-6 mr-2" />
-                            Teslim
+                            <Check className="h-6 w-6 mr-2" />
+                            TESLİM EDİLDİ
                           </Button>
                         )}
                         <Button 
