@@ -77,6 +77,14 @@ export default function SalonDisplay() {
       <header className="bg-gradient-to-r from-orange-600 to-orange-500 p-6 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
+            {/* Geri Dön Butonu */}
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="bg-white/20 hover:bg-white/30 p-3 rounded-xl transition-all"
+              title="Dashboard'a Dön"
+            >
+              <ArrowLeft className="h-8 w-8 text-white" />
+            </button>
             <ChefHat className="h-16 w-16 text-white" />
             <div>
               <h1 className="text-4xl font-bold">KASA BURGER</h1>
