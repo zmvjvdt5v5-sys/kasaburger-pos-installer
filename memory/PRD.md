@@ -1988,6 +1988,31 @@ Sadakat programına entegre edilmiş doğum günü bonus sistemi.
 **Değişen Dosyalar:**
 - `/app/frontend/src/pages/KioskPage.js` - Mobil header ve dialog'lar
 
+### ✅ Kiosk UI/UX Yeniden Tasarımı (January 20, 2026)
+
+**Sorun:** Kiosk web ve mobil sayfaları sıkışık ve karışık görünüyordu.
+
+**Çözüm - "Midnight Gourmet" Teması:**
+
+**Desktop Kiosk İyileştirmeleri:**
+- Header: Daha geniş padding, backdrop-blur efekti, modern butonlar
+- Sidebar: 56px genişlik (önceki 40px), daha büyük kategori butonları
+- Ürün kartları: Daha geniş spacing, fiyat badge'leri görsel üzerinde
+- Bottom bar: Modern tasarım, backdrop-blur efekti
+- Genel: rounded-2xl/3xl köşeler, shadow-xl gölgeler, hover efektleri
+
+**Mobil Kiosk İyileştirmeleri:**
+- Header: Temiz tasarım, sepet badge'i
+- Aksiyon butonları: Ayrı satırda, tam genişlik, daha büyük
+- Kategori pills: Daha geniş, daha okunabilir
+- Ürün kartları: Kare görsel (aspect-square), fiyat badge'i görsel üzerinde
+- Bottom cart bar: Full-width buton, backdrop-blur
+- Genel: Daha fazla whitespace, modern tipografi
+
+**Değişen Dosyalar:**
+- `/app/frontend/src/pages/KioskPage.js` - Komple UI yeniden tasarımı
+- `/app/design_guidelines.json` - Tasarım rehberi oluşturuldu
+
 ### ⚠️ Cache Sorunu (P2) - BLOKE
 
 **Sorun:** "Failed to execute 'json' on 'Response': body stream already read" hatası.
