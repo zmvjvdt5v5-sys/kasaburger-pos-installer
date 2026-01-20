@@ -266,6 +266,14 @@ export default function BranchManagement() {
                         </a>
                       </Button>
                     )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-400 hover:text-red-300 hover:border-red-500"
+                      onClick={() => deleteBranch(branch.id || branch.branch_id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
