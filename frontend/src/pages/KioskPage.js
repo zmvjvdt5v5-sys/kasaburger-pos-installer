@@ -632,16 +632,32 @@ const KioskPage = () => {
       <div className="min-h-screen bg-black text-white flex flex-col">
         {/* Mobile Header */}
         <header className="bg-zinc-900 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-3">
-            <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-12 w-12 object-contain" />
-            <span className="text-xl font-bold text-orange-500">KASA BURGER</span>
+          <div className="flex items-center gap-2">
+            <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-10 w-10 object-contain" />
+            <span className="text-lg font-bold text-orange-500">KASA BURGER</span>
           </div>
-          {cartCount > 0 && (
-            <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-4 py-2 text-sm gap-2">
-              <ShoppingCart className="h-5 w-5" />
-              <span>{cartCount}</span>
+          <div className="flex items-center gap-2">
+            {/* Puan Kazan Butonu - Mobil */}
+            <Button 
+              onClick={() => setShowLoyalty(true)} 
+              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black px-3 py-2 text-xs font-bold rounded-full"
+            >
+              ⭐ Puan
             </Button>
-          )}
+            {/* Menüler Butonu - Mobil */}
+            <Button 
+              onClick={() => setShowCombo(true)} 
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 text-xs font-bold rounded-full"
+            >
+              🎁 Menü
+            </Button>
+            {cartCount > 0 && (
+              <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-3 py-2 text-sm gap-1 rounded-full">
+                <ShoppingCart className="h-4 w-4" />
+                <span>{cartCount}</span>
+              </Button>
+            )}
+          </div>
         </header>
 
         {/* Mobile Categories - Horizontal Scroll */}
