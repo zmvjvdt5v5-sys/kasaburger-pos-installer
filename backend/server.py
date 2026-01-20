@@ -68,6 +68,27 @@ async def lifespan(app: FastAPI):
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
             logger.info("Test bayi oluşturuldu")
+        
+        # Startup'ta test siparişlerini temizle (sadece "pending" veya "ready" olan eski siparişler)
+        # Bu sayede her sabah ekranlar temiz olur
+        from datetime import timedelta
+        one_day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        
+        # 1 günden eski pending/ready siparişleri temizle
+        cleanup_filter = {
+            "$or": [
+                {"status": {"$in": ["pending", "ready"]}, "created_at": {"$lt": one_day_ago}},
+                {"order_number": {"$regex": "^TEST", "$options": "i"}}
+            ]
+        }
+        
+        pos_cleaned = await db.pos_orders.delete_many(cleanup_filter)
+        kiosk_cleaned = await db.kiosk_orders.delete_many(cleanup_filter)
+        delivery_cleaned = await db.delivery_orders.delete_many(cleanup_filter)
+        
+        total_cleaned = pos_cleaned.deleted_count + kiosk_cleaned.deleted_count + delivery_cleaned.deleted_count
+        if total_cleaned > 0:
+            logger.info(f"Eski test siparişleri temizlendi: {total_cleaned} sipariş")
     else:
         logger.warning("MongoDB bağlantısı yok - demo mod")
     
