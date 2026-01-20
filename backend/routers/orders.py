@@ -83,7 +83,12 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     return OrderResponse(**order)
 
 @router.put("/{order_id}/status")
-async def update_order_status(order_id: str, status: str, current_user: dict = Depends(get_current_user)):
+async def update_order_status(
+    order_id: str, 
+    status: str, 
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
     db = get_db()
     if db is None:
         raise HTTPException(status_code=500, detail="Veritabanı bağlantısı yok")
@@ -98,12 +103,14 @@ async def update_order_status(order_id: str, status: str, current_user: dict = D
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
+    bizimhesap_result = None
+    
     # Sipariş onaylandığında (pending_approval -> confirmed)
     if status == "confirmed" and order.get("status") == "pending_approval":
         update_data["approved_at"] = datetime.now(timezone.utc).isoformat()
         update_data["approved_by"] = current_user.get("email") or current_user.get("name")
         
-        # Bayi siparişi ise fatura oluştur
+        # Bayi siparişi ise fatura oluştur ve BizimHesap'a gönder
         if order.get("source") == "dealer_portal" and order.get("dealer_id"):
             invoice_id = str(uuid.uuid4())
             invoice_number = f"FTR-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{invoice_id[:6].upper()}"
@@ -120,6 +127,7 @@ async def update_order_status(order_id: str, status: str, current_user: dict = D
                 "tax_amount": order.get("tax_amount", 0),
                 "total": order.get("total", 0),
                 "status": "pending",
+                "bizimhesap_status": "pending",
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "due_date": order.get("delivery_date")
             }
@@ -133,6 +141,32 @@ async def update_order_status(order_id: str, status: str, current_user: dict = D
             
             update_data["invoice_id"] = invoice_id
             update_data["invoice_number"] = invoice_number
+            
+            # Bayi bilgilerini al
+            dealer = await db.dealers.find_one({"id": order.get("dealer_id")}, {"_id": 0})
+            
+            # BizimHesap'a fatura gönder
+            bizimhesap_result = await send_invoice_to_bizimhesap(invoice_doc, order, dealer)
+            
+            # Fatura durumunu güncelle
+            if bizimhesap_result.get("status") == "success":
+                await db.invoices.update_one(
+                    {"id": invoice_id},
+                    {"$set": {
+                        "bizimhesap_guid": bizimhesap_result.get("guid"),
+                        "bizimhesap_url": bizimhesap_result.get("url", ""),
+                        "bizimhesap_status": "sent",
+                        "status": "sent"
+                    }}
+                )
+            else:
+                await db.invoices.update_one(
+                    {"id": invoice_id},
+                    {"$set": {
+                        "bizimhesap_status": "error",
+                        "bizimhesap_error": bizimhesap_result.get("message", "Bilinmeyen hata")
+                    }}
+                )
     
     await db.orders.update_one(
         {"id": order_id},
