@@ -7,38 +7,26 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# BizimHesap API Ayarları
 BIZIMHESAP_API_KEY = os.environ.get("BIZIMHESAP_API_KEY", "")
 BIZIMHESAP_API_URL = os.environ.get("BIZIMHESAP_API_URL", "https://bizimhesap.com/api/b2b")
 
 
 async def send_invoice_to_bizimhesap(invoice: dict, order: dict, dealer: Optional[dict] = None) -> dict:
-    """
-    Faturayı BizimHesap'a gönderir
-    
-    Args:
-        invoice: Fatura bilgileri
-        order: Sipariş bilgileri
-        dealer: Bayi bilgileri (opsiyonel)
-    
-    Returns:
-        dict: {status, guid, url, message}
-    """
+    """Faturayı BizimHesap'a gönderir"""
     if not BIZIMHESAP_API_KEY:
-        logger.warning("BIZIMHESAP_API_KEY tanımlı değil, fatura gönderilmedi")
+        logger.warning("BIZIMHESAP_API_KEY tanımlı değil")
         return {"status": "skipped", "message": "API key not configured"}
     
     try:
         now = datetime.now(timezone.utc)
         due_date = now + timedelta(days=30)
         
-        # Ürün detayları
         details = []
         for item in invoice.get("items", []):
             unit_price = float(item.get("unit_price", 0))
             quantity = int(item.get("quantity", 1))
             gross = unit_price * quantity
-            tax_rate = 20.0  # KDV oranı %20
+            tax_rate = 20.0
             net = gross
             tax = net * (tax_rate / 100)
             total = net + tax
@@ -58,33 +46,20 @@ async def send_invoice_to_bizimhesap(invoice: dict, order: dict, dealer: Optiona
                 "total": f"{total:.2f}"
             })
         
-        # Müşteri bilgileri
         customer = {
-            "customerId": "",
-            "title": invoice.get("dealer_name", ""),
-            "taxOffice": "",
-            "taxNo": "",
-            "email": "",
-            "phone": "",
-            "address": ""
+            "customerId": dealer.get("id", "") if dealer else "",
+            "title": dealer.get("name", invoice.get("dealer_name", "")) if dealer else invoice.get("dealer_name", ""),
+            "taxOffice": dealer.get("tax_office", "") if dealer else "",
+            "taxNo": dealer.get("tax_number", "") if dealer else "",
+            "email": dealer.get("email", "") if dealer else "",
+            "phone": dealer.get("phone", "") if dealer else "",
+            "address": dealer.get("address", "") if dealer else ""
         }
         
-        if dealer:
-            customer = {
-                "customerId": dealer.get("id", ""),
-                "title": dealer.get("name", invoice.get("dealer_name", "")),
-                "taxOffice": dealer.get("tax_office", ""),
-                "taxNo": dealer.get("tax_number", ""),
-                "email": dealer.get("email", ""),
-                "phone": dealer.get("phone", ""),
-                "address": dealer.get("address", "")
-            }
-        
-        # API payload
         payload = {
             "firmId": BIZIMHESAP_API_KEY,
             "invoiceNo": invoice.get("invoice_number", ""),
-            "invoiceType": 3,  # 3 = Satış faturası
+            "invoiceType": 3,
             "note": f"Sipariş No: {order.get('order_number', '')}",
             "dates": {
                 "invoiceDate": now.strftime("%Y-%m-%dT%H:%M:%S.000+03:00"),
@@ -115,24 +90,13 @@ async def send_invoice_to_bizimhesap(invoice: dict, order: dict, dealer: Optiona
             result = response.json()
             
             if result.get("guid"):
-                logger.info(f"Fatura başarıyla gönderildi: {result['guid']}")
-                return {
-                    "status": "success",
-                    "guid": result["guid"],
-                    "url": result.get("url", ""),
-                    "message": "Fatura BizimHesap'a gönderildi"
-                }
+                logger.info(f"Fatura gönderildi: {result['guid']}")
+                return {"status": "success", "guid": result["guid"], "url": result.get("url", "")}
             else:
-                error_msg = result.get("error", result.get("message", "Bilinmeyen hata"))
+                error_msg = result.get("error", "Bilinmeyen hata")
                 logger.error(f"BizimHesap hatası: {error_msg}")
-                return {
-                    "status": "error",
-                    "message": error_msg
-                }
+                return {"status": "error", "message": error_msg}
                 
     except Exception as e:
         logger.error(f"BizimHesap API hatası: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return {"status": "error", "message": str(e)}
