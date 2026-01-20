@@ -195,6 +195,17 @@ async def dealer_portal_create_order(
     }
     await db.orders.insert_one(order_doc)
     
+    # Admin'e email bildirimi gönder (background task olarak)
+    background_tasks.add_task(
+        send_dealer_order_notification,
+        order_number=order_number,
+        dealer_name=current_dealer["name"],
+        total=total,
+        items=[item.model_dump() for item in order.items],
+        delivery_date=order.delivery_date,
+        notes=order.notes or ""
+    )
+    
     # Response hazırla
     response_data = {k: v for k, v in order_doc.items() if k not in ["_id", "requires_approval", "approval_reason"]}
     
