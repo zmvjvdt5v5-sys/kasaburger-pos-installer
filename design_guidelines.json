@@ -1,129 +1,121 @@
 {
-  "identity": {
-    "name": "KasaBurger",
-    "archetype": "The Performance Pro (Industrial Edition)",
-    "vibe": "Precision, Hygiene, Heat, Efficiency",
-    "theme_mode": "dark"
-  },
-  "typography": {
-    "font_family": {
-      "heading": "Chivo, sans-serif",
-      "body": "Inter, sans-serif",
-      "mono": "JetBrains Mono, monospace"
+  "design_system": {
+    "identity": "E1_Anti_AI_Kiosk",
+    "theme": "Midnight Gourmet",
+    "typography": {
+      "headings": {
+        "font_family": "Chivo, sans-serif",
+        "weights": ["700", "900"],
+        "usage": "Product names, Category titles, Prices",
+        "letter_spacing": "tracking-tight"
+      },
+      "body": {
+        "font_family": "Inter, sans-serif",
+        "weights": ["400", "500"],
+        "usage": "Descriptions, modifiers, notes"
+      }
     },
-    "import_url": "https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
-    "usage": {
-      "h1": "font-heading font-black tracking-tight text-4xl md:text-5xl lg:text-6xl",
-      "h2": "font-heading font-bold tracking-tight text-3xl md:text-4xl",
-      "h3": "font-heading font-bold text-2xl",
-      "body": "font-sans text-base leading-relaxed text-muted-foreground",
-      "label": "font-mono text-xs uppercase tracking-widest text-muted-foreground/80",
-      "data": "font-mono text-sm font-medium text-foreground"
-    }
-  },
-  "colors": {
-    "palette": {
-      "background": "0 0% 3.9%",
-      "foreground": "0 0% 98%",
-      "card": "0 0% 7%",
-      "card_foreground": "0 0% 98%",
-      "popover": "0 0% 7%",
-      "popover_foreground": "0 0% 98%",
-      "primary": "24.6 95% 53.1%",
-      "primary_foreground": "0 0% 9%",
-      "secondary": "0 0% 14.9%",
-      "secondary_foreground": "0 0% 98%",
-      "muted": "0 0% 14.9%",
-      "muted_foreground": "0 0% 63.9%",
-      "accent": "24.6 95% 53.1%",
-      "accent_foreground": "0 0% 98%",
-      "destructive": "0 62.8% 30.6%",
-      "destructive_foreground": "0 0% 98%",
-      "border": "0 0% 14.9%",
-      "input": "0 0% 14.9%",
-      "ring": "24.6 95% 53.1%"
+    "colors": {
+      "background": {
+        "primary": "#09090b",
+        "secondary": "#18181b",
+        "overlay": "rgba(9, 9, 11, 0.8)"
+      },
+      "accent": {
+        "primary": "#f97316",
+        "primary_hover": "#ea580c",
+        "glow": "rgba(249, 115, 22, 0.2)"
+      },
+      "text": {
+        "primary": "#ffffff",
+        "secondary": "#a1a1aa",
+        "muted": "#52525b"
+      },
+      "status": {
+        "success": "#10b981",
+        "error": "#ef4444",
+        "warning": "#f59e0b"
+      }
     },
-    "semantic": {
-      "brand_primary": "#f97316",
-      "brand_secondary": "#27272a",
-      "success": "#10b981",
-      "warning": "#f59e0b",
-      "error": "#ef4444",
-      "info": "#3b82f6"
-    }
-  },
-  "visual_enhancers": {
-    "radius": "0.3rem",
-    "glassmorphism": "bg-black/40 backdrop-blur-xl border-white/10",
-    "borders": "border border-white/10",
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-10",
+      "grid_gap": "gap-4 md:gap-6 lg:gap-8",
+      "card_padding": "p-4 md:p-6"
+    },
+    "radius": {
+      "card": "rounded-2xl",
+      "button": "rounded-xl",
+      "input": "rounded-xl"
+    },
     "shadows": {
-      "card": "shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
-      "glow": "shadow-[0_0_20px_rgba(249,115,22,0.15)]"
-    },
-    "textures": {
-      "grid": "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
-      "noise": "opacity-20 mix-blend-soft-light"
+      "card": "shadow-lg shadow-black/40",
+      "glow": "0 0 20px rgba(249, 115, 22, 0.15)",
+      "floating": "0 20px 40px -10px rgba(0,0,0,0.5)"
     }
   },
   "layout_strategy": {
-    "dashboard_grid": "grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:p-6",
-    "bento_cells": {
-      "hero": "col-span-1 md:col-span-8 lg:col-span-9 row-span-2",
-      "stat_card": "col-span-1 md:col-span-4 lg:col-span-3",
-      "list_vertical": "col-span-1 md:col-span-4 row-span-3",
-      "chart_wide": "col-span-1 md:col-span-8 lg:col-span-9 row-span-2"
+    "desktop_kiosk": {
+      "structure": "Sidebar Navigation (Left) + Main Content (Right)",
+      "grid_system": "Bento Grid - Mix of large featured items and standard items",
+      "columns": "grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
+      "sidebar_width": "w-64 lg:w-72",
+      "header_height": "h-24"
     },
-    "spacing": {
-      "container_padding": "p-4 md:p-8 lg:p-12",
-      "section_gap": "gap-8 md:gap-12"
+    "mobile": {
+      "structure": "Sticky Header + Vertical Scroll + Sticky Bottom Cart",
+      "grid_system": "Single column for featured, Two columns for standard",
+      "navigation": "Horizontal scroll pills for categories"
     }
   },
   "components": {
-    "buttons": {
-      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 font-medium tracking-wide",
-      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-white/5",
-      "ghost": "hover:bg-white/5 hover:text-white"
+    "ProductCard": {
+      "style": "Cardless look or subtle border. Image dominates (60% height).",
+      "interaction": "Scale up on hover (1.02), Border glow on selection",
+      "elements": [
+        "High-res Image (Aspect Square or 4:3)",
+        "Title (Bold, Chivo)",
+        "Price (Large, Orange)",
+        "Add Button (Floating or Bottom Right)"
+      ]
     },
-    "cards": {
-      "base": "bg-card text-card-foreground border border-border/50 shadow-sm hover:border-primary/30 transition-colors duration-300",
-      "interactive": "cursor-pointer hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
+    "CategorySidebar": {
+      "style": "Vertical list with large icons. Active state has glowing left border and background tint.",
+      "item_height": "h-16 or h-20"
     },
-    "inputs": {
-      "base": "bg-input/50 border-input focus:border-primary focus:ring-primary/20 transition-all duration-200"
+    "CartDialog": {
+      "style": "Right-side sheet or Full-screen modal on mobile.",
+      "features": "Large touch targets for quantity (+/-). Clear total."
+    },
+    "ModifierDialog": {
+      "style": "Immersive modal. Big checkboxes. Clear 'Add to Cart' CTA.",
+      "layout": "Two column on desktop: Image Left, Options Right."
     }
   },
-  "image_assets": {
-    "login_background": {
-      "url": "https://images.unsplash.com/photo-1634737118699-8bbb06e3fa2a?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "alt": "Chef preparing burger patty",
-      "usage": "Full screen background for login/register pages with heavy dark overlay (bg-black/80)"
+  "assets": {
+    "images": {
+      "burger_hero": "https://images.unsplash.com/photo-1634737119182-4d09e1305ba7?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "salad_hero": "https://images.unsplash.com/photo-1761315600943-d8a5bb0c499f?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "pizza_hero": "https://images.unsplash.com/photo-1739156202304-5e9e55ad8d46?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "fries_hero": "https://images.unsplash.com/photo-1676566399758-51b0d3927d48?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "drink_hero": "https://images.unsplash.com/photo-1639834482101-5f332c3b701f?crop=entropy&cs=srgb&fm=jpg&q=85"
     },
-    "dashboard_texture": {
-      "url": "https://images.unsplash.com/photo-1760001553414-5634201efc36?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "alt": "Stainless steel kitchen texture",
-      "usage": "Subtle texture for header or hero section backgrounds (opacity-10)"
-    },
-    "production_hero": {
-      "url": "https://images.unsplash.com/photo-1721304812035-db2f773accd8?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "alt": "Raw ingredients concept",
-      "usage": "Hero image for Production Module or Recipe Management"
-    }
+    "icons": "Lucide React (already installed)"
   },
   "instructions_to_main_agent": [
-    "1. THEME SETUP: Update `src/index.css` with the CSS variables provided in `colors.palette`. Ensure `.dark` class is applied to the root or body by default.",
-    "2. FONT SETUP: Add the Google Fonts import to `src/index.css` or `public/index.html`. Update `tailwind.config.js` to include 'Chivo' for headings and 'Inter' for body.",
-    "3. LAYOUT: Use the 'Bento Grid' strategy for the Dashboard. Avoid equal-width columns. Create hierarchy with col-spans.",
-    "4. COMPONENTS: Customize Shadcn components. Remove default rounded-xl if present, enforce `rounded-md` or `rounded-sm` for the industrial look. Add `border-white/10` to all cards.",
-    "5. MOTION: Add `framer-motion` for page transitions and list entrance animations. Use `layout` prop for smooth grid resizing.",
-    "6. DATA-TESTID: Every interactive element (button, input, link) MUST have a `data-testid` attribute (e.g., `data-testid='login-submit'`).",
-    "7. LANGUAGE: The UI must be in TURKISH as per requirements. Use 'Giriş Yap', 'Stok', 'Üretim', 'Raporlar' etc.",
-    "8. NO GRADIENTS: Do not use gradient backgrounds for the main body. Use solid dark colors with subtle noise or grid textures."
+    "REFACTOR: Split the giant `KioskPage.js` into smaller components: `KioskHeader`, `CategorySidebar`, `ProductGrid`, `ProductCard`, `CartDrawer`, `ProductDetailModal`.",
+    "THEME: Apply the 'Midnight Gourmet' theme. Use `bg-zinc-950` as the global background.",
+    "SPACING: Increase all paddings. The interface must feel 'airy' even though it's dark.",
+    "TYPOGRAPHY: Enforce `font-heading` (Chivo) for all product titles and prices.",
+    "INTERACTION: Add `active:scale-95` to all touchable elements for tactile feedback.",
+    "IMAGES: Use `aspect-square` or `aspect-[4/3]` for product images. Ensure `object-cover` is used.",
+    "ACCESSIBILITY: Ensure text contrast is high (White on Zinc-900).",
+    "DATA-TESTID: Add `data-testid` to all interactive elements (e.g., `add-to-cart-btn`, `category-item-burger`)."
   ],
   "universal_guidelines": [
-    "Do not use 'Inter' for Headings. Use 'Chivo'.",
-    "Do not use generic centered layouts. Use asymmetric grids.",
-    "Ensure all text has sufficient contrast (WCAG AA).",
-    "Use 'sonner' for toast notifications.",
-    "Use 'lucide-react' for icons."
+    "Do not use gradients for backgrounds unless it's a subtle glow.",
+    "Avoid 'Inter' for headings.",
+    "Use 'sonner' for toasts.",
+    "Mobile images max-height 80vh.",
+    "Always use 'rounded-2xl' or 'rounded-3xl' for a friendly, modern feel."
   ]
 }
