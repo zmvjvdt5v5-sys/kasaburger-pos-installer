@@ -1,12 +1,13 @@
 """Orders Router - Bayi Siparişleri"""
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from typing import List, Optional
 from pydantic import BaseModel
 
 from utils.auth import get_current_user, get_current_dealer
 from utils.database import get_db
+from utils.bizimhesap import send_invoice_to_bizimhesap
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
