@@ -208,9 +208,9 @@ function OrderTrack() {
   var isDelivered = normalizedStatus === 'delivered';
   var displayCode = '';
   if (order) {
-    displayCode = order.display_code || order.queue_number || order.order_number || orderNumber;
+    displayCode = order.display_code || order.queue_number || order.order_number || formattedOrderNumber;
   } else {
-    displayCode = orderNumber;
+    displayCode = formattedOrderNumber;
   }
 
   return (
