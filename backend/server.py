@@ -222,6 +222,44 @@ async def admin_delete_user(user_id: str, current_user: dict = Depends(get_curre
     await db.users.delete_one({"id": user_id})
     return {"status": "deleted"}
 
+# Manuel sipariş temizleme (Admin)
+@app.delete("/api/admin/cleanup-orders")
+async def admin_cleanup_orders(current_user: dict = Depends(get_current_user)):
+    """Admin tarafından manuel sipariş temizleme - hayalet/test siparişlerini siler"""
+    db = get_db()
+    if db is None:
+        return {"error": "Veritabanı bağlantısı yok"}
+    
+    if current_user.get("role") != "admin":
+        return {"error": "Yetkiniz yok"}
+    
+    from datetime import timedelta
+    twelve_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()
+    
+    # Temizlik filtresi
+    cleanup_filter = {
+        "$or": [
+            {"status": {"$in": ["pending", "ready", "preparing"]}, "created_at": {"$lt": twelve_hours_ago}},
+            {"order_number": {"$regex": "^TEST", "$options": "i"}},
+            {"source": {"$regex": "test", "$options": "i"}},
+            {"order_number": {"$in": [None, "", "null"]}}
+        ]
+    }
+    
+    pos_cleaned = await db.pos_orders.delete_many(cleanup_filter)
+    kiosk_cleaned = await db.kiosk_orders.delete_many(cleanup_filter)
+    delivery_cleaned = await db.delivery_orders.delete_many(cleanup_filter)
+    
+    return {
+        "status": "success",
+        "cleaned": {
+            "pos": pos_cleaned.deleted_count,
+            "kiosk": kiosk_cleaned.deleted_count,
+            "delivery": delivery_cleaned.deleted_count,
+            "total": pos_cleaned.deleted_count + kiosk_cleaned.deleted_count + delivery_cleaned.deleted_count
+        }
+    }
+
 # Dashboard stats
 @app.get("/api/dashboard/stats")
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
