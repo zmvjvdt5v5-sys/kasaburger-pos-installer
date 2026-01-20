@@ -104,43 +104,76 @@ export default function SalonDisplay() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 flex flex-col">
-        {/* Hazır Siparişler Başlık */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <Bell className="h-12 w-12 text-green-400 animate-bounce" />
-          <h2 className="text-5xl font-bold text-green-400">HAZIR SİPARİŞLER</h2>
-          <Bell className="h-12 w-12 text-green-400 animate-bounce" />
+      <main className="flex-1 p-8 flex gap-8 overflow-hidden">
+        {/* Sol: Hazırlanan Siparişler */}
+        <div className="w-1/3 flex flex-col">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Clock className="h-8 w-8 text-blue-400 animate-spin" style={{ animationDuration: '3s' }} />
+            <h2 className="text-3xl font-bold text-blue-400">HAZIRLANIYOR</h2>
+          </div>
+          
+          {preparingOrders.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-zinc-600">
+              <p className="text-xl">Hazırlanan sipariş yok</p>
+            </div>
+          ) : (
+            <div className="flex-1 grid grid-cols-2 gap-4 content-start overflow-auto">
+              {preparingOrders.map((order, index) => (
+                <div
+                  key={`prep-${order.display_code}-${index}`}
+                  className="bg-blue-600/30 border-2 border-blue-500 rounded-xl p-4 flex flex-col items-center justify-center"
+                >
+                  <div className="text-3xl font-bold text-blue-300">
+                    {order.display_code}
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-blue-400 mt-1">
+                    <Clock className="h-4 w-4" />
+                    <span>Hazırlanıyor</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Sipariş Grid */}
-        {readyOrders.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
-            <Clock className="h-32 w-32 mb-6 opacity-30 animate-pulse" />
-            <p className="text-4xl font-bold">Hazırlanan siparişler burada görünecek</p>
-            <p className="text-2xl mt-4">Siparişiniz hazır olduğunda numaranız ekranda belirecek</p>
+        {/* Sağ: Hazır Siparişler (Daha büyük alan) */}
+        <div className="w-2/3 flex flex-col">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <Bell className="h-10 w-10 text-green-400 animate-bounce" />
+            <h2 className="text-4xl font-bold text-green-400">HAZIR - TESLİM ALIN</h2>
+            <Bell className="h-10 w-10 text-green-400 animate-bounce" />
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 flex-1 content-start">
-            {readyOrders.map((order, index) => (
-              <div
-                key={`${order.display_code}-${index}`}
-                className={`${getSourceStyle(order.source)} rounded-2xl p-8 flex flex-col items-center justify-center shadow-2xl transform hover:scale-105 transition-all animate-pulse`}
-                style={{
-                  animationDuration: '2s',
-                  animationDelay: `${index * 0.1}s`
-                }}
-              >
-                <div className="text-6xl font-bold mb-2">
-                  {order.display_code}
+
+          {/* Sipariş Grid */}
+          {readyOrders.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-zinc-500">
+              <ChefHat className="h-24 w-24 mb-4 opacity-30" />
+              <p className="text-2xl font-bold">Hazır sipariş yok</p>
+              <p className="text-lg mt-2">Siparişiniz hazır olduğunda numaranız burada belirecek</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 flex-1 content-start overflow-auto">
+              {readyOrders.map((order, index) => (
+                <div
+                  key={`ready-${order.display_code}-${index}`}
+                  className={`${getSourceStyle(order.source)} rounded-2xl p-8 flex flex-col items-center justify-center shadow-2xl transform hover:scale-105 transition-all`}
+                  style={{
+                    animation: 'pulse 2s infinite',
+                    animationDelay: `${index * 0.1}s`
+                  }}
+                >
+                  <div className="text-5xl font-bold mb-2">
+                    {order.display_code}
+                  </div>
+                  <div className="flex items-center gap-2 text-xl opacity-90">
+                    <Check className="h-6 w-6" />
+                    <span>HAZIR</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xl opacity-90">
-                  <Check className="h-6 w-6" />
-                  <span>HAZIR</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Footer - Bilgilendirme */}
