@@ -3,64 +3,69 @@
 ## Proje Özeti
 Kasa Burger franchise ağı için kapsamlı ERP ve POS sistemi.
 
-## ✅ Tamamlanan Özellikler (20 Ocak 2026)
+## ✅ TEK ŞUBE - TAMAMLANAN MODÜLLER (20 Ocak 2026)
 
-### Sipariş Takip Sistemi
-- `/siparis-takip/:orderNumber` - Müşteri sipariş takip sayfası
-- KIOSK-XXXX format desteği (K-XXXXXX otomatik dönüşüm)
-- Salon TV ekranı (Hazırlanıyor + Hazır siparişler)
-- Mutfak "Teslim Edildi" butonu
-- Production homepage hatası düzeltildi
+### Sipariş Sistemleri
+- ✅ Kiosk Self-Servis Sipariş
+- ✅ Sipariş Takip (Mobil) - KIOSK-XXXX formatı, ses bildirimi
+- ✅ Mutfak Ekranı
+- ✅ Salon TV Ekranı
+- ✅ POS Sistemi (Masa/Paket)
 
-### Bayi Sipariş Onay Sistemi
-- TÜM bayi siparişleri otomatik "Onay Bekliyor" durumuna düşüyor
-- Admin onayı sonrası otomatik fatura oluşturma
-- Bayi bakiye güncelleme
+### Yönetim Modülleri
+- ✅ Ürün Yönetimi (190 ürün)
+- ✅ Hammadde Yönetimi (SKU otomatik)
+- ✅ Reçete Yönetimi (12 reçete)
+- ✅ Kampanya Sistemi
+- ✅ Raporlar (Grafikler + Excel)
+- ✅ Dashboard
 
-### Email Bildirim Sistemi (Yeni)
-- Resend entegrasyonu kuruldu
-- Bayi siparişlerinde admin'e otomatik email bildirimi
-- Domain: kasaburger.com.tr (doğrulama bekliyor)
-- Admin email: bayi@kasaburger.com.tr
+### Bayi/Şube Sistemi
+- ✅ Bayi Yönetimi
+- ✅ Bayi Sipariş Onay Sistemi
+- ✅ Şube Ekleme (Kod otomatik)
 
-### E-Fatura/GİB
-- Select bileşen hatası düzeltildi
-- Sayfa düzgün çalışıyor
+### Entegrasyonlar
+- ✅ BizimHesap Fatura Gönderimi
+- ✅ Teslimat Platformları (Yemeksepeti, Getir yapılandırılmış)
+- ✅ Email Bildirimi (Resend - domain doğrulama bekliyor)
+- ✅ QR Kod Oluşturma
 
-## 🔧 Son Düzeltmeler (20 Ocak 2026)
+### Bekleyen
+- ⏸️ E-Fatura GIB (API bilgisi gerekli)
+- ⏸️ InPOS Yazıcı (fiziksel cihaz gerekli)
 
-1. **Mobil Sipariş Takip Beyaz Ekran** - ÇÖZÜLDÜ
-2. **Sipariş Numarası Formatı** - KIOSK-XXXX formatı uygulandı
-3. **"Siparişi Takip Et" URL** - KIOSK formatında yönlendirme
-4. **Production Beyaz Ekran** - homepage: "/" düzeltmesi
-5. **Bayi Siparişleri Onaya Düşmüyor** - ÇÖZÜLDÜ
-6. **E-Fatura Sayfası Siyah Ekran** - ÇÖZÜLDÜ
+---
 
-## 📋 Bekleyen Görevler
+## 📋 MULTI-BRANCH MİMARİSİ (Onaylandı)
 
-### Email Sistemi
-- [ ] kasaburger.com.tr domain doğrulaması (Resend)
-- [ ] Email testi
+### Rol Yapısı:
 
-### P1 - Yüksek Öncelik
-- [ ] E-fatura GIB API credentials
-- [ ] InPOS yazıcı testi (fiziksel cihaz)
-- [ ] Frontend oturum kaybı sorunu
+#### 👑 Merkez Admin
+- Tüm şubeleri yönetim
+- Şube karşılaştırma raporları
+- Merkezi ürün/kampanya yönetimi
+- Bayi ekleme/silme
 
-### P2 - Orta Öncelik
-- [ ] Delivery platform entegrasyonları
-- [ ] Ödeme gateway entegrasyonu
+#### 🏪 Bayi/Şube
+- Adisyon (POS)
+- Mutfak Ekranı
+- Kiosk Siparişleri
+- Canlı Siparişler (Getir, Yemeksepeti)
+- Paket Servis
+- Kasa Raporu
+- Şube Raporları
 
-## Teknik Notlar
+### Yapılacaklar:
+1. Tüm sipariş tablolarına `branch_id` ekle
+2. Kullanıcılara şube ataması
+3. Login'de şube seçimi
+4. Merkezi dashboard (şube karşılaştırma)
+5. Şube bazlı raporlar
 
-### Email Ayarları (.env)
-```
-RESEND_API_KEY=re_JfJuYJCw_Hcf2rs8eXs4TttTsdnrnLsPj
-SENDER_EMAIL=siparis@kasaburger.com.tr
-ADMIN_EMAIL=bayi@kasaburger.com.tr
-```
+---
 
-### Credentials
+## Credentials
 - Admin: admin@kasaburger.net.tr / admin123
 - Bayi: MEKGRUP / 1234
 
