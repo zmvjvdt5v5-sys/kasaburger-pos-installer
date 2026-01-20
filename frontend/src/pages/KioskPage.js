@@ -629,95 +629,145 @@ const KioskPage = () => {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
-        {/* Mobile Header */}
-        <header className="bg-zinc-900 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center gap-2">
-            <img src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" alt="Logo" className="h-10 w-10 object-contain" />
-            <span className="text-lg font-bold text-orange-500">KASA BURGER</span>
+      <div className="min-h-screen bg-zinc-950 text-white flex flex-col">
+        {/* Mobile Header - Daha geniş ve temiz */}
+        <header className="bg-zinc-900/95 backdrop-blur-lg px-5 py-4 flex items-center justify-between sticky top-0 z-50 border-b border-zinc-800/50">
+          <div className="flex items-center gap-3">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_kasaburger-pos/artifacts/oruytxht_b3459348-380a-4e05-8eb6-989bd31e2066.jpeg" 
+              alt="Logo" 
+              className="h-11 w-11 object-contain rounded-xl"
+            />
+            <span className="text-xl font-black text-orange-500 tracking-tight">KASA BURGER</span>
           </div>
-          <div className="flex items-center gap-2">
-            {/* Puan Kazan Butonu - Mobil */}
-            <Button 
-              onClick={() => setShowLoyalty(true)} 
-              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black px-3 py-2 text-xs font-bold rounded-full"
-            >
-              ⭐ Puan
-            </Button>
-            {/* Menüler Butonu - Mobil */}
-            <Button 
-              onClick={() => setShowCombos(true)} 
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 text-xs font-bold rounded-full"
-            >
-              🎁 Menü
-            </Button>
+          <div className="flex items-center gap-3">
             {cartCount > 0 && (
-              <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-3 py-2 text-sm gap-1 rounded-full">
-                <ShoppingCart className="h-4 w-4" />
-                <span>{cartCount}</span>
+              <Button 
+                onClick={() => setShowCart(true)} 
+                className="bg-orange-500 hover:bg-orange-600 h-11 w-11 p-0 rounded-xl relative"
+                data-testid="mobile-cart-btn"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-white text-orange-500 text-xs font-bold h-5 w-5 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
               </Button>
             )}
           </div>
         </header>
 
+        {/* Mobile Action Buttons - Ayrı satırda, daha büyük */}
+        <div className="bg-zinc-900/80 px-5 py-3 flex gap-3 border-b border-zinc-800/30">
+          <Button 
+            onClick={() => setShowLoyalty(true)} 
+            className="flex-1 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black h-12 text-sm font-bold rounded-xl shadow-lg shadow-yellow-500/20"
+            data-testid="mobile-loyalty-btn"
+          >
+            ⭐ Puan Kazan
+          </Button>
+          <Button 
+            onClick={() => setShowCombos(true)} 
+            className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white h-12 text-sm font-bold rounded-xl shadow-lg shadow-green-500/20"
+            data-testid="mobile-combos-btn"
+          >
+            🎁 Menüler
+          </Button>
+        </div>
+
         {/* Mobile Promotion Banner */}
         {promotions.length > 0 && (
-          <div className="bg-gradient-to-r from-orange-600 to-red-600 px-4 py-2 text-center">
-            <p className="text-white text-xs font-semibold">
-              🔥 {promotions[activePromoIndex]?.title} 🔥 {promotions[activePromoIndex]?.description}
+          <div className="bg-gradient-to-r from-orange-600 via-red-500 to-pink-600 px-5 py-3">
+            <p className="text-white text-sm font-semibold text-center">
+              🔥 {promotions[activePromoIndex]?.title} - {promotions[activePromoIndex]?.description}
             </p>
           </div>
         )}
 
-        {/* Mobile Categories - Horizontal Scroll */}
-        <nav className="bg-zinc-900 px-3 py-2 overflow-x-auto flex gap-2 sticky top-[52px] z-40 border-b border-zinc-800">
+        {/* Mobile Categories - Daha geniş ve okunabilir */}
+        <nav className="bg-zinc-900/50 px-4 py-4 overflow-x-auto flex gap-3 sticky top-[68px] z-40">
           {menuData.categories.map(cat => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap transition-all ${
-                selectedCategory === cat.id ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-800/80 text-zinc-400 hover:bg-zinc-700'
+              data-testid={`category-${cat.id}`}
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl whitespace-nowrap transition-all active:scale-95 ${
+                selectedCategory === cat.id 
+                  ? 'bg-orange-500 text-white shadow-xl shadow-orange-500/30 scale-105' 
+                  : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700'
               }`}
             >
-              <span className="text-base">{cat.icon}</span>
-              <span className="text-sm font-semibold tracking-wide">{cat.name}</span>
+              <span className="text-xl">{cat.icon}</span>
+              <span className="text-base font-semibold">{cat.name}</span>
             </button>
           ))}
         </nav>
 
-        {/* Mobile Products Grid */}
-        <main className="flex-1 p-4 pb-28 bg-gradient-to-b from-zinc-950 to-black">
+        {/* Kategori Başlığı */}
+        <div className="px-5 pt-5 pb-2">
+          <h2 className="text-2xl font-black text-white tracking-tight">{selectedCategory}</h2>
+          <p className="text-zinc-500 text-sm mt-1">{filteredProducts.length} ürün</p>
+        </div>
+
+        {/* Mobile Products Grid - Daha geniş kartlar */}
+        <main className="flex-1 px-4 pb-32">
           <div className="grid grid-cols-2 gap-4">
             {filteredProducts.map(product => (
               <button
                 key={product.id}
                 onClick={() => openProductWithNote(product)}
-                className="bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl overflow-hidden text-left active:scale-95 transition-all border border-zinc-800/50 shadow-xl"
+                data-testid={`product-${product.id}`}
+                className="bg-zinc-900 rounded-3xl overflow-hidden text-left active:scale-[0.97] transition-all duration-200 border border-zinc-800/50 shadow-2xl shadow-black/50 hover:border-orange-500/30"
               >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                {/* Ürün Görseli */}
+                <div className="relative aspect-square overflow-hidden">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                   {product.is_premium && (
-                    <span className="absolute top-2 right-2 bg-gradient-to-r from-yellow-500 to-amber-400 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg">PREMIUM</span>
+                    <span className="absolute top-3 left-3 bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider">
+                      Premium
+                    </span>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-60" />
+                  
+                  {/* Fiyat Badge */}
+                  <div className="absolute bottom-3 right-3 bg-orange-500 text-white font-black text-base px-3 py-1.5 rounded-xl shadow-lg">
+                    {formatPrice(product.price)}
+                  </div>
                 </div>
+                
+                {/* Ürün Bilgileri */}
                 <div className="p-4">
-                  <h3 className="font-bold text-sm text-white tracking-wide">{product.name}</h3>
+                  <h3 className="font-bold text-base text-white leading-tight line-clamp-2">{product.name}</h3>
                   {product.description && (
-                    <p className="text-zinc-400 text-xs mt-1 line-clamp-2">{product.description}</p>
+                    <p className="text-zinc-500 text-xs mt-2 line-clamp-2">{product.description}</p>
                   )}
-                  <p className="text-orange-400 font-black text-lg mt-1">{formatPrice(product.price)}</p>
                 </div>
               </button>
             ))}
           </div>
         </main>
 
-        {/* Mobile Bottom Bar */}
+        {/* Mobile Bottom Cart Bar - Daha belirgin */}
         {cartCount > 0 && !showCart && (
-          <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 px-4 py-3 flex items-center justify-between z-50">
-            <div>
-              <p className="text-xs text-zinc-400">{cartCount} ürün</p>
+          <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800/50 px-5 py-4 z-50 safe-area-inset-bottom">
+            <Button 
+              onClick={() => setShowCart(true)} 
+              className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold rounded-2xl shadow-xl shadow-orange-500/30 flex items-center justify-between px-6"
+              data-testid="view-cart-btn"
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="h-6 w-6" />
+                <span>Sepeti Gör ({cartCount})</span>
+              </div>
+              <span className="text-xl font-black">{formatPrice(cartTotal)}</span>
+            </Button>
+          </div>
+        )}
               <p className="text-lg font-bold text-orange-500">{formatPrice(cartTotal)}</p>
             </div>
             <Button onClick={() => setShowCart(true)} className="bg-orange-500 hover:bg-orange-600 px-6 py-3 text-base rounded-xl">
