@@ -53,11 +53,13 @@ function OrderTrack() {
   const audioRef = useRef(null);
   const lastStatusRef = useRef(null);
   const intervalRef = useRef(null);
+  const soundIntervalRef = useRef(null);
 
-  // Bildirim sesi
+  // Bildirim sesi - daha dikkat çekici
   useEffect(function() {
     try {
-      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+      // Daha dikkat çekici bildirim sesi
+      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
       audioRef.current.volume = 1.0;
     } catch (e) {
       console.warn('Audio init error:', e);
@@ -66,15 +68,36 @@ function OrderTrack() {
       if (audioRef.current) {
         audioRef.current = null;
       }
+      if (soundIntervalRef.current) {
+        clearInterval(soundIntervalRef.current);
+      }
     };
   }, []);
 
-  // Ses çal
+  // Ses çal (tekrarlayan)
   function playSound() {
     if (soundEnabled && audioRef.current) {
       try {
+        // İlk ses
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(function() {});
+        
+        // 3 kez tekrarla (her 2 saniyede)
+        var playCount = 0;
+        if (soundIntervalRef.current) {
+          clearInterval(soundIntervalRef.current);
+        }
+        soundIntervalRef.current = setInterval(function() {
+          playCount++;
+          if (playCount >= 3) {
+            clearInterval(soundIntervalRef.current);
+            return;
+          }
+          if (audioRef.current && soundEnabled) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(function() {});
+          }
+        }, 2000);
       } catch (e) {
         console.warn('Audio play error:', e);
       }
