@@ -224,17 +224,18 @@ async def get_ready_orders(current_user: dict = Depends(get_current_user)):
 
 @router.get("/salon-display")
 async def get_salon_display_data():
-    """Salon ekranı için hazır siparişleri getir (Auth gerektirmez)"""
+    """Salon ekranı için hazır ve hazırlanan siparişleri getir (Auth gerektirmez)"""
     db = get_db()
     if db is None:
-        return {"ready_orders": [], "calling_orders": []}
+        return {"ready_orders": [], "preparing_orders": [], "calling_orders": []}
     
     # Son 24 saat içinde hazır olan siparişler veya ready_at olmayan ready siparişler
     one_day_ago = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     
     ready_orders = []
+    preparing_orders = []
     
-    # POS ready siparişleri - ready_at varsa son 30dk, yoksa tüm ready'ler
+    # POS ready siparişleri
     pos_ready = await db.pos_orders.find(
         {"status": "ready", "$or": [
             {"ready_at": {"$gte": one_day_ago}},
@@ -250,6 +251,19 @@ async def get_salon_display_data():
             "display_code": display,
             "source": order.get("source", "table"),
             "ready_at": order.get("ready_at")
+        })
+    
+    # POS preparing siparişleri
+    pos_preparing = await db.pos_orders.find(
+        {"status": "preparing"},
+        {"_id": 0, "id": 1, "queue_number": 1, "order_number": 1, "source": 1}
+    ).sort("preparing_at", -1).to_list(20)
+    
+    for order in pos_preparing:
+        display = order.get("queue_number") or order.get("order_number", "---")
+        preparing_orders.append({
+            "display_code": display,
+            "source": order.get("source", "table")
         })
     
     # Kiosk ready siparişleri
@@ -270,8 +284,22 @@ async def get_salon_display_data():
             "ready_at": order.get("ready_at")
         })
     
+    # Kiosk preparing siparişleri
+    kiosk_preparing = await db.kiosk_orders.find(
+        {"status": {"$in": ["preparing", "Hazırlanıyor"]}},
+        {"_id": 0, "id": 1, "queue_number": 1, "order_number": 1}
+    ).sort("preparing_at", -1).to_list(20)
+    
+    for order in kiosk_preparing:
+        display = order.get("queue_number") or order.get("order_number", "---")
+        preparing_orders.append({
+            "display_code": display,
+            "source": "kiosk"
+        })
+    
     return {
         "ready_orders": ready_orders,
+        "preparing_orders": preparing_orders,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
