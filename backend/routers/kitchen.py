@@ -725,11 +725,24 @@ async def track_order_by_number(order_number: str):
     if not order:
         raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
     
+    # Display code hesapla - Kiosk siparişleri için KIOSK-XXXX formatı
+    display_code = order.get("queue_number")
+    if not display_code:
+        order_num = order.get("order_number", "")
+        if source == "kiosk" and order_num.startswith("K-"):
+            try:
+                num = int(order_num[2:])
+                display_code = f"KIOSK-{num:04d}"
+            except ValueError:
+                display_code = order_num
+        else:
+            display_code = order_num
+    
     return {
         "id": order.get("id"),
         "order_number": order.get("order_number"),
         "queue_number": order.get("queue_number"),
-        "display_code": order.get("queue_number") or order.get("order_number"),
+        "display_code": display_code,
         "status": order.get("status"),
         "source": source,
         "created_at": order.get("created_at"),
