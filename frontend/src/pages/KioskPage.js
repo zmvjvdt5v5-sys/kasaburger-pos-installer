@@ -1349,29 +1349,29 @@ const KioskPage = () => {
                   )}
                 </div>
               </button>
-                    <span className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:bg-orange-400 transition-colors">+</span>
-                  </div>
-                </div>
-              </button>
             ))}
           </div>
         </main>
       </div>
 
-      {/* Bottom Bar */}
+      {/* Bottom Bar - Daha modern */}
       {cartCount > 0 && !showCart && (
-        <div className="bg-gradient-to-r from-zinc-900 to-zinc-950 border-t border-zinc-800 px-8 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-orange-500/20 rounded-xl flex items-center justify-center">
-              <ShoppingCart className="h-7 w-7 text-orange-400" />
+        <div className="bg-zinc-900/95 backdrop-blur-lg border-t border-zinc-800/50 px-10 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center">
+              <ShoppingCart className="h-8 w-8 text-orange-400" />
             </div>
             <div>
-              <p className="text-sm text-zinc-400 font-medium">{cartCount} ürün</p>
-              <p className="text-2xl font-black text-orange-400">{formatPrice(cartTotal)}</p>
+              <p className="text-base text-zinc-400 font-medium">{cartCount} ürün sepette</p>
+              <p className="text-3xl font-black text-orange-400">{formatPrice(cartTotal)}</p>
             </div>
           </div>
-          <Button onClick={() => setShowCart(true)} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-12 py-6 text-lg rounded-xl shadow-lg shadow-orange-500/20 font-bold">
-            Siparişi Tamamla
+          <Button 
+            onClick={() => setShowCart(true)} 
+            data-testid="checkout-btn"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 px-14 py-7 text-xl rounded-2xl shadow-2xl shadow-orange-500/30 font-bold active:scale-95 transition-all"
+          >
+            Siparişi Tamamla →
           </Button>
         </div>
       )}
