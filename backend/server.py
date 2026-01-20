@@ -166,6 +166,7 @@ app.include_router(invoices.router, prefix="/api")
 app.include_router(campaigns.router, prefix="/api")
 app.include_router(production.router, prefix="/api")
 app.include_router(kitchen.router, prefix="/api")
+app.include_router(accounting.router, prefix="/api")
 
 # Admin endpoints
 from fastapi import Depends
