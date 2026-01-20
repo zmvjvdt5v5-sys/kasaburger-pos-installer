@@ -979,6 +979,170 @@ const KioskPage = () => {
             <p className="text-center text-xs text-zinc-500">Ekran 15 saniye sonra otomatik kapanacak</p>
           </DialogContent>
         </Dialog>
+
+        {/* Mobile Loyalty Dialog */}
+        <Dialog open={showLoyalty} onOpenChange={setShowLoyalty}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[95vw] max-h-[85vh] overflow-y-auto rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl flex items-center gap-2">
+                ⭐ Sadakat Programı
+              </DialogTitle>
+            </DialogHeader>
+            
+            {!loyaltyMember ? (
+              <div className="space-y-4 py-2">
+                <p className="text-zinc-400 text-center text-sm">
+                  Telefon numaranızı girerek puan kazanın!
+                </p>
+                <Input
+                  type="tel"
+                  placeholder="05XX XXX XX XX"
+                  value={loyaltyPhone}
+                  onChange={(e) => setLoyaltyPhone(e.target.value.replace(/\D/g, ''))}
+                  className="bg-zinc-800 border-zinc-700 text-white text-center text-lg py-4"
+                  maxLength={11}
+                />
+                <Button 
+                  onClick={lookupLoyaltyMember} 
+                  className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-base"
+                  disabled={loyaltyPhone.length < 10}
+                >
+                  Devam Et
+                </Button>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-zinc-800 rounded-lg p-2 text-center">
+                    <span className="text-xl block">🎯</span>
+                    <p>Her ₺1 = 1 Puan</p>
+                  </div>
+                  <div className="bg-zinc-800 rounded-lg p-2 text-center">
+                    <span className="text-xl block">🎁</span>
+                    <p>Ücretsiz Ürünler</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3 py-2">
+                {/* Üye Kartı - Mobil */}
+                <div className={`rounded-xl p-4 ${
+                  loyaltyMember.tier === 'platinum' ? 'bg-gradient-to-r from-purple-600 to-pink-600' :
+                  loyaltyMember.tier === 'gold' ? 'bg-gradient-to-r from-yellow-500 to-amber-600' :
+                  loyaltyMember.tier === 'silver' ? 'bg-gradient-to-r from-gray-400 to-gray-500' :
+                  'bg-gradient-to-r from-amber-700 to-amber-800'
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-white/80 text-xs">{loyaltyMember.phone}</p>
+                      <p className="text-2xl font-bold text-white">{loyaltyMember.points} Puan</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-3xl">
+                        {loyaltyMember.tier === 'platinum' ? '💎' : 
+                         loyaltyMember.tier === 'gold' ? '🥇' : 
+                         loyaltyMember.tier === 'silver' ? '🥈' : '🥉'}
+                      </span>
+                      <p className="text-white text-sm font-semibold capitalize">{loyaltyMember.tier}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Ödülleri Gör */}
+                <Button 
+                  onClick={() => { setShowLoyalty(false); setShowRewards(true); }}
+                  className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-base"
+                >
+                  🎁 Ödülleri Gör ({loyaltyMember.points} Puan)
+                </Button>
+                
+                {/* Referans Kodu */}
+                {loyaltyMember.referral_code && (
+                  <div className="bg-purple-500/20 rounded-lg p-3">
+                    <p className="text-xs text-purple-300 mb-1">Referans Kodun:</p>
+                    <p className="text-lg font-bold text-white text-center">{loyaltyMember.referral_code}</p>
+                    <p className="text-xs text-purple-300 text-center mt-1">Arkadaşına söyle, 100 puan kazan!</p>
+                  </div>
+                )}
+                
+                {/* Çıkış */}
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => { setLoyaltyMember(null); setLoyaltyPhone(''); }}
+                >
+                  Çıkış Yap
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Mobile Rewards Dialog */}
+        <Dialog open={showRewards} onOpenChange={setShowRewards}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[95vw] max-h-[85vh] overflow-y-auto rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl">🎁 Ödüller</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              {rewards.map(reward => {
+                const canRedeem = loyaltyMember && loyaltyMember.points >= reward.points_required;
+                return (
+                  <div key={reward.id} className={`rounded-lg p-3 border ${canRedeem ? 'border-green-500 bg-green-500/10' : 'border-zinc-700 bg-zinc-800/50'}`}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold text-sm">{reward.name}</p>
+                        <p className="text-xs text-zinc-400">{reward.points_required} Puan</p>
+                      </div>
+                      {canRedeem ? (
+                        <Button size="sm" className="bg-green-500 text-xs" onClick={() => redeemReward(reward)}>
+                          Kullan
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-zinc-500">🔒</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mobile Combos Dialog */}
+        <Dialog open={showCombos} onOpenChange={setShowCombos}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-[95vw] max-h-[85vh] overflow-y-auto rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl">🎁 Combo Menüler</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              {combos.map(combo => (
+                <div key={combo.id} className="bg-zinc-800 rounded-xl p-3 border border-zinc-700">
+                  <div className="flex gap-3">
+                    {combo.image && (
+                      <img src={combo.image} alt={combo.name} className="w-20 h-20 object-cover rounded-lg" />
+                    )}
+                    <div className="flex-1">
+                      <h3 className="font-bold text-sm">{combo.name}</h3>
+                      <p className="text-xs text-zinc-400 line-clamp-2">{combo.description}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-zinc-500 line-through text-xs">₺{combo.original_price}</span>
+                        <span className="text-orange-500 font-bold">₺{combo.combo_price}</span>
+                        <span className="text-green-400 text-xs">%{Math.round((1 - combo.combo_price/combo.original_price) * 100)} indirim</span>
+                      </div>
+                      {combo.gift_product_name && (
+                        <p className="text-xs text-pink-400 mt-1">🎁 {combo.gift_product_name} Hediye!</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button 
+                    className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-sm py-2"
+                    onClick={() => addComboToCart(combo)}
+                  >
+                    Sepete Ekle
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
