@@ -365,6 +365,14 @@ async def notify_kitchen(order_id: str, action: str, current_user: dict = Depend
     return {"status": "sent"}
 
 
+# Sipariş Takip API (Müşteri İçin - Auth Gerektirmez)
+@app.get("/api/order-track/{order_number}")
+async def track_order(order_number: str):
+    """Sipariş numarası ile takip (Auth gerektirmez)"""
+    from routers.kitchen import track_order_by_number
+    return await track_order_by_number(order_number)
+
+
 # Mutfak bildirimi gönderme helper fonksiyonu
 async def send_kitchen_notification(order_id: str, action: str, order_data: dict = None):
     """Yardımcı fonksiyon - POS router'dan çağrılabilir"""
