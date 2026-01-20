@@ -3,99 +3,66 @@
 ## Proje Özeti
 Kasa Burger franchise ağı için kapsamlı ERP ve POS sistemi.
 
-## Temel Özellikler
+## ✅ Tamamlanan Özellikler (20 Ocak 2026)
 
-### ✅ Tamamlanan Özellikler
-
-#### 1. Self-Service Kiosk
-- Müşteri sipariş ekranı
-- Ürün kategorileri ve seçimi
-- Sipariş özeti ve ödeme
-
-#### 2. Multi-Branch Management (Çoklu Şube Yönetimi)
-- Admin paneli
-- Bayi yönetimi
-- Ürün ve fiyatlandırma
-
-#### 3. Sipariş Takip Sistemi (Yeni - 20 Ocak 2026)
+### Sipariş Takip Sistemi
 - `/siparis-takip/:orderNumber` - Müşteri sipariş takip sayfası
+- KIOSK-XXXX format desteği (K-XXXXXX otomatik dönüşüm)
 - Salon TV ekranı (Hazırlanıyor + Hazır siparişler)
 - Mutfak "Teslim Edildi" butonu
-- KIOSK-XXXX ve K-XXXXXX format desteği
+- Production homepage hatası düzeltildi
 
-#### 4. Bayi Sipariş Onay Sistemi (Yeni - 20 Ocak 2026)
+### Bayi Sipariş Onay Sistemi
 - TÜM bayi siparişleri otomatik "Onay Bekliyor" durumuna düşüyor
 - Admin onayı sonrası otomatik fatura oluşturma
 - Bayi bakiye güncelleme
 
-#### 5. E-Fatura/GİB Entegrasyonu
-- E-Fatura ve E-Arşiv belge oluşturma
-- GİB API entegrasyonu (API bilgisi bekliyor)
+### Email Bildirim Sistemi (Yeni)
+- Resend entegrasyonu kuruldu
+- Bayi siparişlerinde admin'e otomatik email bildirimi
+- Domain: kasaburger.com.tr (doğrulama bekliyor)
+- Admin email: bayi@kasaburger.com.tr
 
-#### 6. Mutfak Ekranı (Birleşik)
-- Tüm siparişler tek ekranda
-- Durum güncelleme (Hazırla, Hazır, Teslim Edildi)
-- Sesli bildirimler
+### E-Fatura/GİB
+- Select bileşen hatası düzeltildi
+- Sayfa düzgün çalışıyor
 
-### 🔧 Son Düzeltmeler (20 Ocak 2026)
+## 🔧 Son Düzeltmeler (20 Ocak 2026)
 
 1. **Mobil Sipariş Takip Beyaz Ekran** - ÇÖZÜLDÜ
-   - OrderTrack.js tamamen yeniden yazıldı
-   - Eski tarayıcı uyumluluğu sağlandı
-   - KIOSK-XXXX → K-XXXXXX format dönüşümü
+2. **Sipariş Numarası Formatı** - KIOSK-XXXX formatı uygulandı
+3. **"Siparişi Takip Et" URL** - KIOSK formatında yönlendirme
+4. **Production Beyaz Ekran** - homepage: "/" düzeltmesi
+5. **Bayi Siparişleri Onaya Düşmüyor** - ÇÖZÜLDÜ
+6. **E-Fatura Sayfası Siyah Ekran** - ÇÖZÜLDÜ
 
-2. **Salon Ekranında Siparişler Görünmüyor** - ÇÖZÜLDÜ
-   - "Bekliyor" siparişler artık "Hazırlanıyor" sütununda
-   - Display kodları tutarlı (KIOSK-XXXX formatı)
+## 📋 Bekleyen Görevler
 
-3. **E-Fatura/GİB Sayfası Siyah Ekran** - ÇÖZÜLDÜ
-   - Select bileşenlerindeki boş string hatası düzeltildi
+### Email Sistemi
+- [ ] kasaburger.com.tr domain doğrulaması (Resend)
+- [ ] Email testi
 
-4. **Bayi Siparişleri Onaya Düşmüyor** - ÇÖZÜLDÜ
-   - Tüm bayi siparişleri "pending_approval" durumunda başlıyor
-   - Admin onayı sonrası fatura otomatik oluşuyor
+### P1 - Yüksek Öncelik
+- [ ] E-fatura GIB API credentials
+- [ ] InPOS yazıcı testi (fiziksel cihaz)
+- [ ] Frontend oturum kaybı sorunu
 
-### 📋 Bekleyen/Gelecek Görevler
+### P2 - Orta Öncelik
+- [ ] Delivery platform entegrasyonları
+- [ ] Ödeme gateway entegrasyonu
 
-#### P1 - Yüksek Öncelik
-- [ ] E-fatura GIB API credentials bekleniyor
-- [ ] InPOS yazıcı testi (fiziksel cihaz gerekli)
-- [ ] Frontend oturum kaybı sorunu araştırması
+## Teknik Notlar
 
-#### P2 - Orta Öncelik  
-- [ ] Delivery platform entegrasyonları (API anahtarları gerekli)
-- [ ] Ödeme gateway entegrasyonu (Stripe/Iyzico)
-
-#### P3 - Düşük Öncelik
-- [ ] Teslim edilen siparişler dashboard
-- [ ] KioskAdmin_old.js dosyası silinecek (kullanıcı onayı ile)
-
-## Teknik Mimari
-
+### Email Ayarları (.env)
 ```
-/app/
-├── backend/
-│   ├── routers/
-│   │   ├── kitchen.py        # Mutfak, salon ekranı, sipariş takip
-│   │   ├── dealer_portal.py  # Bayi portal (onay sistemi güncel)
-│   │   ├── orders.py         # Sipariş yönetimi (fatura oluşturma)
-│   │   └── ...
-│   └── server.py
-└── frontend/
-    └── src/
-        ├── pages/
-        │   ├── OrderTrack.js     # Müşteri sipariş takip (yeniden yazıldı)
-        │   ├── EInvoice.js       # E-Fatura (düzeltildi)
-        │   ├── Dealers.js        # Bayi yönetimi
-        │   └── kitchen/
-        │       ├── UnifiedKitchen.js
-        │       └── SalonDisplay.js
-        └── components/
+RESEND_API_KEY=re_JfJuYJCw_Hcf2rs8eXs4TttTsdnrnLsPj
+SENDER_EMAIL=siparis@kasaburger.com.tr
+ADMIN_EMAIL=bayi@kasaburger.com.tr
 ```
 
-## Credentials
+### Credentials
 - Admin: admin@kasaburger.net.tr / admin123
 - Bayi: MEKGRUP / 1234
 
 ## Son Güncelleme
-20 Ocak 2026 - 4 kritik bug düzeltildi
+20 Ocak 2026
