@@ -173,7 +173,18 @@ async def update_order_status(
         {"$set": update_data}
     )
     
-    return {"status": "updated", "new_status": status}
+    response = {"status": "updated", "new_status": status}
+    
+    # BizimHesap sonucunu ekle
+    if bizimhesap_result:
+        response["bizimhesap"] = bizimhesap_result
+        if bizimhesap_result.get("status") == "success":
+            response["invoice_number"] = update_data.get("invoice_number")
+            response["message"] = "Sipariş onaylandı ve fatura BizimHesap'a gönderildi"
+        else:
+            response["warning"] = f"Sipariş onaylandı ancak BizimHesap'a gönderilemedi: {bizimhesap_result.get('message')}"
+    
+    return response
 
 @router.delete("/{order_id}")
 async def delete_order(order_id: str, current_user: dict = Depends(get_current_user)):
