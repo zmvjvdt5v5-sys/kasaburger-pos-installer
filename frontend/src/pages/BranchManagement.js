@@ -88,6 +88,32 @@ export default function BranchManagement() {
     }
   };
 
+  const deleteBranch = async (branchId) => {
+    if (!window.confirm('Bu şubeyi silmek istediğinize emin misiniz?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('kasaburger_token');
+      const response = await fetch(`${BACKEND_URL}/api/branches/${branchId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        toast.success('Şube silindi');
+        setBranches(branches.filter(b => (b.id || b.branch_id) !== branchId));
+        loadData();
+      } else {
+        toast.error('Şube silinemedi');
+      }
+    } catch (error) {
+      toast.error('Hata oluştu');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(amount || 0);
   };
