@@ -278,7 +278,16 @@ async def get_salon_display_data():
     ).sort("updated_at", -1).to_list(20)
     
     for order in kiosk_ready:
-        display = order.get("queue_number") or order.get("order_number", "---")
+        # K-000004 -> KIOSK-0004 formatına çevir
+        order_num = order.get("order_number", "")
+        if order_num.startswith("K-"):
+            try:
+                num = int(order_num[2:])
+                display = f"KIOSK-{num:04d}"
+            except ValueError:
+                display = order.get("queue_number") or order_num or "---"
+        else:
+            display = order.get("queue_number") or order_num or "---"
         ready_orders.append({
             "display_code": display,
             "source": "kiosk",
@@ -292,7 +301,16 @@ async def get_salon_display_data():
     ).sort("preparing_at", -1).to_list(20)
     
     for order in kiosk_preparing:
-        display = order.get("queue_number") or order.get("order_number", "---")
+        # K-000004 -> KIOSK-0004 formatına çevir
+        order_num = order.get("order_number", "")
+        if order_num.startswith("K-"):
+            try:
+                num = int(order_num[2:])
+                display = f"KIOSK-{num:04d}"
+            except ValueError:
+                display = order.get("queue_number") or order_num or "---"
+        else:
+            display = order.get("queue_number") or order_num or "---"
         preparing_orders.append({
             "display_code": display,
             "source": "kiosk"
